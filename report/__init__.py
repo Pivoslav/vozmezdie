@@ -5,7 +5,6 @@ Glossary definitions are always loaded from Categories Explained.html when avail
 """
 import html as html_module
 import json
-import os
 import re
 from pathlib import Path
 from urllib.parse import quote
@@ -34,8 +33,6 @@ _UI_TRANSLATIONS = {
     "intro_cap_b": {"en": "Inspect specific details (what the segment is about) and ideological layers (how it is phrased).", "uk": "Переглядати конкретні деталі (про що сегмент) та ідеологічні шари (як це сформульовано)."},
     "intro_cap_c": {"en": "Open human vs AI comparison tables and optional scans (PDF) when configured.", "uk": "Відкривати таблиці порівняння людина проти ШІ та за потреби скани (PDF)."},
     "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and glossary-backed definitions.", "uk": "Використовувати дослідницьку лабораторію для графіків по корпусу, карт та визначень у глосарії."},
-    "intro_framework_heading": {"en": "Analytical framework", "uk": "Аналітична рамка"},
-    "intro_framework_body": {"en": "Plain-language names map to the technical pipeline: Specific Details correspond to content data (content categories in the dataset). Ideological Layers correspond to language data (framing strategies). Stored JSON and taxonomy IDs are unchanged — see docs/agents/UI_LABEL_MAP.md.", "uk": "Звичайні назви відповідають технічному конвеєру: конкретні деталі — це дані контенту (категорії в наборі даних). Ідеологічні шари — це мовні дані (стратегії фреймінгу). Збережені JSON та ID таксономії не змінюються — див. docs/agents/UI_LABEL_MAP.md."},
     "analysis_by_head": {"en": "Analysis by", "uk": "Аналіз за"},
     "viz_standalone_full_report": {"en": "Open full Research Lab", "uk": "Відкрити повну дослідницьку лабораторію"},
     "viz_standalone_subtitle": {"en": "Single-chart view. Language and chart choice sync with the main lab when possible.", "uk": "Окремий перегляд діаграми. Мова та вибір графіка синхронізуються з основною лабораторією за можливості."},
@@ -86,8 +83,7 @@ _UI_TRANSLATIONS = {
     "doc_text_cap_lab": {"en": "Pair this view with the Research Lab visualizations to compare human-led and AI-led analysis.", "uk": "Поєднуйте з візуалізаціями дослідницької лабораторії для порівняння аналізу людини та ШІ."},
     "cyrillic_keyboard_label": {"en": "Cyrillic keyboard (click to insert into search)", "uk": "Кирилична клавіатура (клік — уставити в пошук)"},
     "pdf_view_summary": {"en": "PDF view (scanned document)", "uk": "PDF (скан документа)"},
-    "pdf_view_embed_hint": {"en": "Embedded PDF relative to the project; add pdf_relative_path in document_map.json to enable.", "uk": "Вбудований PDF відносно проєкту; додайте pdf_relative_path у document_map.json для активації."},
-    "pdf_view_missing": {"en": "No PDF configured for this document. Add pdf_relative_path under this document_id in config/document_map.json (path relative to project root).", "uk": "PDF не налаштовано. Додайте pdf_relative_path для цього document_id у config/document_map.json (шлях від кореня проєкту)."},
+    "pdf_view_missing": {"en": "No PDF is available for this document.", "uk": "PDF для цього документа недоступний."},
     "glossary_purpose_label": {"en": "Purpose:", "uk": "Призначення:"},
     "glossary_function_label": {"en": "Function:", "uk": "Функція:"},
     "glossary_examples_label": {"en": "Examples:", "uk": "Приклади:"},
@@ -288,32 +284,27 @@ def _pdf_repo_relative_path(
 
 def _pdf_href_for_report(
     doc: Dict[str, Any],
-    out_dir: Path,
+    _out_dir: Path,
     *,
     config: Optional[Dict[str, Any]] = None,
 ) -> Optional[str]:
-    """href for embedded PDF: relative file URL locally, or absolute URL when pdf_public_base_url is set."""
+    """Absolute PDF URL for iframe embedding when documents.pdf_public_base_url is set.
+
+    Relative file paths are not emitted so hosted reports always use published URLs.
+    """
     doc_cfg = (config or {}).get("documents", {}) if config else {}
     pdf_root = _sanitize_pdf_root_rel(doc_cfg.get("original_pdfs_dir"))
     public_base = (doc_cfg.get("pdf_public_base_url") or "").strip().rstrip("/")
+    if not public_base:
+        return None
 
     repo_rel = _pdf_repo_relative_path(doc, pdf_root=pdf_root)
     if not repo_rel:
         return None
 
-    if public_base:
-        segments = [s for s in repo_rel.split("/") if s != ""]
-        encoded_rel = "/".join(quote(seg, safe="") for seg in segments)
-        return f"{public_base}/{encoded_rel}"
-
-    abs_pdf = (_REPORT_ROOT / repo_rel).resolve()
-    if not abs_pdf.is_file():
-        return None
-    try:
-        rel = os.path.relpath(abs_pdf, out_dir.resolve())
-    except ValueError:
-        return None
-    return Path(rel).as_posix()
+    segments = [s for s in repo_rel.split("/") if s != ""]
+    encoded_rel = "/".join(quote(seg, safe="") for seg in segments)
+    return f"{public_base}/{encoded_rel}"
 
 
 def _json_for_html_script(payload: Any) -> str:
@@ -1669,10 +1660,6 @@ def _intro_tab() -> str:
       <li data-i18n="intro_cap_d">Use the Research Lab for corpus-level charts, maps, and glossary-backed definitions.</li>
     </ul>
   </section>
-  <section class="homepage-section">
-    <h3 data-i18n="intro_framework_heading">Analytical framework</h3>
-    <p data-i18n="intro_framework_body">Plain-language names map to the technical pipeline: Specific Details correspond to content data (content categories in the dataset). Ideological Layers correspond to language data (framing strategies). Stored JSON and taxonomy IDs are unchanged — see docs/agents/UI_LABEL_MAP.md.</p>
-  </section>
 </div>
 </div>"""
 
@@ -1981,7 +1968,6 @@ def _doc_tab(
         pdf_section = f"""<details class="collapsible-section pdf-view-section" id="doc-section-pdf-{doc_id}" open>
   <summary data-i18n="pdf_view_summary">PDF view</summary>
   <div class="collapsible-body">
-    <p class="viz-intro" style="margin-bottom:0.5rem;font-size:0.85rem;" data-i18n="pdf_view_embed_hint">Embedded PDF</p>
     <div class="pdf-view-wrap"><iframe src="{esc_pdf}" title="Document PDF"></iframe></div>
   </div>
 </details>"""
