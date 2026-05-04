@@ -4080,8 +4080,7 @@ function glossarySearchMatcher(query) {
       var flagSet = new Set(['u', 'i']);
       if (/m/i.test(fp)) flagSet.add('m');
       if (/s/i.test(fp)) flagSet.add('s');
-      if (/g/i.test(fp)) flagSet.add('g');
-      if (/y/i.test(fp)) flagSet.add('y');
+      /* Omit g and y: one RegExp is reused for many .test() calls; global/sticky patterns mutate lastIndex and break filtering. */
       var flags = Array.from(flagSet).join('');
       var re = new RegExp(parsed.body, flags);
       return function(text) { return re.test(text || ''); };
