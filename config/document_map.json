@@ -5,85 +5,85 @@
     {
       "document_id": "1127",
       "rus_filename": "F.16-Op.01-Spr.1127-59-64 RUS.txt",
-      "display_name": "1127.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, Dec 1976)"
     },
     {
       "document_id": "1128",
       "rus_filename": "F.16-Op.01-Spr.1128-67-73 RUS.txt",
-      "display_name": "1128.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, Jan 1977)"
     },
     {
       "document_id": "1206",
       "rus_filename": "F.16-Op.01-Spr.1206-0150-154 RUS.txt",
-      "display_name": "1206.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, Mar 1983)"
     },
     {
       "document_id": "1208",
       "rus_filename": "F.16-Op.01-Spr.1208-090-93 RUS.txt",
-      "display_name": "1208.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, May 1983)"
     },
     {
       "document_id": "1209",
       "rus_filename": "F.16-Op.01-Spr.1209-229-32 RUS.txt",
-      "display_name": "1209.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, Oct 1983)"
     },
     {
       "document_id": "1213",
       "rus_filename": "F.16-Op.01-Spr.1213-0154-56 RUS.txt",
-      "display_name": "1213.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, Dec 1983)"
     },
     {
       "document_id": "1215",
       "rus_filename": "F.16-Op.01-Spr.1215-051-54 RUS.txt",
-      "display_name": "1215.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, Jan 1984)"
     },
     {
       "document_id": "1230",
       "rus_filename": "FineReader-016-0001-1230-Original_Rus.docx.txt",
-      "display_name": "1230.txt"
+      "display_name": "Memorandum (active measures vs foreign OUN, Vozmezdie, Oct 1985)"
     },
     {
       "document_id": "1245",
       "rus_filename": "FineReader-016-0001-1245-Original_Rus.docx.txt",
-      "display_name": "1245.txt",
+      "display_name": "Memorandum (literature, arts and mass vigilance, KGB Ukraine, Dec 1986)",
       "en_filename": "FineReader-016-0001-1245-ENG.txt"
     },
     {
       "document_id": "1247",
       "rus_filename": "FineReader-016-0001-1247-Original-Rus.docx.txt",
-      "display_name": "1247.txt"
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR and OUN split note, Mar 1987)"
     },
     {
       "document_id": "1249-0046-0047",
       "rus_filename": "F.16-Op.01-Spr.1249-0046-0047 RUS chunk-aligned.txt",
-      "display_name": "1249-0046-0047.txt",
+      "display_name": "Memorandum (Operation Farisei, Holodomor narrative countermeasures, Mar 1987)",
       "en_filename": "F.16-Op.01-Spr.1249-0046-0047 ENG.txt"
     },
     {
       "document_id": "1249-80-83",
       "rus_filename": "FineReader-F.16-Op.01-Spr.1249-Rus.txt",
-      "display_name": "1249-80-83.txt",
+      "display_name": "Foreign nationals bulletin (Ukrainian SSR, Mar 1987, alternate)",
       "en_filename": "FineReader-F.16-Op.01-Spr.1249-ENG.txt"
     },
     {
       "document_id": "1256",
       "rus_filename": "Fine Reader - 016-0001-1256-Original-Verified.txt",
-      "display_name": "1256.txt"
+      "display_name": "Letter (anti-nationalist anthology Samі pro sebe, Sep 1987)"
     },
     {
       "document_id": "1262_149-150",
       "rus_filename": "FineReader-016-0001-1262-149-50-Original_Rus.txt",
-      "display_name": "1262 149-150.txt"
+      "display_name": "Bulletin (foreign nationals, Chernobyl and OUN leaflet at UN, Apr 1988)"
     },
     {
       "document_id": "1262_198-200",
       "rus_filename": "FineReader-016-0001-1262-198-200-Original_Rus.txt",
-      "display_name": "1262 198-200.txt"
+      "display_name": "Memorandum (OUN and Reagan summit, church politics, May 1988)"
     },
     {
       "document_id": "1262_28-32",
       "rus_filename": "RUS - 016-0001-1262-0028-32_Rus.txt",
-      "display_name": "1262 28-32.txt"
+      "display_name": "Memorandum (special measures vs foreign OUN centres, Feb 1988)"
     }
   ],
   "source_dir_en": "dev/english_translations",
