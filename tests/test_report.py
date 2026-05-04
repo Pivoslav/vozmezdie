@@ -53,7 +53,7 @@ def test_report_folds_legacy_content_category_in_table_and_attrs():
 
 
 def test_report_produces_html():
-    """Report run writes HTML file containing tabs, table, document text view, glossary."""
+    """Report run writes HTML file containing tabs, table, document text view, glossary section on Lab page."""
     config = {"output": {"dir": "data/output", "report_html": "test_report_output.html", "intermediate_json": "comparison_results.json"}}
     taxonomy = {
         "content_categories": [{"id": "Actors", "label_en": "Actors", "colour": "#3b82f6"}],
@@ -87,7 +87,8 @@ def test_report_produces_html():
     assert "tab-contents" in html
     assert "tab-d1" in html
     assert "tab-d2" in html
-    assert "tab-glossary" in html
+    assert 'id="lab-glossary"' in html
+    assert "onclick=\"showTab('tab-glossary')\"" not in html
     assert "comparison-table" in html
     assert "document-text-view" in html or "document-text-content" in html
     assert "buildDocumentTextView" in html or "doc-text-" in html
@@ -124,6 +125,19 @@ def test_get_accepted_segments_whitespace_tolerant():
     assert accepted[0][2] == "word1\nword2"
 
 
+def test_get_accepted_segments_duplicate_phrases_successive_occurrences():
+    """Repeated identical English segments map to successive occurrences, not all to the first."""
+    aligned = [
+        {"entry_eng": "foo", "llm_category": "A", "llm_framing": "X"},
+        {"entry_eng": "foo", "llm_category": "B", "llm_framing": "Y"},
+    ]
+    full_text = "prefix foo middle foo suffix"
+    accepted = _get_accepted_segments(full_text, aligned, "entry_eng")
+    assert len(accepted) == 2
+    positions = sorted(a[0] for a in accepted)
+    assert positions[0] < positions[1]
+
+
 def test_get_accepted_segments_shorter_wins():
     """Shorter overlapping segments win (substring overlap fix)."""
     aligned = [
@@ -135,3 +149,4 @@ def test_get_accepted_segments_shorter_wins():
     texts = [a[2] for a in accepted]
     assert "arrived" in texts
     assert "delegation arrived" not in texts
+

@@ -17,6 +17,7 @@ on:
       - 'run_report_only.py'
       - 'scripts/build_github_pages_docs.py'
       - 'docs/fixtures/**'
+      - 'landing/**'
 
 concurrency:
   group: regenerate-pages-${{ github.ref }}
@@ -44,7 +45,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/lab_visualization.html docs/places_map.html
+          git add docs/index.html docs/lab_visualization.html docs/places_map.html docs/introduction.html
           if git diff --staged --quiet; then
             echo "No HTML changes."
           else

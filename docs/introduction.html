@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="Cache-Control" content="max-age=0, must-revalidate"/>
+  <title>Vozmezdie — Introduction</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    :root { --cream: #f5f0e6; --sepia: #8b7355; --ink: #2d3748; --muted: #5a5348; --red: #8b0000; --paper: #fffef9; --card-border: rgba(139,115,85,0.35); }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Crimson Text', Georgia, serif; background: var(--cream); color: var(--ink); line-height: 1.65; min-height: 100vh; }
+    header { background: linear-gradient(180deg, #4a4038 0%, #3d352e 100%); color: var(--cream); padding: 2rem 1.5rem 2.5rem; border-bottom: 2px solid var(--sepia); text-align: center; }
+    header h1 { font-weight: 700; letter-spacing: 0.03em; font-size: 2rem; }
+    header p { margin-top: 0.75rem; opacity: 0.92; max-width: 40rem; margin-left: auto; margin-right: auto; font-size: 1.08rem; }
+    main { max-width: 52rem; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+    section { margin-bottom: 2.75rem; }
+    section.lead { font-size: 1.05rem; color: var(--muted); }
+    h2 { font-size: 1.35rem; color: var(--ink); border-bottom: 1px solid var(--card-border); padding-bottom: 0.4rem; margin-bottom: 1rem; }
+    h3 { font-size: 1.05rem; color: var(--ink); margin-bottom: 0.5rem; }
+    .dual-cta { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; align-items: stretch; margin: 1.5rem 0 0.5rem; }
+    .cta { display: inline-block; padding: 0.85rem 1.5rem; background: var(--red); color: var(--cream); text-decoration: none; font-weight: 600; border-radius: 4px; border: 1px solid #6b0000; font-size: 1.02rem; text-align: center; flex: 1 1 14rem; max-width: 22rem; }
+    .cta:hover { background: #6b0000; }
+    .cta.secondary { background: transparent; color: var(--red); border-color: var(--red); }
+    .cta.secondary:hover { background: rgba(139,0,0,0.08); }
+    .cta-note { font-size: 0.82rem; color: var(--muted); margin-top: 1rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5; text-align: center; max-width: 46rem; margin-left: auto; margin-right: auto; }
+    .tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr)); gap: 1rem 1.15rem; margin-top: 1.25rem; }
+    .tool-card { background: var(--paper); border: 1px solid var(--card-border); border-radius: 6px; padding: 1.1rem 1.15rem; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+    .tool-card h3 { font-size: 1rem; color: var(--red); letter-spacing: 0.02em; margin-bottom: 0.45rem; }
+    .tool-card p { font-size: 0.92rem; color: var(--muted); line-height: 1.55; }
+    .tool-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--sepia); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; display: block; }
+    ul.capabilities { list-style: none; padding: 0; margin-top: 0.75rem; }
+    ul.capabilities li { position: relative; padding-left: 1.5rem; margin-bottom: 0.75rem; color: var(--muted); font-size: 0.98rem; }
+    ul.capabilities li::before { content: ""; position: absolute; left: 0; top: 0.55rem; width: 0.45rem; height: 0.45rem; background: var(--red); border-radius: 50%; opacity: 0.85; }
+    .framework-visual { border: 1px solid var(--sepia); border-radius: 6px; padding: 1.25rem 1rem; background: var(--paper); margin-top: 1rem; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    .framework-visual h3 { font-size: 1rem; color: var(--red); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1rem; }
+    .fw-columns { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+    .fw-col { flex: 1 1 11rem; padding: 1rem; border-radius: 4px; border: 1px dashed rgba(139,115,85,0.5); background: var(--cream); }
+    .fw-col strong { display: block; font-size: 0.95rem; margin-bottom: 0.35rem; color: var(--ink); }
+    .fw-col span.tech { font-size: 0.8rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+    .video-note { font-size: 0.95rem; color: var(--muted); margin-bottom: 1rem; line-height: 1.55; }
+    .video-section-narrow { max-width: 28rem; margin-left: auto; margin-right: auto; }
+    .video-wrap { position: relative; width: 100%; max-width: 28rem; margin: 0 auto; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; border: 2px solid var(--sepia); background: #1a1a1a; box-shadow: 0 4px 18px rgba(0,0,0,0.12); }
+    .video-wrap iframe { display: block; width: 100%; height: 100%; border: 0; }
+    footer { text-align: center; padding: 1.5rem; font-size: 0.85rem; color: var(--muted); border-top: 1px solid rgba(139,115,85,0.25); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Vozmezdie</h1>
+    <p>Expert-grounded exploration of declassified archival texts: compare human analyst labels with AI-assisted extraction, then explore the corpus interactively.</p>
+    <p style="margin-top: 1rem; font-size: 1rem;"><a href="index.html" style="color: var(--cream); font-weight: 600; text-decoration: underline;">Open Research Lab</a></p>
+  </header>
+  <main>
+    <section class="lead">
+      <p>This introduction page orients you to the project. The <strong>Research Lab</strong> is the full interactive report: per-document reading views, comparison tables, charts, maps, and a glossary anchored at the bottom of the Lab page. Use the paths below depending on whether you are browsing a local checkout or a GitHub Pages build.</p>
+    </section>
+
+    <section>
+      <h2>Open the Research Lab</h2>
+      <div class="dual-cta">
+        <a class="cta" href="index.html">Research Lab (site build)</a>
+        <a class="cta secondary" href="index.html">Research Lab (local output)</a>
+      </div>
+      <p class="cta-note">GitHub Pages and similar hosts typically serve <code>docs/index.html</code>. After <code>python run_report_only.py</code>, the same HTML is also written under <code>data/output/</code>. Adjust relative links if your server layout differs.</p>
+    </section>
+
+    <section>
+      <h2>Ways to interact with the data</h2>
+      <p style="color: var(--muted); margin-bottom: 0.25rem; font-size: 1.02rem;">Each capability lives in the Research Lab unless noted. Combine them to move between close reading and corpus-level patterns.</p>
+      <div class="tools-grid">
+        <article class="tool-card">
+          <span class="tool-tag">Document tabs</span>
+          <h3>Bilingual text view</h3>
+          <p>Aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.</p>
+        </article>
+        <article class="tool-card">
+          <span class="tool-tag">Same tab</span>
+          <h3>Comparison table</h3>
+          <p>Human vs model labels row by row; jump from a row into the text view. Export aligned comparison as JSON where enabled.</p>
+        </article>
+        <article class="tool-card">
+          <span class="tool-tag">Research Lab</span>
+          <h3>Corpus visualizations</h3>
+          <p>Word clouds, category and framing distributions, agreement summaries, mismatch views, and configurable charts tied to the loaded documents.</p>
+        </article>
+        <article class="tool-card">
+          <span class="tool-tag">Research Lab</span>
+          <h3>Places map</h3>
+          <p>Geocoded locations when place extraction data is present; explore mentions in context from the map UI.</p>
+        </article>
+        <article class="tool-card">
+          <span class="tool-tag">Bottom of Lab</span>
+          <h3>Glossary and terms</h3>
+          <p>Taxonomy definitions plus terms observed in the corpus, with search (including regex), document filter, and links into segment anchors.</p>
+        </article>
+        <article class="tool-card">
+          <span class="tool-tag">Intro &amp; Lab</span>
+          <h3>Taxonomy reference</h3>
+          <p>Collapsible reference on how categories and framing are qualified, aligned with Categories Explained where configured.</p>
+        </article>
+        <article class="tool-card">
+          <span class="tool-tag">Comparison rows</span>
+          <h3>Label suggestions</h3>
+          <p>In-page modal from the &ldquo;+&rdquo; control: propose alternate labels; suggestions persist in the browser and can be downloaded as JSON.</p>
+        </article>
+        <article class="tool-card">
+          <span class="tool-tag">Throughout</span>
+          <h3>UI language &amp; typing</h3>
+          <p>English / Ukrainian toggle for chrome strings where available. Cyrillic popup keyboard on search fields so you can query without switching OS layouts.</p>
+        </article>
+      </div>
+    </section>
+
+    <section>
+      <h2>Analytical framework</h2>
+      <p style="color: var(--muted); margin-bottom: 0.75rem;">Plain-language names map to the technical pipeline: <strong>Specific Details</strong> correspond to <strong>content data</strong> (content categories). <strong>Ideological Layers</strong> correspond to <strong>language data</strong> (framing strategies). Stored JSON and taxonomy IDs are unchanged — see <code>docs/agents/UI_LABEL_MAP.md</code>.</p>
+      <div class="framework-visual">
+        <h3>Vozmezdie analytical framework</h3>
+        <div class="fw-columns">
+          <div class="fw-col">
+            <strong>Specific Details</strong>
+            <span class="tech">Content data · categories</span>
+          </div>
+          <div class="fw-col">
+            <strong>Ideological Layers</strong>
+            <span class="tech">Language data · framing</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>Vozmezdie framework · Introduction page · Regenerate report with <span style="font-family:'JetBrains Mono',monospace">python run_report_only.py</span></footer>
+  <section class="video-section-narrow" style="padding: 2rem 1.25rem 3rem;">
+    <h2 style="font-size: 1.35rem; color: var(--ink); border-bottom: 1px solid var(--card-border); padding-bottom: 0.4rem; margin-bottom: 1rem;">How to use the site (video)</h2>
+    <p class="video-note">Short overview of the Research Lab layout and main tools.</p>
+    <div class="video-wrap" aria-label="YouTube video player">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/bHzHlSLhtmM?si=ZMpLZY3hgkpKi4tK" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+  </section>
+</body>
+</html>

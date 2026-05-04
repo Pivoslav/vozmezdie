@@ -9,6 +9,7 @@ import json
 import re
 from pathlib import Path
 from urllib.parse import quote
+from collections import defaultdict
 from typing import Dict, List, Any, Tuple, Optional, Set
 
 from ingest import _find_original_pdf, _sanitize_pdf_root_rel
@@ -90,9 +91,48 @@ _UI_TRANSLATIONS = {
     "intro_cap_a": {"en": "Read aligned English and Russian segments side by side with search and filters.", "uk": "Читати вирівняні англійські та російські сегменти поруч із пошуком і фільтрами."},
     "intro_cap_b": {"en": "Inspect specific details (what the segment is about) and ideological layers (how it is phrased).", "uk": "Переглядати конкретні деталі (про що сегмент) та ідеологічні шари (як це сформульовано)."},
     "intro_cap_c": {"en": "Open human vs AI comparison tables and optional scans (PDF) when configured.", "uk": "Відкривати таблиці порівняння людина проти ШІ та за потреби скани (PDF)."},
-    "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and glossary-backed definitions.", "uk": "Використовувати дослідницьку лабораторію для графіків по корпусу, карт та визначень у глосарії."},
-    "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.", "uk": "Екранна кирилична клавіатура: відкрийте вкладку документа або глосарій і натисніть у поле пошуку (англійською чи російською) — з’явиться спливаюча клавіатура."},
+    "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.", "uk": "Використовуйте дослідницьку лабораторію для графіків по корпусу, карт і глосарія (внизу сторінки лабораторії) з визначеннями таксономії."},
+    "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.", "uk": "Екранна кирилична клавіатура: відкрийте вкладку документа або поле пошуку глосарія на сторінці лабораторії й натисніть у поле пошуку — з’явиться спливаюча клавіатура."},
+    "intro_video_heading": {"en": "How to use this site (video)", "uk": "Як користуватися сайтом (відео)"},
+    "intro_video_note": {"en": "Short overview of the Research Lab layout and main tools.", "uk": "Короткий огляд інтерфейсу дослідницької лабораторії та основних інструментів."},
     "intro_cap_f": {"en": "Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.", "uk": "Альтернативні мітки з таблиці порівняння — кнопка «+»: модальне вікно; пропозиції зберігаються в браузері й експортуються як JSON."},
+    "intro_lead_para": {"en": "This page orients you to the project. Use the shortcuts below to open corpus tools in this same page, or watch the walkthrough at the end.", "uk": "Ця сторінка допомагає орієнтуватися в проєкті. Скорочення нижче відкривають інструменти корпусу на цій же сторінці; наприкінці — відеоогляд."},
+    "intro_open_lab_heading": {"en": "Open the Research Lab", "uk": "Відкрити дослідницьку лабораторію"},
+    "intro_go_lab_btn": {"en": "Research Lab (charts & glossary)", "uk": "Лабораторія (діаграми й глосарій)"},
+    "intro_jump_glossary_btn": {"en": "Jump to glossary", "uk": "Перейти до глосарію"},
+    "intro_open_lab_note": {"en": "You are already in the app; these buttons switch the main panel. The glossary sits at the bottom of the Research Lab tab.", "uk": "Ви вже в застосунку; ці кнопки перемикають основну панель. Глосарій — внизу вкладки «Дослідницька лабораторія»."},
+    "intro_tools_heading": {"en": "Ways to interact with the data", "uk": "Як працювати з даними"},
+    "intro_tools_lead": {"en": "Each capability lives in this Research Lab unless noted. Combine close reading with corpus-level patterns.", "uk": "Можливості нижче доступні в цій лабораторії. Поєднуйте читання тексту з оглядом корпусу."},
+    "intro_tool_doc_tag": {"en": "Document tabs", "uk": "Вкладки документів"},
+    "intro_tool_doc_h": {"en": "Bilingual text view", "uk": "Двомовний текст"},
+    "intro_tool_doc_p": {"en": "Aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.", "uk": "Вирівняні англійські й російські сегменти з синхронним прокручуванням, пошуком і фільтрами за категорією та фреймінгом."},
+    "intro_tool_compare_tag": {"en": "Same tab", "uk": "Та сама вкладка"},
+    "intro_tool_compare_h": {"en": "Comparison table", "uk": "Таблиця порівняння"},
+    "intro_tool_compare_p": {"en": "Human vs model labels row by row; jump from a row into the text view. Export aligned comparison as JSON where enabled.", "uk": "Мітки людини проти моделі по рядках; перехід до тексту з рядка. Експорт JSON за підтримки."},
+    "intro_tool_viz_tag": {"en": "Research Lab", "uk": "Лабораторія"},
+    "intro_tool_viz_h": {"en": "Corpus visualizations", "uk": "Візуалізації корпусу"},
+    "intro_tool_viz_p": {"en": "Word clouds, category and framing distributions, agreement summaries, mismatch views, and charts tied to loaded documents.", "uk": "Хмари слів, розподіли категорій і фреймінгу, узгодженість, невідповідності та діаграми за документами."},
+    "intro_tool_map_tag": {"en": "Research Lab", "uk": "Лабораторія"},
+    "intro_tool_map_h": {"en": "Places map", "uk": "Карта місць"},
+    "intro_tool_map_p": {"en": "Geocoded locations when place data is present; explore mentions from the map.", "uk": "Геокодування за наявності даних; перегляд згадок з карти."},
+    "intro_tool_gloss_tag": {"en": "Bottom of Lab", "uk": "Низ лабораторії"},
+    "intro_tool_gloss_h": {"en": "Glossary and terms", "uk": "Глосарій і терміни"},
+    "intro_tool_gloss_p": {"en": "Taxonomy definitions plus corpus terms, search (including regex), document filter, and links to segment anchors.", "uk": "Визначення таксономії та терміни корпусу, пошук (regex), фільтр документів і посилання на сегменти."},
+    "intro_tool_tax_tag": {"en": "Intro & Lab", "uk": "Вступ і лабораторія"},
+    "intro_tool_tax_h": {"en": "Taxonomy reference", "uk": "Довідка таксономії"},
+    "intro_tool_tax_p": {"en": "Collapsible reference on how categories and framing are qualified, aligned with Categories Explained where configured.", "uk": "Згортний блок про кваліфікацію категорій і фреймінгу, узгоджено з Categories Explained за наявності."},
+    "intro_tool_suggest_tag": {"en": "Comparison rows", "uk": "Рядки порівняння"},
+    "intro_tool_suggest_h": {"en": "Label suggestions", "uk": "Пропозиції міток"},
+    "intro_tool_suggest_p": {"en": "In-page modal from the “+” control: propose alternate labels; persist in the browser and download JSON.", "uk": "Модальне вікно через «+»: альтернативні мітки; збереження в браузері та завантаження JSON."},
+    "intro_tool_ui_tag": {"en": "Throughout", "uk": "Усюди"},
+    "intro_tool_ui_h": {"en": "UI language & typing", "uk": "Мова інтерфейсу й введення"},
+    "intro_tool_ui_p": {"en": "English / Ukrainian toggle where available. Cyrillic popup keyboard on search fields without switching OS layouts.", "uk": "Перемикач EN/UK де доступно. Спливаюча кирилична клавіатура в полях пошуку."},
+    "intro_framework_heading": {"en": "Analytical framework", "uk": "Аналітична рамка"},
+    "intro_framework_visual_title": {"en": "Vozmezdie analytical framework", "uk": "Аналітична рамка Vozmezdie"},
+    "intro_fw_specific_label": {"en": "Specific Details", "uk": "Конкретні деталі"},
+    "intro_fw_specific_sub": {"en": "Content data · categories", "uk": "Контентні дані · категорії"},
+    "intro_fw_ideo_label": {"en": "Ideological Layers", "uk": "Ідеологічні шари"},
+    "intro_fw_ideo_sub": {"en": "Language data · framing", "uk": "Мовні дані · фреймінг"},
     "analysis_by_head": {"en": "Analysis by", "uk": "Аналіз за"},
     "viz_standalone_full_report": {"en": "Open full Research Lab", "uk": "Відкрити повну дослідницьку лабораторію"},
     "viz_standalone_subtitle": {"en": "Single-chart view. Language and chart choice sync with the main lab when possible.", "uk": "Окремий перегляд діаграми. Мова та вибір графіка синхронізуються з основною лабораторією за можливості."},
@@ -208,7 +248,7 @@ _UI_TRANSLATIONS = {
     "project_overview": {"en": "Project Overview", "uk": "Огляд проекту"},
     "taxonomy_reference": {"en": "How Specific Details and Ideological Layers Are Qualified", "uk": "Як кваліфікуються конкретні деталі та ідеологічні шари"},
     "taxonomy_reference_intro": {"en": "This report uses a reference taxonomy from Categories Explained. Segments carry labels for specific details (what is discussed; stored as content categories) and ideological layers (how it is phrased; stored as framing strategies). Below is how each is defined and qualified.", "uk": "Цей звіт використовує довідкову таксономію з Categories Explained. Сегменти мають мітки конкретних деталей (що обговорюється; зберігаються як категорії контенту) та ідеологічних шарів (як це сформульовано; зберігаються як стратегії фреймінгу). Нижче наведено визначення та критерії кваліфікації."},
-    "project_description": {"en": "Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, glossary, and visualizations.", "uk": "Vozmezdie — модульний конвеєр для експертної оцінки LLM щодо розсекречених архівних документів колишнього КДБ. Документи інгестуються, обробляються LLM для екстракції (конкретні деталі та ідеологічні шари) та порівнюються з експертно розміченими даними. Ця дослідницька лабораторія надає інтерактивний аналіз: перегляд тексту з двомовним виділенням, таблиці порівняння, глосарій та візуалізації."},
+    "project_description": {"en": "Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.", "uk": "Vozmezdie — модульний конвеєр для експертної оцінки LLM щодо розсекречених архівних документів колишнього КДБ. Документи інгестуються, обробляються LLM для екстракції (конкретні деталі та ідеологічні шари) та порівнюються з експертно розміченими даними. Ця дослідницька лабораторія надає інтерактивний аналіз: перегляд тексту з двомовним виділенням, таблиці порівняння, візуалізації та глосарій внизу сторінки лабораторії."},
     "dataset_statistics": {"en": "Dataset Statistics", "uk": "Статистика набору даних"},
     "document": {"en": "Document", "uk": "Документ"},
     "segments": {"en": "Segments", "uk": "Сегменти"},
@@ -571,6 +611,46 @@ def _normalize_segment_for_search(segment: str) -> str:
     return " ".join((segment or "").split())
 
 
+def _segment_occurrences(full_text: str, segment: str) -> List[Tuple[int, str]]:
+    """All non-overlapping occurrences of segment in full_text (left to right).
+
+    Tries exact substring, then whitespace-normalized substring, then flexible-regex
+    between words (same strategy as legacy first-match, but every occurrence).
+    """
+    seg = (segment or "").strip()
+    if not seg or not full_text:
+        return []
+    out: List[Tuple[int, str]] = []
+    pos = 0
+    while True:
+        idx = full_text.find(seg, pos)
+        if idx == -1:
+            break
+        out.append((idx, seg))
+        pos = idx + max(1, len(seg))
+    if out:
+        return out
+    norm = _normalize_segment_for_search(seg)
+    if norm and norm != seg:
+        pos = 0
+        while True:
+            idx = full_text.find(norm, pos)
+            if idx == -1:
+                break
+            out.append((idx, norm))
+            pos = idx + max(1, len(norm))
+    if out:
+        return out
+    try:
+        parts = norm.split()
+        pattern = r"\s+".join(re.escape(p) for p in parts) if parts else re.escape(norm)
+        for m in re.finditer(pattern, full_text, re.IGNORECASE):
+            out.append((m.start(), m.group(0)))
+    except Exception:
+        pass
+    return out
+
+
 def _normalize_term_key(s: str) -> str:
     """Normalize for term_synonyms lookup: strip, collapse whitespace."""
     if not s:
@@ -619,32 +699,30 @@ def _get_accepted_segments(
     entry_key: str,
 ) -> List[Tuple[int, int, str, Dict, int]]:
     """Return list of (idx, length, segment, row_dict, row_index) for segments that fit without overlap.
-    Shorter segments win when overlapping (e.g. 'arrived' preferred over 'delegation arrived' at same span).
-    Row index is position in aligned (so Eng and Rus can be matched)."""
+
+    Rows are matched to successive occurrences of the same substring (1st row → 1st ``foo``, 2nd → 2nd ``foo``),
+    so repeated English phrases do not all collapse onto the first hit (which made the EN panel look truncated
+    compared to Russian).
+
+    Shorter segments still win when spans overlap (e.g. ``arrived`` vs ``delegation arrived``).
+    Row index is position in aligned (so Eng and Rus panels pair by row).
+    """
     if not full_text or not aligned:
         return []
+    next_occurrence: Dict[str, int] = defaultdict(int)
     candidates: List[Tuple[int, int, str, Dict, int]] = []
     for row_index, r in enumerate(aligned):
         segment = (r.get(entry_key) or "").strip()
         if not segment:
             continue
-        norm = _normalize_segment_for_search(segment)
-        idx = full_text.find(segment, 0)
-        if idx == -1 and norm != segment:
-            idx = full_text.find(norm, 0)
-        if idx == -1:
-            try:
-                parts = norm.split()
-                pattern = r"\s+".join(re.escape(p) for p in parts) if parts else re.escape(norm)
-                m = re.search(pattern, full_text, re.IGNORECASE)
-                if m:
-                    idx = m.start()
-                    segment = m.group(0)
-            except Exception:
-                pass
-        if idx == -1:
+        occ_key = _normalize_segment_for_search(segment) or segment
+        occ_list = _segment_occurrences(full_text, segment)
+        k = next_occurrence[occ_key]
+        if k >= len(occ_list):
             continue
-        candidates.append((idx, len(segment), segment, r, row_index))
+        idx, matched = occ_list[k]
+        next_occurrence[occ_key] += 1
+        candidates.append((idx, len(matched), matched, r, row_index))
     candidates.sort(key=lambda x: (x[1], x[0]))
     accepted: List[Tuple[int, int, str, Dict, int]] = []
     for item in candidates:
@@ -773,6 +851,10 @@ def run(
     out_path = out_dir / html_name
     viz_out_path = out_dir / viz_html_name
 
+    _docs_root = (_REPORT_ROOT / "docs").resolve()
+    # Full introduction lives on the Introduction tab; no separate header link.
+    hdr_guide: Dict[str, str] = {}
+
     categories = filter_content_categories_for_taxonomy(list(taxonomy.get("content_categories", [])))
     framings = list(taxonomy.get("framing_strategies", []))
     allowed_cat_ids, allowed_fram_ids = _load_allowed_taxonomy_ids_from_json(config)
@@ -822,6 +904,17 @@ def run(
         f'data-main-report="{html_module.escape(html_name, quote=True)}" '
         f'data-lab-viz="{html_module.escape(viz_html_name, quote=True)}"'
     )
+    from_ce = bool(glossary_cats or glossary_fram)
+    glossary_panel_html = _glossary_tab(
+        glossary_categories,
+        glossary_framings,
+        comparison_by_doc,
+        documents,
+        cat_colours,
+        fram_colours,
+        from_categories_explained=from_ce,
+        config=config,
+    )
     home_html, viz_json, heatmap_html, places_map_srcdoc = _homepage(
         comparison_by_doc,
         documents,
@@ -831,10 +924,11 @@ def run(
         glossary_categories,
         glossary_framings,
         taxonomy_framings=framings_ui,
+        glossary_panel_html=glossary_panel_html,
     )
     parts = [
         _head(body_attrs=body_attrs, build_meta=build_meta),
-        _master_header(),
+        _master_header(**hdr_guide),
         '<div class="app-container">',
         _sidebar(documents, comparison_by_doc),
         '<div class="main-content" id="tab-contents">',
@@ -894,19 +988,6 @@ def run(
             )
         )
 
-    from_ce = bool(glossary_cats or glossary_fram)
-    parts.append(
-        _glossary_tab(
-            glossary_categories,
-            glossary_framings,
-            comparison_by_doc,
-            documents,
-            cat_colours,
-            fram_colours,
-            from_categories_explained=from_ce,
-            config=config,
-        )
-    )
     parts.append("</div></div>")
     parts.append(_label_suggestion_modal_html())
     term_synonyms = _load_term_synonyms()
@@ -915,7 +996,7 @@ def run(
 
     standalone_parts = [
         _head(body_attrs='class="standalone-viz-page"', build_meta=build_meta),
-        _master_header(link_href=html_name, link_i18n_key="viz_standalone_full_report"),
+        _master_header(link_href=html_name, link_i18n_key="viz_standalone_full_report", **hdr_guide),
         '<div class="standalone-viz-wrap">',
         '<p class="viz-standalone-subtitle" data-i18n="viz_standalone_subtitle">Single-chart view. Language and chart choice sync with the main lab when possible.</p>',
         _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc),
@@ -939,6 +1020,7 @@ def _head(*, body_attrs: str = "", build_meta: str = "") -> str:
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="max-age=0, must-revalidate"/>
 """
         + meta_extra
         + """<title>Vozmezdie — Research Lab</title>
@@ -951,6 +1033,8 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .master-header { background: linear-gradient(180deg, #4a4038 0%, #3d352e 100%); color: #f5f0e6; padding: 1.5rem 2rem; border-bottom: 2px solid #8b7355; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
 .master-header-link { color: #e8e4dc; text-decoration: underline; text-underline-offset: 3px; font-size: 0.95rem; margin-left: 1rem; }
 .master-header-link:hover { color: #fff; }
+.master-header-links { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; margin-left: 1rem; }
+.master-header-links .master-header-link { margin-left: 0; }
 .master-header h1 { font-family: 'Crimson Text', Georgia, serif; font-weight: 700; letter-spacing: 0.02em; }
 .master-header-badge { font-family: 'Stardos Stencil', 'Impact', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.12em; padding: 0.4rem 0.75rem; border: 2px solid #8b0000; border-radius: 2px; color: #8b0000; background: rgba(245,240,230,0.15); }
 .master-header .lang-toggle { margin-left: auto; }
@@ -1242,6 +1326,72 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .homepage-section:last-child { margin-bottom: 0; }
 .homepage-section h3 { color: #4a5568; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 1px solid rgba(139,115,85,0.3); padding-bottom: 0.5rem; }
 .homepage-section h4 { color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem; }
+.intro-video-note { font-size: 0.95rem; color: #4a5568; margin-bottom: 0.75rem; line-height: 1.5; }
+.intro-video-section { max-width: 28rem; margin-left: auto; margin-right: auto; }
+.intro-video-wrap { position: relative; width: 100%; max-width: 28rem; margin: 0 auto; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; border: 1px solid #8b7355; background: #1a1a1a; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+.intro-video-wrap iframe { display: block; width: 100%; height: 100%; border: 0; }
+.intro-lead { font-size: 1.02rem; color: #5a5348; line-height: 1.6; margin: 0 0 1rem 0; }
+.intro-dual-cta { display: flex; flex-wrap: wrap; gap: 1rem; align-items: stretch; margin: 1rem 0 0.5rem; }
+.intro-cta-btn { display: inline-block; padding: 0.75rem 1.35rem; background: #8b0000; color: #f5f0e6; text-decoration: none; font-weight: 600; border-radius: 4px; border: 1px solid #6b0000; cursor: pointer; font-family: inherit; font-size: 1rem; text-align: center; flex: 1 1 12rem; max-width: 22rem; }
+.intro-cta-btn:hover { background: #6b0000; color: #f5f0e6; }
+.intro-cta-btn.secondary { background: transparent; color: #8b0000; }
+.intro-cta-btn.secondary:hover { background: rgba(139,0,0,0.08); }
+.intro-cta-note { font-size: 0.82rem; color: #6b7280; margin-top: 0.75rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5; }
+.intro-tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem 1.15rem; margin-top: 1rem; }
+.intro-tool-card { background: #fff; border: 1px solid rgba(139,115,85,0.35); border-radius: 6px; padding: 1rem 1.1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.intro-tool-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #8b7355; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; display: block; }
+.intro-tool-card h4 { font-size: 1rem; color: #8b0000; letter-spacing: 0.02em; margin-bottom: 0.4rem; font-weight: 600; }
+.intro-tool-card p { font-size: 0.9rem; color: #5a5348; line-height: 1.55; margin: 0; }
+.intro-cap-list { list-style: none; padding: 0; margin-top: 0.75rem; }
+.intro-cap-list li { position: relative; padding-left: 1.35rem; margin-bottom: 0.7rem; color: #5a5348; font-size: 0.95rem; line-height: 1.5; }
+.intro-cap-list li::before { content: ""; position: absolute; left: 0; top: 0.52rem; width: 0.42rem; height: 0.42rem; background: #8b0000; border-radius: 50%; opacity: 0.85; }
+.intro-framework-visual { border: 1px solid rgba(139,115,85,0.5); border-radius: 6px; padding: 1.1rem 1rem; background: #f8f6f2; margin-top: 0.75rem; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+.intro-framework-visual h4 { font-size: 1rem; color: #8b0000; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1rem; font-weight: 600; }
+.intro-fw-columns { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+.intro-fw-col { flex: 1 1 11rem; padding: 1rem; border-radius: 4px; border: 1px dashed rgba(139,115,85,0.5); background: #fffef9; }
+.intro-fw-col strong { display: block; font-size: 0.95rem; margin-bottom: 0.35rem; color: #2d3748; }
+.intro-fw-col span.tech { font-size: 0.8rem; color: #6b7280; font-family: 'JetBrains Mono', monospace; }
+.lab-glossary-root { margin-top: 2rem; padding-top: 0; border-top: 2px solid rgba(139,115,85,0.4); scroll-margin-top: 1rem; }
+.lab-glossary-root .header { margin-bottom: 1.25rem; }
+.lab-glossary-collapsible-body > p:first-child { margin-top: 0; }
+.lab-visualizations-inner .viz-controls {
+  margin-top: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem 1rem;
+  align-items: end;
+}
+.lab-visualizations-inner .viz-controls > label[for="viz-select"] {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
+}
+.lab-visualizations-inner .viz-controls .viz-select {
+  grid-column: 1;
+  width: 100%;
+  max-width: 420px;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.lab-visualizations-inner .viz-controls .viz-open-new-tab-btn {
+  grid-column: 2;
+  align-self: end;
+  white-space: nowrap;
+  margin-left: 0;
+}
+@media (max-width: 540px) {
+  .lab-visualizations-inner .viz-controls .viz-open-new-tab-btn {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+.lab-visualizations-inner .viz-controls .viz-config-panel {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  margin-top: 0;
+}
+.taxonomy-ref-body .taxonomy-ref-block:first-child { margin-top: 0; }
 .stat-summary { margin-bottom: 1rem; font-size: 1rem; }
 .stat-bars-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
 @media (max-width: 700px) { .stat-bars-grid { grid-template-columns: 1fr; } }
@@ -1393,14 +1543,26 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
     )
 
 
-def _master_header(*, link_href: Optional[str] = None, link_i18n_key: Optional[str] = None) -> str:
-    """Top bar: optional single link (e.g. full lab from standalone viz page). Main report omits link."""
-    extra = ""
+def _master_header(
+    *,
+    link_href: Optional[str] = None,
+    link_i18n_key: Optional[str] = None,
+    guide_href: Optional[str] = None,
+    guide_i18n_key: Optional[str] = None,
+) -> str:
+    """Top bar: optional links (e.g. full lab link from standalone viz page). Site guide lives on the Introduction tab."""
+    links: List[str] = []
+    if guide_href and guide_i18n_key:
+        links.append(
+            f'<a class="master-header-link" href="{html_module.escape(guide_href, quote=True)}">'
+            f'<span data-i18n="{html_module.escape(guide_i18n_key)}"></span></a>'
+        )
     if link_href and link_i18n_key:
-        extra = (
+        links.append(
             f'<a class="master-header-link" href="{html_module.escape(link_href, quote=True)}">'
             f'<span data-i18n="{html_module.escape(link_i18n_key)}"></span></a>'
         )
+    extra = f'<span class="master-header-links">{"".join(links)}</span>' if links else ""
     return (
         '<div class="master-header">'
         '<h1>Vozmezdie</h1>'
@@ -2341,7 +2503,62 @@ def _intro_tab() -> str:
 <div class="homepage-content">
   <section class="homepage-section">
     <h3 data-i18n="project_overview">Project Overview</h3>
-    <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, glossary, and visualizations.</p>
+    <p class="intro-lead" data-i18n="intro_lead_para">This page orients you to the project. Use the shortcuts below to open corpus tools in this same page, or watch the walkthrough at the end.</p>
+    <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.</p>
+  </section>
+  <section class="homepage-section">
+    <h3 data-i18n="intro_open_lab_heading">Open the Research Lab</h3>
+    <div class="intro-dual-cta">
+      <button type="button" class="intro-cta-btn" data-i18n="intro_go_lab_btn" onclick="showTab('tab-home');">Research Lab (charts & glossary)</button>
+      <button type="button" class="intro-cta-btn secondary" data-i18n="intro_jump_glossary_btn" onclick="showTab('tab-home');setTimeout(function(){var g=document.getElementById('lab-glossary');if(g&&g.tagName==='DETAILS')g.open=true;if(g)g.scrollIntoView({behavior:'smooth',block:'start'});},120);">Jump to glossary</button>
+    </div>
+    <p class="intro-cta-note" data-i18n="intro_open_lab_note">You are already in the app; these buttons switch the main panel. The glossary sits at the bottom of the Research Lab tab.</p>
+  </section>
+  <section class="homepage-section">
+    <h3 data-i18n="intro_tools_heading">Ways to interact with the data</h3>
+    <p style="color:#5a5348;margin-bottom:0.25rem;font-size:1rem;line-height:1.55;" data-i18n="intro_tools_lead">Each capability lives in this Research Lab unless noted. Combine close reading with corpus-level patterns.</p>
+    <div class="intro-tools-grid">
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_doc_tag">Document tabs</span>
+        <h4 data-i18n="intro_tool_doc_h">Bilingual text view</h4>
+        <p data-i18n="intro_tool_doc_p">Aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_compare_tag">Same tab</span>
+        <h4 data-i18n="intro_tool_compare_h">Comparison table</h4>
+        <p data-i18n="intro_tool_compare_p">Human vs model labels row by row; jump from a row into the text view. Export aligned comparison as JSON where enabled.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_viz_tag">Research Lab</span>
+        <h4 data-i18n="intro_tool_viz_h">Corpus visualizations</h4>
+        <p data-i18n="intro_tool_viz_p">Word clouds, category and framing distributions, agreement summaries, mismatch views, and charts tied to loaded documents.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_map_tag">Research Lab</span>
+        <h4 data-i18n="intro_tool_map_h">Places map</h4>
+        <p data-i18n="intro_tool_map_p">Geocoded locations when place data is present; explore mentions from the map.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_gloss_tag">Bottom of Lab</span>
+        <h4 data-i18n="intro_tool_gloss_h">Glossary and terms</h4>
+        <p data-i18n="intro_tool_gloss_p">Taxonomy definitions plus corpus terms, search (including regex), document filter, and links to segment anchors.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_tax_tag">Intro & Lab</span>
+        <h4 data-i18n="intro_tool_tax_h">Taxonomy reference</h4>
+        <p data-i18n="intro_tool_tax_p">Collapsible reference on how categories and framing are qualified, aligned with Categories Explained where configured.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_suggest_tag">Comparison rows</span>
+        <h4 data-i18n="intro_tool_suggest_h">Label suggestions</h4>
+        <p data-i18n="intro_tool_suggest_p">In-page modal from the “+” control: propose alternate labels; persist in the browser and download JSON.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_ui_tag">Throughout</span>
+        <h4 data-i18n="intro_tool_ui_h">UI language & typing</h4>
+        <p data-i18n="intro_tool_ui_p">English / Ukrainian toggle where available. Cyrillic popup keyboard on search fields without switching OS layouts.</p>
+      </article>
+    </div>
   </section>
   <section class="homepage-section">
     <h3 data-i18n="intro_capabilities_heading">What you can do here</h3>
@@ -2349,10 +2566,33 @@ def _intro_tab() -> str:
       <li data-i18n="intro_cap_a">Read aligned English and Russian segments side by side with search and filters.</li>
       <li data-i18n="intro_cap_b">Inspect specific details (what the segment is about) and ideological layers (how it is phrased).</li>
       <li data-i18n="intro_cap_c">Open human vs AI comparison tables and optional scans (PDF) when configured.</li>
-      <li data-i18n="intro_cap_d">Use the Research Lab for corpus-level charts, maps, and glossary-backed definitions.</li>
-      <li data-i18n="intro_cap_e">Use the on-screen Cyrillic keyboard: open any document tab or the glossary, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.</li>
+      <li data-i18n="intro_cap_d">Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.</li>
+      <li data-i18n="intro_cap_e">Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.</li>
       <li data-i18n="intro_cap_f">Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.</li>
     </ul>
+  </section>
+  <section class="homepage-section">
+    <h3 data-i18n="intro_framework_heading">Analytical framework</h3>
+    <div class="intro-framework-visual">
+      <h4 data-i18n="intro_framework_visual_title">Vozmezdie analytical framework</h4>
+      <div class="intro-fw-columns">
+        <div class="intro-fw-col">
+          <strong data-i18n="intro_fw_specific_label">Specific Details</strong>
+          <span class="tech" data-i18n="intro_fw_specific_sub">Content data · categories</span>
+        </div>
+        <div class="intro-fw-col">
+          <strong data-i18n="intro_fw_ideo_label">Ideological Layers</strong>
+          <span class="tech" data-i18n="intro_fw_ideo_sub">Language data · framing</span>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section class="homepage-section intro-video-section">
+    <h3 data-i18n="intro_video_heading">How to use this site (video)</h3>
+    <p class="intro-video-note" data-i18n="intro_video_note">Short overview of the Research Lab layout and main tools.</p>
+    <div class="intro-video-wrap" aria-label="YouTube video player">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/bHzHlSLhtmM?si=ZMpLZY3hgkpKi4tK" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
   </section>
 </div>
 </div>"""
@@ -2400,6 +2640,8 @@ def _homepage(
     glossary_categories: Optional[List[Dict[str, Any]]] = None,
     glossary_framings: Optional[List[Dict[str, Any]]] = None,
     taxonomy_framings: Optional[List[Dict[str, Any]]] = None,
+    *,
+    glossary_panel_html: str = "",
 ) -> Tuple[str, str, str, str]:
     """Research Lab tab HTML plus viz payload for standalone chart page."""
     stats = _compute_dataset_stats(comparison_by_doc, documents)
@@ -2515,14 +2757,20 @@ def _homepage(
 
     viz_section_markup = _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc)
     taxonomy_section = (
-        f'<section class="homepage-section"><details class="taxonomy-ref-details" open><summary style="cursor: pointer; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;"><span data-i18n="taxonomy_reference">How Categories and Framing Are Qualified</span></summary><p data-i18n="taxonomy_reference_intro" style="margin: 0.75rem 0 1rem;">This report uses a reference taxonomy from Categories Explained. Segments are classified by content category (what is discussed) and framing strategy (how it is phrased). Below is how each is defined and qualified.</p>{taxonomy_ref_html}</details></section>'
+        f'<details class="collapsible-section taxonomy-ref-details" id="lab-feature-taxonomy">'
+        f'<summary><span data-i18n="taxonomy_reference">How Categories and Framing Are Qualified</span></summary>'
+        f'<div class="collapsible-body taxonomy-ref-body">'
+        f'<p data-i18n="taxonomy_reference_intro" style="margin: 0 0 1rem; color: #4a5568; line-height: 1.55;">This report uses a reference taxonomy from Categories Explained. Segments are classified by content category (what is discussed) and framing strategy (how it is phrased). Below is how each is defined and qualified.</p>'
+        f"{taxonomy_ref_html}</div></details>"
         if taxonomy_ref_html else ""
     )
-    feedback_section = f"""  <section class="homepage-section homepage-feedback-section">
-    <h3 data-i18n="feedback">Feedback</h3>
+    feedback_section = f"""  <details class="collapsible-section homepage-feedback-section" id="lab-feature-feedback">
+    <summary><span data-i18n="feedback">Feedback</span></summary>
+    <div class="collapsible-body">
     <p data-i18n="feedback_intro">Submit general requests or suggest labels for tagged sections.</p>
     {feedback_form}
-  </section>"""
+    </div>
+  </details>"""
 
     home_html = f"""
 <div class="tab-content" id="tab-home">
@@ -2533,6 +2781,8 @@ def _homepage(
   {taxonomy_section}
 
   {feedback_section}
+
+  {glossary_panel_html}
 </div>
 </div>"""
     return home_html, viz_json, heatmap_html, places_map_srcdoc
@@ -2540,12 +2790,11 @@ def _homepage(
 
 
 def _sidebar(documents: List[Dict[str, Any]], comparison_by_doc: Dict[str, Dict[str, Any]]) -> str:
-    """Sidebar navigation: Introduction, Research Lab, documents, Glossary."""
+    """Sidebar navigation: Introduction, Research Lab, documents (glossary lives at bottom of Lab)."""
     items = []
     items.append('<div class="sidebar-section-title" data-i18n="navigation">Navigation</div>')
     items.append('<button class="sidebar-nav-item active" onclick="showTab(\'tab-intro\')" data-i18n="intro_landing_link">Introduction</button>')
     items.append('<button class="sidebar-nav-item" onclick="showTab(\'tab-home\')" data-i18n="home">Research Lab</button>')
-    items.append('<button class="sidebar-nav-item" onclick="showTab(\'tab-glossary\')" data-i18n="glossary">Glossary</button>')
     items.append('<div class="sidebar-section-title" data-i18n="documents">Documents</div>')
     for doc in documents:
         doc_id = doc.get("document_id", "")
@@ -2561,7 +2810,6 @@ def _tabs(documents: List[Dict[str, Any]]) -> str:
         display_name = doc.get("display_name", doc_id)
         active = " active" if doc == documents[0] else ""
         buttons.append(f'<button class="tab-button{active}" onclick="showTab(\'tab-{doc_id}\')">{display_name}</button>')
-    buttons.append('<button class="tab-button" onclick="showTab(\'tab-glossary\')" data-i18n="glossary">Glossary</button>')
     return '<div class="tabs" id="tabs-container">' + "\n".join(buttons) + "</div>"
 
 
@@ -2970,6 +3218,7 @@ def _glossary_tab(
     from_categories_explained: bool = False,
     config: Optional[Dict[str, Any]] = None,
 ) -> str:
+    """Build glossary HTML embedded at the bottom of the Research Lab tab."""
     terms_by_cat, terms_by_fram, all_terms, term_docs, term_locations = _collect_terms_from_comparison(
         comparison_by_doc
     )
@@ -3080,12 +3329,10 @@ def _glossary_tab(
     )
     glossary_cyr = _cyrillic_keyboard_html("glossary")
     return (
-        """<div class="tab-content" id="tab-glossary">
-<div class="header">
-<h2 data-i18n="glossary_of_terms">Glossary of Terms</h2>
-<p data-i18n="glossary_intro">Definitions and examples for content categories and framing strategies used in document analysis.</p>
-</div>
-<div style="background: #fffef9; padding: 2rem; border-radius: 4px; border: 1px solid #8b7355; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 2rem;">
+        """<details class="collapsible-section lab-glossary-root" id="lab-glossary" aria-labelledby="lab-glossary-heading">
+<summary><span id="lab-glossary-heading" data-i18n="glossary_of_terms">Glossary of Terms</span></summary>
+<div class="collapsible-body lab-glossary-collapsible-body">
+<p data-i18n="glossary_intro" style="margin: 0 0 1rem; color: #4a5568; line-height: 1.55;">Definitions and examples for content categories and framing strategies used in document analysis.</p>
 <div class="glossary-controls">
 <div class="glossary-search-cyrillic-anchor">
 <input type="search" id="glossary-search" class="glossary-search" placeholder="Search glossary by name or definition..." data-i18n="glossary_search_placeholder" autocomplete="off"/>
@@ -3118,7 +3365,7 @@ def _glossary_tab(
         + chr(10).join(fram_sections)
         + """
 </div>
-</div>"""
+</details>"""
     )
 
 
@@ -3362,7 +3609,7 @@ function setLanguage(lang) {
     } catch (e2) {}
   });
   var visibleTab = document.querySelector('.tab-content.active');
-  if (visibleTab && visibleTab.id && visibleTab.id.indexOf('tab-glossary') === -1 && visibleTab.id !== 'tab-home' && visibleTab.id !== 'tab-intro') {
+  if (visibleTab && visibleTab.id && visibleTab.id !== 'tab-home' && visibleTab.id !== 'tab-intro') {
     var tid = visibleTab.id.replace('tab-', '');
     if (tid && typeof onDocumentTabShown === 'function') onDocumentTabShown(tid);
   }
@@ -3378,11 +3625,10 @@ function showTab(tabId) {
   for (var i = 0; i < btns.length; i++) {
     if (btns[i].getAttribute('onclick') && btns[i].getAttribute('onclick').indexOf(tabId) !== -1) btns[i].classList.add('active');
   }
-  if (tabId && tabId !== 'tab-home' && tabId !== 'tab-intro' && tabId.indexOf('tab-glossary') === -1) {
+  if (tabId && tabId !== 'tab-home' && tabId !== 'tab-intro') {
     var tid = tabId.replace('tab-', '');
     if (tid && typeof onDocumentTabShown === 'function') onDocumentTabShown(tid);
   }
-  if (tabId === 'tab-glossary' && typeof applyGlossaryFilters === 'function') applyGlossaryFilters();
 }
 var scrollSyncInitialized = {};
 function initScrollSyncForDoc(tid) {
@@ -3900,8 +4146,7 @@ function glossarySearchMatcher(query) {
       var flagSet = new Set(['u', 'i']);
       if (/m/i.test(fp)) flagSet.add('m');
       if (/s/i.test(fp)) flagSet.add('s');
-      if (/g/i.test(fp)) flagSet.add('g');
-      if (/y/i.test(fp)) flagSet.add('y');
+      /* Omit g and y: one RegExp is reused for many .test() calls; global/sticky patterns mutate lastIndex and break filtering. */
       var flags = Array.from(flagSet).join('');
       var re = new RegExp(parsed.body, flags);
       return function(text) { return re.test(text || ''); };
@@ -3916,7 +4161,7 @@ function applyGlossaryFilters() {
   var q = (searchEl && searchEl.value) ? (searchEl.value || '').trim() : '';
   var docId = (filterEl && filterEl.value) ? filterEl.value : '';
   var matchFn = glossarySearchMatcher(q);
-  var sections = document.querySelectorAll('#tab-glossary .glossary-searchable-section');
+  var sections = document.querySelectorAll('#lab-glossary .glossary-searchable-section');
   sections.forEach(function(s) {
     var sectionBlob = s.getAttribute('data-text') || '';
     var sectionMatchesSearch = !q || matchFn(sectionBlob);
@@ -4856,22 +5101,44 @@ function initViz() {
   var data;
   try { data = JSON.parse(jsonEl.textContent); } catch(e) { return; }
   var cfg = getVizConfig();
+  var labDet = document.getElementById('lab-visualizations');
+  function labVizSectionOpen() {
+    return !labDet || labDet.tagName !== 'DETAILS' || labDet.open;
+  }
+  function syncPanelsAndRender(selection) {
+    document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
+    var panel = document.getElementById('viz-' + selection);
+    if (panel) {
+      panel.classList.add('active');
+      if (labVizSectionOpen()) renderVizPanel('viz-' + selection, data);
+    }
+    buildConfigPanel('viz-' + selection, data);
+  }
   var select = document.getElementById('viz-select');
   if (select) {
     select.value = cfg.selection;
     select.addEventListener('change', function() {
       var v = select.value;
-      saveVizConfig(v, cfg.config);
-      document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
-      var panel = document.getElementById('viz-' + v);
-      if (panel) { panel.classList.add('active'); renderVizPanel('viz-' + v, data); }
-      buildConfigPanel('viz-' + v, data);
+      var cur = getVizConfig();
+      saveVizConfig(v, cur.config);
+      syncPanelsAndRender(v);
     });
   }
-  document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
-  var panel = document.getElementById('viz-' + cfg.selection);
-  if (panel) { panel.classList.add('active'); renderVizPanel('viz-' + cfg.selection, data); }
-  buildConfigPanel('viz-' + cfg.selection, data);
+  syncPanelsAndRender(cfg.selection);
+  if (labDet && labDet.tagName === 'DETAILS') {
+    labDet.addEventListener('toggle', function() {
+      if (!labDet.open) return;
+      var cur = getVizConfig();
+      var sel = (select && select.value) ? select.value : cur.selection;
+      renderVizPanel('viz-' + sel, data);
+      requestAnimationFrame(function() {
+        Object.keys(vizChartInstances).forEach(function(k) {
+          var ch = vizChartInstances[k];
+          if (ch && typeof ch.resize === 'function') ch.resize();
+        });
+      });
+    });
+  }
   var configBody = document.getElementById('viz-config-body');
   if (configBody) {
     configBody.addEventListener('change', function(e) {
@@ -5035,6 +5302,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       setTimeout(function() {
         var anchor = document.getElementById('lab-visualizations');
+        if (anchor && anchor.tagName === 'DETAILS') anchor.open = true;
         if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
       return;
@@ -5064,6 +5332,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       setTimeout(function() {
         var anchor = document.getElementById('lab-visualizations');
+        if (anchor && anchor.tagName === 'DETAILS') anchor.open = true;
         if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
       return;
@@ -5077,6 +5346,15 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     var tabId = h.slice(1);
+    if (tabId === 'tab-glossary' || tabId === 'lab-glossary') {
+      showTab('tab-home');
+      setTimeout(function() {
+        var el = document.getElementById('lab-glossary');
+        if (el && el.tagName === 'DETAILS') el.open = true;
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+      return;
+    }
     if (document.getElementById(tabId)) showTab(tabId);
   }
   applyHashNav();
@@ -5109,7 +5387,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', function() { setLanguage(btn.getAttribute('data-lang')); });
   });
   var active = document.querySelector('.tab-content.active');
-  if (active && active.id && active.id.indexOf('tab-glossary') === -1 && active.id !== 'tab-home' && active.id !== 'tab-intro') {
+  if (active && active.id && active.id !== 'tab-home' && active.id !== 'tab-intro') {
     var tid = active.id.replace('tab-', '');
     if (tid) onDocumentTabShown(tid);
   }

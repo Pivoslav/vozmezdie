@@ -66,8 +66,9 @@ def per_document_viz_section(dom_suffix: str, viz_json: str, heatmap_html: str, 
 
 
 def viz_lab_visualizations_section(viz_json: str, heatmap_html: str, places_map_srcdoc: str) -> str:
-    return f"""  <section class="homepage-section" id="lab-visualizations">
-    <h3 data-i18n="visualizations">Visualizations</h3>
+    return f"""  <details class="collapsible-section lab-visualizations-collapsible" id="lab-visualizations">
+    <summary><span data-i18n="visualizations">Visualizations</span></summary>
+    <div class="collapsible-body lab-visualizations-inner">
     <script type="application/json" id="viz-data">{viz_json}</script>
     <div class="viz-controls">
       <label for="viz-select" data-i18n="select_visualization">Select visualization:</label>
@@ -146,5 +147,6 @@ def viz_lab_visualizations_section(viz_json: str, heatmap_html: str, places_map_
         <div class="viz-panel" id="viz-mismatch" data-viz="mismatch"><div class="chart-wrap"><canvas id="chart-mismatch"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_mismatch_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_mismatch_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_mismatch_technical"></p></div></details></div>
       </div>
     </div>
-  </section>
+    </div>
+  </details>
 """
