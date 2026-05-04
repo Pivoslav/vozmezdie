@@ -1,0 +1,530 @@
+[
+  {
+    "section": 39,
+    "entry_eng": "visiting",
+    "entry_rus": "посещение",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "visiting"
+  },
+  {
+    "section": 81,
+    "entry_eng": "arrived on private business",
+    "entry_rus": "прибывших по частным делам",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "arrived on private business"
+  },
+  {
+    "section": 95,
+    "entry_eng": "to prosecute",
+    "entry_rus": "по преследованию",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to prosecute"
+  },
+  {
+    "section": 97,
+    "entry_eng": "Nazi accomplicies",
+    "entry_rus": "нацистских пособников",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "Nazi accomplicies"
+  },
+  {
+    "section": 98,
+    "entry_eng": "As a result of",
+    "entry_rus": "В результате осуществления",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "As a result of"
+  },
+  {
+    "section": 99,
+    "entry_eng": "by the KGB of the republic",
+    "entry_rus": "органами КГБ республики",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "by the KGB of the republic"
+  },
+  {
+    "section": 100,
+    "entry_eng": "measures carried out [...] to discredit",
+    "entry_rus": "мероприятий по компрометации",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "measures carried out [...] to discredit"
+  },
+  {
+    "section": 105,
+    "entry_eng": "OUN members",
+    "entry_rus": "оуновцев",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "OUN members"
+  },
+  {
+    "section": 106,
+    "entry_eng": "and other fascist accomplicies",
+    "entry_rus": "и других фашистских пособников,",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "and other fascist accomplicies"
+  },
+  {
+    "section": 109,
+    "entry_eng": "was established",
+    "entry_rus": "была создана",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "was established"
+  },
+  {
+    "section": 110,
+    "entry_eng": "special government commission",
+    "entry_rus": "специальная правительственная комиссия",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "special government commission"
+  },
+  {
+    "section": 111,
+    "entry_eng": "to investigate",
+    "entry_rus": "по расследованию",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to investigate"
+  },
+  {
+    "section": 113,
+    "entry_eng": "reported in No. 69/sv",
+    "entry_rus": "(докладывалось № 69/св",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "reported in No. 69/sv"
+  },
+  {
+    "section": 116,
+    "entry_eng": "by the KGB of the Ukrainian SSR",
+    "entry_rus": "КГБ УССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "by the KGB of the Ukrainian SSR"
+  },
+  {
+    "section": 118,
+    "entry_eng": "the mentioned commission",
+    "entry_rus": "указанная комиссия",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the mentioned commission"
+  },
+  {
+    "section": 119,
+    "entry_eng": "submitted a report to the government",
+    "entry_rus": "представила правительству отчет",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "submitted a report to the government"
+  },
+  {
+    "section": 121,
+    "entry_eng": "in determining",
+    "entry_rus": "по определению",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "in determining"
+  },
+  {
+    "section": 122,
+    "entry_eng": "the legal basis",
+    "entry_rus": "правовой основы",
+    "content_category": "Legal Framework",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the legal basis"
+  },
+  {
+    "section": 123,
+    "entry_eng": "for prosecuting",
+    "entry_rus": "для привлечения к ответственности",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "for prosecuting"
+  },
+  {
+    "section": 124,
+    "entry_eng": "882 former accomplices",
+    "entry_rus": "882 бывших пособников",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "882 former accomplices"
+  },
+  {
+    "section": 125,
+    "entry_eng": "It was deemed appropriate",
+    "entry_rus": "Признано целесообразным",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "It was deemed appropriate"
+  },
+  {
+    "section": 126,
+    "entry_eng": "to terminate investigations",
+    "entry_rus": "прекратить расследование",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to terminate investigations"
+  },
+  {
+    "section": 134,
+    "entry_eng": "Investigations [...] will continue",
+    "entry_rus": "разбирательство будет продолжено",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Investigations [...] will continue"
+  },
+  {
+    "section": 135,
+    "entry_eng": "Materials",
+    "entry_rus": "Материалы",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Materials"
+  },
+  {
+    "section": 136,
+    "entry_eng": "concerning 20 executioners",
+    "entry_rus": "в отношении 20 карателей",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "concerning 20 executioners"
+  },
+  {
+    "section": 137,
+    "entry_eng": "were classified as particularly important",
+    "entry_rus": "квалифицированы как особо важные",
+    "content_category": "Legal Framework",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "were classified as particularly important"
+  },
+  {
+    "section": 138,
+    "entry_eng": "the commission demanded",
+    "entry_rus": "комиссия потребовала",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the commission demanded"
+  },
+  {
+    "section": 139,
+    "entry_eng": "from the justice authorities",
+    "entry_rus": "от органов юстиции",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "from the justice authorities"
+  },
+  {
+    "section": 140,
+    "entry_eng": "their deportation",
+    "entry_rus": "их депортации",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "their deportation"
+  },
+  {
+    "section": 141,
+    "entry_eng": "or criminal prosecution",
+    "entry_rus": "или привлечения к уголовной ответственности",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "or criminal prosecution"
+  },
+  {
+    "section": 145,
+    "entry_eng": "decided",
+    "entry_rus": "приняло решение",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "decided"
+  },
+  {
+    "section": 146,
+    "entry_eng": "to introduce [...] to the criminal legislation",
+    "entry_rus": "внести в уголовное законодательство",
+    "content_category": "Legal Framework",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "to introduce [...] to the criminal legislation"
+  },
+  {
+    "section": 147,
+    "entry_eng": "amendments",
+    "entry_rus": "ряд поправок",
+    "content_category": "Legal Framework",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "amendments"
+  },
+  {
+    "section": 148,
+    "entry_eng": "allowing judicial authorities",
+    "entry_rus": "разрешающих судебным органам",
+    "content_category": "Legal Framework",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "allowing judicial authorities"
+  },
+  {
+    "section": 149,
+    "entry_eng": "to prosecute",
+    "entry_rus": "вести дела",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to prosecute"
+  },
+  {
+    "section": 150,
+    "entry_eng": "war criminals",
+    "entry_rus": "на военных преступников",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "war criminals"
+  },
+  {
+    "section": 154,
+    "entry_eng": "The Committee for State Security of the republic",
+    "entry_rus": "Комитет госбезопасности республики",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The Committee for State Security of the republic"
+  },
+  {
+    "section": 155,
+    "entry_eng": "is continuing activities",
+    "entry_rus": "проводит дальнейшие мероприятия",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "is continuing activities"
+  },
+  {
+    "section": 156,
+    "entry_eng": "to push out to the West",
+    "entry_rus": "по продвижению на Запад",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to push out to the West"
+  },
+  {
+    "section": 158,
+    "entry_eng": "of fascist accomplices’ atrocities",
+    "entry_rus": "о злодеяниях фашистских пособников",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "of fascist accomplices’ atrocities"
+  },
+  {
+    "section": 160,
+    "entry_eng": "KGB of the USSR has been informed",
+    "entry_rus": "КГБ СССР доложено",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "KGB of the USSR has been informed"
+  },
+  {
+    "section": 161,
+    "entry_eng": "On the conclusion of the trial",
+    "entry_rus": "Об окончании судебного процесса",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "On the conclusion of the trial"
+  },
+  {
+    "section": 167,
+    "entry_eng": "an off-site session",
+    "entry_rus": "выездная сессия",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "an off-site session"
+  },
+  {
+    "section": 168,
+    "entry_eng": "of the Collegium for Criminal Cases",
+    "entry_rus": "коллегии по уголовным делам",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "of the Collegium for Criminal Cases"
+  },
+  {
+    "section": 169,
+    "entry_eng": "of the Supreme Court of the USSR",
+    "entry_rus": "Верховного суда СССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "of the Supreme Court of the USSR"
+  },
+  {
+    "section": 170,
+    "entry_eng": "having considered the criminal case against",
+    "entry_rus": "рассмотрев уголовное дело по обвинению",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "having considered the criminal case against"
+  },
+  {
+    "section": 181,
+    "entry_eng": "[charged]",
+    "entry_rus": "в преступлении,",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "[charged]"
+  },
+  {
+    "section": 182,
+    "entry_eng": "under Article 85, Part 1 of the Criminal Code of the RSFSR",
+    "entry_rus": "предусмотренном ст. 85, ч. 1 УК РСФСР",
+    "content_category": "Legal Framework",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "under Article 85, Part 1 of the Criminal Code of the RSFSR"
+  },
+  {
+    "section": 183,
+    "entry_eng": "violation of safety rules",
+    "entry_rus": "нарушение правил безопасности",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "violation of safety rules"
+  },
+  {
+    "section": 184,
+    "entry_eng": "and transport operation)",
+    "entry_rus": "и эксплуатации транспорта",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "and transport operation)"
+  },
+  {
+    "section": 185,
+    "entry_eng": "found them fully guilty",
+    "entry_rus": "признала их полностью виновными",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "found them fully guilty"
+  },
+  {
+    "section": 186,
+    "entry_eng": "of committing the said crime",
+    "entry_rus": "в совершении данного преступления,",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "of committing the said crime"
+  },
+  {
+    "section": 188,
+    "entry_eng": "(the beginning of the trial",
+    "entry_rus": "(о начале судебного процесса",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "(the beginning of the trial"
+  },
+  {
+    "section": 189,
+    "entry_eng": "was reported in No. 56/sv",
+    "entry_rus": "докладывалось № 56/св",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "was reported in No. 56/sv"
+  },
+  {
+    "section": 193,
+    "entry_eng": "were sentenced",
+    "entry_rus": "приговорены",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "were sentenced"
+  },
+  {
+    "section": 200,
+    "entry_eng": "will be collected",
+    "entry_rus": "с них будет взыскано",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "will be collected"
+  },
+  {
+    "section": 202,
+    "entry_eng": "The court issued",
+    "entry_rus": "Судом вынесено",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The court issued"
+  },
+  {
+    "section": 203,
+    "entry_eng": "a special ruling",
+    "entry_rus": "частное определение",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "a special ruling"
+  },
+  {
+    "section": 206,
+    "entry_eng": "and party committee",
+    "entry_rus": "и парткома",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "and party committee"
+  },
+  {
+    "section": 213,
+    "entry_eng": "on the criminal inaction",
+    "entry_rus": "о преступной бездеятельности",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "on the criminal inaction"
+  },
+  {
+    "section": 219,
+    "entry_eng": "of the [...] inspection authorities",
+    "entry_rus": "инспекции портнадзора",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "of the [...] inspection authorities"
+  },
+  {
+    "section": 221,
+    "entry_eng": "the USSR Register",
+    "entry_rus": "Регистра СССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the USSR Register"
+  },
+  {
+    "section": 232,
+    "entry_eng": "KGB authorities",
+    "entry_rus": "Органами КГБ",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "KGB authorities"
+  },
+  {
+    "section": 235,
+    "entry_eng": "are monitoring",
+    "entry_rus": "контролируется",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "are monitoring"
+  },
+  {
+    "section": 236,
+    "entry_eng": "KGB of the USSR has been informed",
+    "entry_rus": "КГБ СССР доложено",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "KGB of the USSR has been informed"
+  },
+  {
+    "section": 237,
+    "entry_eng": "the regional committee of the Communist Party of Ukraine has been notified",
+    "entry_rus": "обком Компартии Украины информирован",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the regional committee of the Communist Party of Ukraine has been notified"
+  }
+]

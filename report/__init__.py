@@ -3,6 +3,7 @@ Report module: build HTML from comparison results, document list, taxonomy, i18n
 Output: write report file(s) to output dir.
 Glossary definitions are always loaded from Categories Explained.html when available.
 """
+import copy
 import html as html_module
 import json
 import re
@@ -12,10 +13,67 @@ from typing import Dict, List, Any, Tuple, Optional, Set
 
 from ingest import _find_original_pdf, _sanitize_pdf_root_rel
 
+from config.taxonomy_categories import (
+    GROUND_TRUTH_CONTENT_CATEGORY_REDIRECT,
+    canonical_content_category_id,
+    display_content_category_for_ui,
+    display_framing_for_ui,
+    filter_content_categories_for_taxonomy,
+    normalize_comparison_by_doc,
+    restrict_content_categories_to_allowed_ids,
+    restrict_framing_strategies_to_allowed_ids,
+    scrub_retired_multiword_category_labels,
+)
+
+from .viz_lab_html import per_document_viz_section as _per_document_viz_section
 from .viz_lab_html import viz_lab_visualizations_section as _viz_lab_visualizations_section
 
 # Project root (report/__init__.py -> parent's parent)
 _REPORT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _load_allowed_taxonomy_ids_from_json(config: Dict[str, Any]) -> Tuple[frozenset, frozenset]:
+    """Strict allowlists from taxonomy.json (project baseline categories / framings only)."""
+    tax_cfg = config.get("taxonomy")
+    rel = "config/taxonomy.json"
+    if isinstance(tax_cfg, dict) and tax_cfg.get("path"):
+        rel = tax_cfg["path"]
+    path = _REPORT_ROOT / rel
+    if not path.exists():
+        return frozenset(), frozenset()
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+    except Exception:
+        return frozenset(), frozenset()
+    cats = frozenset(c["id"] for c in data.get("content_categories", []) if c.get("id"))
+    frams = frozenset(x["id"] for x in data.get("framing_strategies", []) if x.get("id"))
+    return cats, frams
+
+
+def _report_category_colour(raw: Optional[str], colours: Dict[str, str]) -> str:
+    """Colour for LLM/Human category chips and doc-entry spans; deprecated/unknown → muted gray."""
+    if not raw or not raw.strip():
+        return "#888888"
+    folded = display_content_category_for_ui(raw.strip())
+    cid = canonical_content_category_id(folded)
+    if not cid:
+        return "#888888"
+    return colours.get(cid, "#888888")
+
+
+def _normalize_framing_label(t: str) -> str:
+    return display_framing_for_ui(t) if t else ""
+
+
+def _report_framing_colour(fram: Optional[str], colours: Dict[str, str]) -> str:
+    """Framing chip colour; normalizes Generic variants to taxonomy id."""
+    if not fram or not str(fram).strip():
+        return "#333"
+    raw = str(fram).strip()
+    n = _normalize_framing_label(raw)
+    return colours.get(n, colours.get(raw, "#333"))
+
 
 # Fallback palette for categories/framings that have no colour assigned (#333 or missing)
 _DEFAULT_PALETTE = [
@@ -53,6 +111,8 @@ _UI_TRANSLATIONS = {
     "reader_layout_stacked": {"en": "Stacked", "uk": "Стовпчиком"},
     "viz_open_new_tab": {"en": "Open this chart in new tab", "uk": "Відкрити цю діаграму в новій вкладці"},
     "comparison_table": {"en": "Human-led vs AI-led Analysis — Comparison Table", "uk": "Людині проти ШІ — таблиця порівняння"},
+    "comparison_model_side_short": {"en": "LLM", "uk": "LLM"},
+    "comparison_human_side_short": {"en": "Human", "uk": "Людина"},
     "section": {"en": "Section", "uk": "Розділ"},
     "entry_eng": {"en": "Entry (ENG)", "uk": "Запис (АНГЛ)"},
     "entry_rus": {"en": "Entry (RUS)", "uk": "Запис (РУС)"},
@@ -81,10 +141,17 @@ _UI_TRANSLATIONS = {
     "doc_text_cap_highlight": {"en": "Find and highlight different ideological layers in the text.", "uk": "Знаходити та виділяти різні ідеологічні шари в тексті."},
     "doc_text_cap_compare": {"en": "Compare how specific details and ideological layers intersect within segments.", "uk": "Порівнювати, як конкретні деталі та ідеологічні шари перетинаються в сегментах."},
     "doc_text_cap_lab": {"en": "Pair this view with the Research Lab visualizations to compare human-led and AI-led analysis.", "uk": "Поєднуйте з візуалізаціями дослідницької лабораторії для порівняння аналізу людини та ШІ."},
-    "cyrillic_keyboard_label": {"en": "Cyrillic keyboard (click to insert into search)", "uk": "Кирилична клавіатура (клік — уставити в пошук)"},
+    "cyrillic_keyboard_label": {"en": "Cyrillic keyboard", "uk": "Кирилична клавіатура"},
+    "cyrillic_key_caps": {"en": "Caps Lock", "uk": "Caps Lock"},
+    "cyrillic_key_shift": {"en": "⇧ Shift", "uk": "⇧ Shift"},
+    "cyrillic_key_space": {"en": "Space", "uk": "Пробіл"},
+    "cyrillic_key_backspace": {"en": "⌫ Backspace", "uk": "⌫ Назад"},
+    "cyrillic_key_caps_title": {"en": "Toggle locked uppercase letters", "uk": "Фіксовані великі літери"},
+    "cyrillic_key_shift_title": {"en": "Next letter only: uppercase, or lowercase if Caps Lock is on", "uk": "Лише наступна літера: велика, або мала якщо Caps Lock увімкнено"},
     "pdf_view_summary": {"en": "PDF view (scanned document)", "uk": "PDF (скан документа)"},
     "pdf_open_new_tab": {"en": "Open PDF in new tab", "uk": "Відкрити PDF у новій вкладці"},
     "pdf_view_missing": {"en": "No PDF is available for this document.", "uk": "PDF для цього документа недоступний."},
+    "document_visualizations": {"en": "Visualizations for this document", "uk": "Візуалізації для цього документа"},
     "glossary_purpose_label": {"en": "Purpose:", "uk": "Призначення:"},
     "glossary_function_label": {"en": "Function:", "uk": "Функція:"},
     "glossary_examples_label": {"en": "Examples:", "uk": "Приклади:"},
@@ -94,6 +161,21 @@ _UI_TRANSLATIONS = {
     "glossary_stats_fram_detail": {"en": "{n_types} types · {n_inst} term instances", "uk": "{n_types} типів · {n_inst} згадок термінів"},
     "glossary_link_view_tooltip": {"en": "Open document at this segment", "uk": "Відкрити документ на цьому сегменті"},
     "suggest_label_tooltip": {"en": "Suggest a different label", "uk": "Запропонувати іншу мітку"},
+    "label_suggestion_modal_title": {"en": "Suggest alternative labels", "uk": "Запропонувати альтернативні мітки"},
+    "label_suggestion_context_intro": {"en": "Segment context", "uk": "Контекст сегмента"},
+    "label_suggestion_current_labels": {"en": "Current labels", "uk": "Поточні мітки"},
+    "label_suggestion_suggested_category": {"en": "Suggested specific detail", "uk": "Запропонована конкретна деталь"},
+    "label_suggestion_suggested_framing": {"en": "Suggested ideological layer", "uk": "Запропонований ідеологічний шар"},
+    "label_suggestion_notes": {"en": "Notes (optional)", "uk": "Примітки (необов'язково)"},
+    "label_suggestion_notes_placeholder": {"en": "Reasoning, citations, or other context…", "uk": "Обґрунтування, посилання або інший контекст…"},
+    "label_suggestion_optional_blank": {"en": "— Optional —", "uk": "— Необов'язково —"},
+    "label_suggestion_save": {"en": "Save suggestion", "uk": "Зберегти пропозицію"},
+    "label_suggestion_cancel": {"en": "Cancel", "uk": "Скасувати"},
+    "label_suggestion_download": {"en": "Download all suggestions (JSON)", "uk": "Завантажити всі пропозиції (JSON)"},
+    "label_suggestion_saved_ok": {"en": "Suggestion saved locally.", "uk": "Пропозицію збережено локально."},
+    "label_suggestion_hidden_json_hint": {"en": "All suggestions are mirrored in the hidden JSON block at the bottom of this page (and in localStorage) for export.", "uk": "Усі пропозиції дублюються у прихованому JSON-блоці внизу сторінки (та в localStorage) для експорту."},
+    "label_suggestion_document_id": {"en": "Document ID", "uk": "ID документа"},
+    "label_suggestion_row_index": {"en": "Row index", "uk": "Індекс рядка"},
     "english": {"en": "English", "uk": "Англійська"},
     "russian_original": {"en": "Russian (original)", "uk": "Російська (оригінал)"},
     "glossary_of_terms": {"en": "Glossary of Terms", "uk": "Глосарій термінів"},
@@ -101,7 +183,10 @@ _UI_TRANSLATIONS = {
     "glossary_search_placeholder": {"en": "Search glossary by name or definition...", "uk": "Пошук у глосарії за назвою або визначенням..."},
     "filter_by_document": {"en": "Filter by document:", "uk": "Фільтр за документом:"},
     "all_documents": {"en": "All documents", "uk": "Усі документи"},
-    "glossary_search_hint": {"en": "Search supports plain text (e.g. arrest) or regex when wrapped in slashes (e.g. /arrest|detain/ for either term, /arrest.*ed/ for variants).", "uk": "Пошук підтримує звичайний текст (наприклад arrest) або regex у слешах (наприклад /arrest|detain/ для будь-якого терміну, /arrest.*ed/ для варіантів)."},
+    "glossary_search_hint": {
+        "en": "Plain text matches anywhere (case-insensitive). Regex: /pattern/ or /pattern/flags. <strong>CLOSING SLASH REQUIRED</strong> after the pattern. For a literal slash inside the pattern, type backslash then slash. Optional flags g m s y merge with defaults i and u (Unicode + case-insensitive). Example: /вітаю|привіт/.",
+        "uk": "Звичайний текст збігається будь-де (без урахування регістру). Regex: /шаблон/ або /шаблон/прапорці. <strong>ОБОВ'ЯЗКОВИЙ ЗАКРИВНИЙ СЛЕШ</strong> після шаблону. Літеральний слеш: зворотна коса риска, потім слеш. Прапорці g m s y додаються до базових i та u. Приклад: /вітаю|привіт/.",
+    },
     "view_in_document": {"en": "View in document", "uk": "Переглянути в документі"},
     "content_categories": {"en": "Specific Details", "uk": "Конкретні деталі"},
     "content_categories_desc": {"en": "Specific details describe WHAT the text refers to at surface level (aligned with content-category labels in the data model). In technical materials these correspond to content categories.", "uk": "Конкретні деталі описують ДО ЧОГО стосується текст на поверхневому рівні (відповідають міткам категорій контенту в моделі даних). У технічних матеріалах це відповідає категоріям контенту."},
@@ -145,6 +230,7 @@ _UI_TRANSLATIONS = {
     "viz_config_language": {"en": "Language:", "uk": "Мова:"},
     "viz_config_stopwords": {"en": "Additional stopwords (one per line or comma-separated):", "uk": "Додаткові стоп-слова (по одному на рядок або через кому):"},
     "viz_config_apply": {"en": "Apply", "uk": "Застосувати"},
+    "viz_config_doc_radar_note": {"en": "This document view shows a single profile. Multi-document radar modes are available in the Research Lab.", "uk": "Тут показано профіль одного документа. Режими радару для кількох документів доступні в Дослідницькій лабораторії."},
     "viz_both": {"en": "Both", "uk": "Обидві"},
     "no_data": {"en": "No text data available.", "uk": "Немає текстових даних."},
     "viz_terms_cat": {"en": "Top Terms by Specific Detail", "uk": "Топ термінів за конкретною деталлю"},
@@ -243,6 +329,89 @@ _UI_TRANSLATIONS = {
     "viz_calc_doc_similarity_technical": {"en": "v_doc(f) = proportion of segments in doc with framing f. Each document is a vector over framing categories, normalized so components sum to 1. Cosine similarity cos(A, B) = (A·B)/(||A|| ||B||) measures the angle between vectors: 1 when identical (or proportional), 0 when orthogonal. Two different documents can have similarity 1 if they share the same framing distribution.", "uk": "v_doc(f) = частка сегментів з фреймінгом f. Документ = вектор по категоріях фреймінгу. cos(A,B) = (A·B)/(||A|| ||B||). 1 = ідентичні профілі; 0 = ортогональні. Різні документи можуть мати 1, якщо мають однаковий розподіл."},
 }
 
+
+def _effective_ui_translations(config: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Deep copy of UI strings with optional merges from config.report.ui_translation_overrides."""
+    merged = copy.deepcopy(_UI_TRANSLATIONS)
+    overrides = ((config or {}).get("report") or {}).get("ui_translation_overrides") or {}
+    if not isinstance(overrides, dict):
+        return merged
+    for key, langs in overrides.items():
+        if not isinstance(key, str) or not isinstance(langs, dict):
+            continue
+        base = merged.setdefault(key, {"en": "", "uk": ""})
+        for lg in ("en", "uk"):
+            val = langs.get(lg)
+            if isinstance(val, str) and val.strip():
+                base[lg] = val
+    return merged
+
+
+def _framings_excluded_from_document_ui(config: Optional[Dict[str, Any]]) -> Set[str]:
+    """Framing ids (canonical labels) omitted from the HTML report: doc view, glossary, Research Lab viz, heatmaps, etc.
+
+    If ``report.document_ui_exclude_framings`` is absent, omit Generic variants (experiment GT commonly drops these rows).
+    If set to an empty list, nothing is omitted (full taxonomy in UI).
+    """
+    rep = (config or {}).get("report") or {}
+    raw = rep.get("document_ui_exclude_framings")
+    if raw is None:
+        return {"Generic / Neutral Language", "Generic / Neutral"}
+    if not isinstance(raw, list):
+        return set()
+    return {str(x).strip() for x in raw if str(x).strip()}
+
+
+def _filter_framings_for_document_ui(
+    framings: List[Dict[str, Any]],
+    config: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    excl = _framings_excluded_from_document_ui(config)
+    if not excl:
+        return list(framings)
+    out: List[Dict[str, Any]] = []
+    for f in framings:
+        fid = str(f.get("id") or f.get("label_en") or "").strip()
+        if not fid:
+            continue
+        disp = display_framing_for_ui(fid)
+        if fid in excl or disp in excl:
+            continue
+        out.append(f)
+    return out
+
+
+def _framing_label_excluded_from_report_ui(framing_label: Optional[str], config: Optional[Dict[str, Any]]) -> bool:
+    """True if a stats/comparison framing key should be dropped from viz payloads and glossary term grouping."""
+    if not framing_label or not str(framing_label).strip():
+        return False
+    excl = _framings_excluded_from_document_ui(config)
+    if not excl:
+        return False
+    s = str(framing_label).strip()
+    canon = display_framing_for_ui(s)
+    checks = {s, canon} - {""}
+    return bool(checks & excl)
+
+
+def _filter_framing_counts_dict_for_report_ui(
+    d: Dict[str, Any],
+    cat_ids: Set[str],
+    config: Optional[Dict[str, Any]],
+) -> Dict[str, Any]:
+    """Drop glossary-category bleed-through and report-excluded framings from count maps embedded in viz JSON."""
+    if not d:
+        return {}
+    out: Dict[str, Any] = {}
+    for k, v in d.items():
+        if k in cat_ids or _normalize_for_group(k) in cat_ids:
+            continue
+        if _framing_label_excluded_from_report_ui(str(k), config):
+            continue
+        out[k] = v
+    return out
+
+
 # Canonical framing colours so server and JS text view always use them
 _FRAMING_COLOUR_FALLBACK = {
     "Action-Focused Language": "#dc2626",
@@ -253,10 +422,60 @@ _FRAMING_COLOUR_FALLBACK = {
     "Ideological Framing (Discrediting)": "#ea580c",
 }
 
-# Keys inserted into document search Cyrillic helper (Russian + Ukrainian letters)
-_CYRILLIC_KEYBOARD_CHARS = (
-    "абвгдеёжзийклмнопрстуфхцчшщъыьэюяіїєґ"
+# ЙЦУКЕН-style rows + Ukrainian letters on bottom row (Russian + Ukrainian coverage)
+_CYRILLIC_KEYBOARD_ROWS: Tuple[Tuple[str, ...], ...] = (
+    ("ё",),
+    ("й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х", "ъ"),
+    ("ф", "ы", "в", "а", "п", "р", "о", "л", "д", "ж", "э"),
+    ("я", "ч", "с", "м", "и", "т", "ь", "б", "ю"),
 )
+
+
+def _cyrillic_keyboard_html(doc_id: str) -> str:
+    esc_id = html_module.escape(doc_id)
+
+    def letter_key(ch: str, extra_class: str = "") -> str:
+        lo = ch.lower()
+        ec = f" {extra_class}" if extra_class else ""
+        return (
+            f'<button type="button" class="cyr-key-ins{ec}" data-tab="{esc_id}" '
+            f'data-base="{html_module.escape(lo)}">{html_module.escape(lo)}</button>'
+        )
+
+    rows_out: List[str] = []
+    r0 = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[0])
+    rows_out.append(f'<div class="cyrillic-keyboard-row kb-row-top">{r0}</div>')
+    for ri in range(1, 3):
+        stagger = f" kb-stagger-{min(ri, 3)}"
+        rk = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[ri])
+        rows_out.append(f'<div class="cyrillic-keyboard-row{stagger}">{rk}</div>')
+    letters_r3 = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[3])
+    caps_btn = (
+        f'<button type="button" class="cyr-key-mod cyr-key-caps" data-tab="{esc_id}" '
+        f'data-i18n="cyrillic_key_caps" data-i18n-title="cyrillic_key_caps_title">Caps Lock</button>'
+    )
+    rows_out.append(f'<div class="cyrillic-keyboard-row kb-stagger-2">{caps_btn}{letters_r3}</div>')
+    ua = ("і", "ї", "є", "ґ")
+    ua_keys = "".join(letter_key(c) for c in ua)
+    shift_btn = (
+        f'<button type="button" class="cyr-key-mod cyr-key-shift" data-tab="{esc_id}" '
+        f'data-i18n="cyrillic_key_shift" data-i18n-title="cyrillic_key_shift_title">⇧ Shift</button>'
+    )
+    space_btn = (
+        f'<button type="button" class="cyr-key-ins cyr-key-space" data-tab="{esc_id}" data-base=" ">Space</button>'
+    )
+    back_btn = (
+        f'<button type="button" class="cyr-key-mod cyr-key-backsp" data-tab="{esc_id}" '
+        f'data-i18n="cyrillic_key_backspace">⌫</button>'
+    )
+    rows_out.append(
+        f'<div class="cyrillic-keyboard-row kb-stagger-1">{shift_btn}{ua_keys}{space_btn}{back_btn}</div>'
+    )
+    inner = "\n".join(rows_out)
+    return (
+        f'<div class="cyrillic-keyboard" data-caps-on="0" data-shift-next="0">'
+        f'<div class="cyrillic-keyboard-frame">{inner}</div></div>'
+    )
 
 
 def _pdf_repo_relative_path(
@@ -466,14 +685,18 @@ def _spans_to_html(
                     f'data-human-category="" data-human-framing="" data-human-category-colour="#333" data-human-framing-colour="#333" '
                     f'data-has-partner="true">{gap}</span>'
                 )
-        cat = r.get("llm_category", "")
-        fram = r.get("llm_framing", "")
-        human_cat = r.get("human_category", "")
-        human_fram = r.get("human_framing", "")
-        cat_col = cat_colours.get(cat, "#333")
-        fram_col = fram_colours.get(fram, "#333")
-        human_cat_col = cat_colours.get(human_cat, "#333")
-        human_fram_col = fram_colours.get(human_fram, "#333")
+        cat_raw = str(r.get("llm_category") or "")
+        human_cat_raw = str(r.get("human_category") or "")
+        fram_raw = str(r.get("llm_framing") or "")
+        human_fram_raw = str(r.get("human_framing") or "")
+        cat = display_content_category_for_ui(cat_raw)
+        fram = _normalize_framing_label(fram_raw)
+        human_cat = display_content_category_for_ui(human_cat_raw)
+        human_fram = _normalize_framing_label(human_fram_raw)
+        cat_col = _report_category_colour(cat_raw, cat_colours)
+        fram_col = _report_framing_colour(fram_raw, fram_colours)
+        human_cat_col = _report_category_colour(human_cat_raw, cat_colours)
+        human_fram_col = _report_framing_colour(human_fram_raw, fram_colours)
         cls = "doc-entry"
         if not has_partner:
             cls += " doc-entry-orphan"
@@ -536,6 +759,10 @@ def run(
     Produce a single HTML report. Uses minimal template: tabs per doc, table, stats.
     Document text view and full glossary can be added later; structure matches FRAMEWORK.
     """
+    comparison_by_doc = normalize_comparison_by_doc(comparison_by_doc or {})
+
+    ui_tr = _effective_ui_translations(config)
+
     out_config = config.get("output", {})
     out_dir = Path(out_config.get("dir", "data/output"))
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -544,14 +771,21 @@ def run(
     out_path = out_dir / html_name
     viz_out_path = out_dir / viz_html_name
 
-    categories = taxonomy.get("content_categories", [])
-    framings = taxonomy.get("framing_strategies", [])
+    categories = filter_content_categories_for_taxonomy(list(taxonomy.get("content_categories", [])))
+    framings = list(taxonomy.get("framing_strategies", []))
+    allowed_cat_ids, allowed_fram_ids = _load_allowed_taxonomy_ids_from_json(config)
+    if allowed_cat_ids:
+        categories = restrict_content_categories_to_allowed_ids(categories, allowed_cat_ids)
+    if allowed_fram_ids:
+        framings = restrict_framing_strategies_to_allowed_ids(framings, allowed_fram_ids)
     _ensure_colours(categories, framings)
     cat_colours = {c["id"]: c.get("colour", "#333") for c in categories}
     fram_colours = {f["id"]: f.get("colour", "#333") for f in framings}
     for fid, col in _FRAMING_COLOUR_FALLBACK.items():
         if fid not in fram_colours or fram_colours[fid] in ("#333", "#333333"):
             fram_colours[fid] = col
+
+    framings_ui = _filter_framings_for_document_ui(framings, config)
 
     # Glossary uses Categories Explained.html as the basis for definitions
     glossary_cats, glossary_fram = _load_glossary_taxonomy_from_categories_explained(config)
@@ -563,11 +797,17 @@ def run(
         for f in glossary_fram:
             if f.get("id") and f.get("id") in fram_colours:
                 f["colour"] = fram_colours[f["id"]]
-        glossary_categories = glossary_cats
-        glossary_framings = glossary_fram
+        glossary_categories = restrict_content_categories_to_allowed_ids(
+            filter_content_categories_for_taxonomy(list(glossary_cats)), allowed_cat_ids,
+        ) if allowed_cat_ids else filter_content_categories_for_taxonomy(list(glossary_cats))
+        glossary_framings = restrict_framing_strategies_to_allowed_ids(
+            list(glossary_fram), allowed_fram_ids,
+        ) if allowed_fram_ids else list(glossary_fram)
     else:
-        glossary_categories = categories
-        glossary_framings = framings
+        glossary_categories = list(categories)
+        glossary_framings = list(framings)
+
+    glossary_framings = _filter_framings_for_document_ui(glossary_framings, config)
 
     body_attrs = (
         f'data-main-report="{html_module.escape(html_name, quote=True)}" '
@@ -581,7 +821,7 @@ def run(
         fram_colours,
         glossary_categories,
         glossary_framings,
-        taxonomy_framings=framings,
+        taxonomy_framings=framings_ui,
     )
     parts = [
         _head(body_attrs=body_attrs),
@@ -608,6 +848,18 @@ def run(
         full_rus = doc.get("raw_text") or ""
         pdf_href = _pdf_href_for_report(doc, out_path.parent, config=config)
         comparison_script = _json_for_html_script(aligned)
+        doc_viz_section_html = _build_per_document_viz_section(
+            doc_id,
+            comparison_by_doc,
+            documents,
+            config,
+            cat_colours,
+            fram_colours,
+            glossary_categories,
+            glossary_framings,
+            framings_ui,
+        )
+        viz_dom_suffix = _viz_dom_suffix(doc_id) if doc_viz_section_html else ""
         parts.append(
             _doc_tab(
                 doc_id,
@@ -619,7 +871,7 @@ def run(
                 cat_colours,
                 fram_colours,
                 categories,
-                framings,
+                framings_ui,
                 full_text_eng=full_eng,
                 full_text_rus=full_rus,
                 n_human=n_human,
@@ -628,6 +880,8 @@ def run(
                 active=False,
                 pdf_href=pdf_href,
                 comparison_json_script=comparison_script,
+                doc_viz_section_html=doc_viz_section_html,
+                viz_dom_suffix=viz_dom_suffix,
             )
         )
 
@@ -641,11 +895,13 @@ def run(
             cat_colours,
             fram_colours,
             from_categories_explained=from_ce,
+            config=config,
         )
     )
     parts.append("</div></div>")
+    parts.append(_label_suggestion_modal_html())
     term_synonyms = _load_term_synonyms()
-    parts.append(_script(categories, framings, term_synonyms, standalone_viz=False))
+    parts.append(_script(categories, framings_ui, term_synonyms, standalone_viz=False, ui_translations=ui_tr))
     parts.append("</body></html>")
 
     standalone_parts = [
@@ -655,7 +911,7 @@ def run(
         '<p class="viz-standalone-subtitle" data-i18n="viz_standalone_subtitle">Single-chart view. Language and chart choice sync with the main lab when possible.</p>',
         _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc),
         "</div>",
-        _script(categories, framings, term_synonyms, standalone_viz=True),
+        _script(categories, framings_ui, term_synonyms, standalone_viz=True, ui_translations=ui_tr),
         "</body></html>",
     ]
     viz_out_path.write_text("\n".join(standalone_parts), encoding="utf-8")
@@ -723,6 +979,29 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .section-click-to-view:hover { color: #8b0000; }
 .suggest-label-btn { background: rgba(139,115,85,0.2); border: 1px solid #8b7355; border-radius: 3px; width: 1.5rem; height: 1.5rem; font-size: 1rem; line-height: 1; cursor: pointer; color: #4a5568; margin-left: 0.25rem; vertical-align: middle; }
 .suggest-label-btn:hover { background: rgba(139,0,0,0.2); color: #8b0000; }
+.label-suggestion-modal { display: none; position: fixed; inset: 0; z-index: 500; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; }
+.label-suggestion-modal.is-open { display: flex; }
+.label-suggestion-modal-backdrop { position: absolute; inset: 0; background: rgba(45, 55, 72, 0.55); cursor: pointer; }
+.label-suggestion-modal-panel { position: relative; max-width: min(100%, 26rem); width: 100%; max-height: min(90vh, 36rem); overflow-y: auto; background: #fffef9; border: 2px solid #8b7355; border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,0.2); padding: 1.25rem 1.5rem; font-size: 0.95rem; color: #2d3748; }
+.label-suggestion-modal-panel h3 { margin: 0 0 0.75rem; font-size: 1.25rem; color: #4a4038; font-weight: 700; }
+.label-suggestion-context { font-size: 0.88rem; line-height: 1.45; margin-bottom: 1rem; padding: 0.75rem; background: #e8e4dc; border-radius: 4px; border: 1px solid rgba(139,115,85,0.35); }
+.label-suggestion-dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.75rem; }
+.label-suggestion-dl dt { font-weight: 700; color: #4a5568; margin: 0; }
+.label-suggestion-dl dd { margin: 0; word-break: break-word; }
+.label-suggestion-field { margin-bottom: 0.85rem; }
+.label-suggestion-field label { display: block; font-weight: 600; font-size: 0.82rem; color: #4a5568; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.label-suggestion-field select, .label-suggestion-field textarea { width: 100%; max-width: 100%; box-sizing: border-box; padding: 0.45rem 0.5rem; border: 1px solid #8b7355; border-radius: 4px; font-family: inherit; font-size: 0.92rem; background: #fff; }
+.label-suggestion-field textarea { min-height: 4rem; resize: vertical; }
+.label-suggestion-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid rgba(139,115,85,0.3); }
+.label-suggestion-actions button { padding: 0.45rem 0.9rem; border-radius: 4px; font-family: inherit; font-size: 0.9rem; cursor: pointer; border: 1px solid #8b7355; }
+.label-suggestion-save-btn { background: #8b0000; color: #f5f0e6; border-color: #6b0000; font-weight: 600; }
+.label-suggestion-save-btn:hover { background: #6b0000; }
+.label-suggestion-cancel-btn { background: #fff; color: #4a5568; }
+.label-suggestion-cancel-btn:hover { background: #f5f0e6; }
+.label-suggestion-download-btn { background: transparent; color: #2563eb; border-color: transparent; text-decoration: underline; margin-left: auto; }
+.label-suggestion-download-btn:hover { color: #1d4ed8; }
+.label-suggestion-status { font-size: 0.85rem; color: #15803d; margin-top: 0.5rem; min-height: 1.25rem; }
+.label-suggestions-json-store { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .doc-entry-highlight-brief { animation: highlightBrief 2s ease-out forwards; }
 @keyframes highlightBrief { 0% { background-color: rgba(255, 235, 59, 0.7); } 70% { background-color: rgba(255, 235, 59, 0.4); } 100% { background-color: transparent; } }
 .category-match, .framing-match { background: rgba(45,90,39,0.15); color: #2d5a27; }
@@ -733,18 +1012,134 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .document-text-controls input, .document-text-controls select { padding: 0.5rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; background: #fff; max-width: 100%; box-sizing: border-box; }
 .document-text-controls-row1 { margin-bottom: 0.25rem; }
 .document-text-controls-row1 .document-search { width: 100%; max-width: min(100%, 28rem); min-width: min(100%, 240px); }
-.document-text-controls-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.65rem 1rem; align-items: end; margin-bottom: 0.45rem; }
+.document-search-cyrillic-anchor,
+.glossary-search-cyrillic-anchor { position: relative; z-index: 12; }
+.glossary-search-cyrillic-anchor { flex: 1 1 280px; min-width: min(100%, 280px); }
+.cyrillic-keyboard-popup-wrap {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  width: min(100vw - 2rem, 52rem);
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 0.55rem 0.72rem 0.72rem;
+  background: linear-gradient(180deg, #faf8f4 0%, #efeae2 100%);
+  border: 1px solid #8b7355;
+  border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.1);
+  z-index: 50;
+}
+/* Per-document keyboard lives outside <details> so it stays visible when only Comparison (or other) sections are open */
+.cyrillic-keyboard-popup-wrap.doc-cyrillic-popup-floating {
+  position: fixed;
+  left: 50%;
+  right: auto;
+  top: auto;
+  bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(100vw - 2rem, 52rem);
+  max-width: min(100vw - 2rem, 52rem);
+  z-index: 300;
+}
+.cyrillic-keyboard-popup-wrap.is-open { display: block; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard-label { margin-top: 0; margin-bottom: 0.35rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard { margin-top: 0; margin-bottom: 0; max-width: 100%; }
+.document-text-controls-filters, .comparison-table-controls-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.65rem 1rem; align-items: end; margin-bottom: 0.45rem; }
+.comparison-table-controls-filters { margin-bottom: 0; grid-column: 1 / -1; }
 .document-text-controls-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin-bottom: 0.35rem; }
 .document-text-controls-filters .document-colour-by { min-width: 12rem; max-width: 100%; }
 .document-text-intro-block { font-size: 0.9rem; color: #5a5348; margin-bottom: 1rem; line-height: 1.55; }
 .doc-controls-capabilities { margin: 0.35rem 0 0.5rem 1.25rem; padding: 0; }
 .doc-controls-capabilities li { margin-bottom: 0.35rem; }
 .document-text-filter-head { display: block; font-weight: 700; font-size: 0.8rem; color: #2d3748; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
-.document-text-controls .ctl-group { display: flex; flex-direction: column; align-items: stretch; min-width: 140px; }
+.document-text-controls .ctl-group, .comparison-table-controls .ctl-group { display: flex; flex-direction: column; align-items: stretch; min-width: 140px; }
 .cyrillic-keyboard-label { font-size: 0.78rem; color: #6b7280; margin: 0.35rem 0 0.25rem; }
-.cyrillic-keyboard-row { display: flex; flex-wrap: nowrap; gap: 0.28rem; margin-bottom: 0.55rem; max-width: 100%; overflow-x: auto; padding-bottom: 0.2rem; -webkit-overflow-scrolling: touch; scrollbar-width: thin; }
-.cyr-key-ins { font-family: inherit; font-size: 0.85rem; padding: 0.2rem 0.45rem; border: 1px solid #8b7355; border-radius: 3px; background: #fffef9; cursor: pointer; color: #2d3748; line-height: 1.2; }
-.cyr-key-ins:hover { background: #e8e4dc; }
+.cyrillic-keyboard { margin: 0.35rem 0 0.65rem; max-width: min(100%, 52rem); }
+.cyrillic-keyboard-frame {
+  background: linear-gradient(168deg, #ddd9d0 0%, #c9c3b8 42%, #bcb6ab 100%);
+  border: 1px solid #5c554c;
+  border-radius: 9px;
+  padding: 0.65rem 0.72rem 0.78rem;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.45), 0 4px 14px rgba(0,0,0,0.12);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.cyrillic-keyboard-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.38rem;
+  margin-bottom: 0.48rem;
+  align-items: stretch;
+}
+.cyrillic-keyboard-row:last-child { margin-bottom: 0; }
+.kb-row-top { justify-content: center; padding-left: 0; }
+.kb-stagger-1 { padding-left: 1rem; }
+.kb-stagger-2 { padding-left: 2rem; }
+.kb-stagger-3 { padding-left: 3rem; }
+.cyr-key-ins {
+  flex: 1 1 auto;
+  min-width: 1.75rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.48rem 0.32rem;
+  border: 1px solid #4a453e;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #fefdfb 0%, #eae5dc 48%, #dcd6cb 100%);
+  cursor: pointer;
+  color: #1e293b;
+  line-height: 1.15;
+  box-shadow: 0 2px 0 #8a8379, 0 3px 5px rgba(0,0,0,0.1);
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+}
+.cyr-key-ins:hover { background: linear-gradient(180deg, #fffefb 0%, #f0ebe3 50%, #e5dfd5 100%); }
+.cyr-key-ins:active {
+  transform: translateY(2px);
+  box-shadow: 0 0 0 #8a8379, 0 1px 2px rgba(0,0,0,0.08);
+}
+.cyr-key-mod {
+  flex: 0 0 auto;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.48rem 0.55rem;
+  border: 1px solid #4a453e;
+  border-radius: 5px;
+  background: linear-gradient(180deg, #dcd7cf 0%, #c4bfb5 55%, #b5afa5 100%);
+  cursor: pointer;
+  color: #334155;
+  line-height: 1.2;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  box-shadow: 0 2px 0 #7a7269, 0 2px 4px rgba(0,0,0,0.08);
+  transition: transform 0.06s ease;
+}
+.cyr-key-mod:hover { filter: brightness(1.04); }
+.cyr-key-mod:active { transform: translateY(2px); box-shadow: 0 0 0 #7a7269; }
+.cyr-key-caps { min-width: 4.6rem; }
+.cyr-key-caps.active {
+  background: linear-gradient(180deg, #d4ecd2 0%, #9fcf98 45%, #7fb87a 100%);
+  border-color: #2d5a27;
+  color: #14532d;
+  box-shadow: inset 0 2px 5px rgba(45,90,39,0.2), 0 1px 0 rgba(255,255,255,0.35);
+}
+.cyr-key-shift { min-width: 4rem; }
+.cyr-key-shift.active {
+  background: linear-gradient(180deg, #dbeafe 0%, #93c5fd 50%, #60a5fa 100%);
+  border-color: #1d4ed8;
+  color: #1e3a8a;
+}
+.cyr-key-space {
+  flex: 4 1 7rem;
+  min-width: 5rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.06em;
+}
+.cyr-key-backsp { min-width: 3.35rem; font-size: 0.65rem; }
 .colour-legend-details { margin-top: 0.5rem; margin-bottom: 0.75rem; border: 1px solid rgba(139,115,85,0.35); border-radius: 4px; background: #f8f6f2; }
 .colour-legend-details > summary { cursor: pointer; padding: 0.6rem 1rem; font-weight: 600; color: #4a5568; list-style: none; }
 .colour-legend-details > summary::-webkit-details-marker { display: none; }
@@ -754,6 +1149,8 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .pdf-open-tab-btn:hover { color: #991b1b; }
 .pdf-view-section .pdf-view-wrap { margin-top: 0.5rem; border: 1px solid #8b7355; border-radius: 4px; overflow: hidden; background: #fffef9; min-height: 120px; }
 .pdf-view-section iframe { width: 100%; height: 72vh; min-height: 440px; border: none; display: block; }
+.places-srcdoc-store { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.doc-viz-places-embed-wrap { position: relative; }
 .pdf-view-placeholder { padding: 1.25rem; color: #6b7280; font-size: 0.95rem; line-height: 1.5; }
 .comparison-export-json { padding: 0.45rem 0.85rem; border: 1px solid #8b7355; border-radius: 4px; background: #e8e4dc; cursor: pointer; font-family: inherit; font-size: 0.85rem; color: #2d3748; }
 .comparison-export-json:hover { background: #ddd9d0; }
@@ -791,9 +1188,8 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .document-text-content .doc-entry.dimmed { color: #999 !important; opacity: 0.4 !important; }
 .document-text-content.filter-active .doc-entry { color: #aaa !important; opacity: 0.25 !important; }
 .document-text-content.filter-active .doc-entry.filter-match { opacity: 1 !important; color: inherit !important; }
-.document-text-content.filter-active .doc-entry.search-highlight,
-.document-text-content.filter-active .doc-entry.filter-match.search-highlight { opacity: 1 !important; color: inherit !important; background: rgba(255, 193, 7, 0.75) !important; }
-.document-text-content .doc-entry.search-highlight { background: rgba(255, 193, 7, 0.6) !important; border-radius: 2px; }
+.document-text-content.filter-active .doc-entry.filter-match mark.doc-search-hit { opacity: 1 !important; color: inherit !important; background: rgba(255, 193, 7, 0.82) !important; }
+.document-text-content mark.doc-search-hit { background: rgba(255, 193, 7, 0.72) !important; color: inherit !important; padding: 0 1px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
 .document-text-content .doc-entry.doc-entry-orphan { border-bottom: 1px dashed #8b7355; }
 @media (max-width: 900px) { .document-text-panels { grid-template-columns: 1fr; } }
 /* Glossary search and filter */
@@ -846,6 +1242,11 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .viz-select { padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; min-width: 260px; }
 .viz-config-panel { margin-top: 1rem; border: 1px solid rgba(139,115,85,0.4); border-radius: 4px; background: #e8e4dc; }
 .viz-config-panel summary { padding: 0.5rem 1rem; cursor: pointer; font-weight: 500; }
+.doc-viz-controls { flex-direction: column; align-items: stretch; gap: 0.65rem 1rem; }
+.doc-viz-controls > label { margin-bottom: 0; }
+.doc-viz-controls .doc-viz-select { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
+.doc-viz-controls .doc-viz-config-panel { margin-top: 0; width: 100%; min-width: 0; align-self: stretch; box-sizing: border-box; }
+.doc-viz-controls .doc-viz-config-panel summary { white-space: normal; line-height: 1.4; }
 .viz-config-body { padding: 1rem; display: flex; flex-wrap: wrap; gap: 1rem; align-items: flex-end; }
 .viz-config-row { display: flex; align-items: center; gap: 0.5rem; }
 .viz-config-row label { margin: 0; font-weight: normal; font-size: 0.9rem; }
@@ -1079,9 +1480,224 @@ def _load_places_map_data_enriched(config: Dict[str, Any]) -> List[Dict[str, Any
     return enriched
 
 
-def _build_places_map_html(config: Dict[str, Any], embedded: bool = False) -> str:
+def _filter_places_enriched_for_doc(places: List[Dict[str, Any]], doc_id: str) -> List[Dict[str, Any]]:
+    """Keep only places mentioned in segments belonging to doc_id; adjust counts."""
+    if not doc_id or not places:
+        return []
+    out: List[Dict[str, Any]] = []
+    for p in places:
+        dc_list = p.get("doc_counts") or []
+        total_here = sum(int(d.get("count", 0)) for d in dc_list if d.get("doc_id") == doc_id)
+        if total_here <= 0:
+            continue
+        segs_all = p.get("segments") or []
+        segs = [s for s in segs_all if s.get("doc_id") == doc_id]
+        doc_counts_f = [d for d in dc_list if d.get("doc_id") == doc_id]
+        row = dict(p)
+        row["count"] = total_here
+        row["segments"] = segs[:15]
+        row["doc_counts"] = doc_counts_f
+        out.append(row)
+    return out
+
+
+def _viz_dom_suffix(doc_id: str) -> str:
+    """Stable HTML id fragment for per-document viz (no entities)."""
+    s = re.sub(r"[^a-zA-Z0-9_-]+", "_", (doc_id or "").strip()).strip("_")
+    if not s:
+        s = "doc"
+    if s[0].isdigit():
+        s = "d_" + s
+    return s
+
+
+def _taxonomy_orders_for_viz(
+    stats: Dict[str, Any],
+    glossary_categories: Optional[List[Dict[str, Any]]],
+    glossary_framings: Optional[List[Dict[str, Any]]],
+    taxonomy_framings: Optional[List[Dict[str, Any]]],
+    config: Optional[Dict[str, Any]] = None,
+) -> Tuple[List[str], List[str], Set[str]]:
+    """Category sort order, framing sort order, and glossary category ids (to exclude from framing axis)."""
+    cat_order = sorted(stats["categories"].keys(), key=lambda c: -stats["categories"].get(c, 0))
+    cat_ids = {c.get("id", "").strip() for c in (glossary_categories or []) if c.get("id")}
+    canonical_fram_ids: List[str] = []
+    seen_norm: Set[str] = set()
+    for f in (glossary_framings or []):
+        fid = (f.get("id") or "").strip()
+        if not fid or fid in cat_ids:
+            continue
+        norm = _normalize_for_group(fid)
+        if norm and norm not in seen_norm:
+            seen_norm.add(norm)
+            canonical_fram_ids.append(norm)
+    if canonical_fram_ids:
+        fram_order = sorted(
+            canonical_fram_ids,
+            key=lambda f: -sum(stats["framings"].get(k, 0) for k in stats["framings"] if _normalize_for_group(k) == f),
+        )
+    else:
+        filtered = [f for f in stats["framings"] if f not in cat_ids and _normalize_for_group(f) not in cat_ids]
+        if config and _framings_excluded_from_document_ui(config):
+            filtered = [f for f in filtered if not _framing_label_excluded_from_report_ui(f, config)]
+        if filtered:
+            fram_order = sorted(filtered, key=lambda f: -stats["framings"].get(f, 0))
+        else:
+            src = (glossary_framings or []) or (taxonomy_framings or [])
+            fallback_ids = [f.get("id") for f in src if f.get("id") and f.get("id") not in cat_ids]
+            seen_f = set()
+            deduped: List[str] = []
+            for fid in fallback_ids:
+                norm = _normalize_for_group(fid or "")
+                if norm and norm not in seen_f:
+                    seen_f.add(norm)
+                    deduped.append(norm)
+            fram_order = sorted(
+                deduped,
+                key=lambda f: -sum(stats["framings"].get(k, 0) for k in stats["framings"] if _normalize_for_group(k) == f or k == f),
+            ) if deduped else []
+    if config and _framings_excluded_from_document_ui(config):
+        fram_order = [f for f in fram_order if not _framing_label_excluded_from_report_ui(f, config)]
+    return cat_order, fram_order, cat_ids
+
+
+def _fram_colours_for_viz_order(fram_order: List[str], fram_colours: Dict[str, str]) -> Dict[str, str]:
+    fram_colours_for_viz = dict(fram_colours)
+    for f in fram_order:
+        if f not in fram_colours_for_viz:
+            fram_colours_for_viz[f] = next(
+                (fram_colours_for_viz[k] for k in fram_colours_for_viz if _normalize_for_group(k) == f),
+                "#8b7355",
+            )
+    return fram_colours_for_viz
+
+
+def _places_map_doc_embed_markup(dom_suffix: str, places_html: str) -> str:
+    """Per-document viz: avoid giant iframe srcdoc attributes (breaks HTML parsing). Load via JS."""
+    esc_body = html_module.escape(places_html)
+    return (
+        f'<textarea id="places-srcdoc-{dom_suffix}" class="places-srcdoc-store" '
+        f'aria-hidden="true" readonly tabindex="-1">{esc_body}</textarea>'
+        f'<iframe class="doc-places-map-iframe" title="Places map" '
+        f'data-srcdoc-from="places-srcdoc-{dom_suffix}" src="about:blank" '
+        f'style="width:100%;height:100%;min-height:500px;border:none;"></iframe>'
+    )
+
+
+def _places_map_lab_embed_markup(places_html: str) -> str:
+    """Research Lab viz: same deferred srcdoc pattern as per-document maps (inline srcdoc breaks large maps)."""
+    esc_body = html_module.escape(places_html)
+    return (
+        '<textarea id="places-srcdoc-lab" class="places-srcdoc-store" '
+        'aria-hidden="true" readonly tabindex="-1">' + esc_body + "</textarea>"
+        '<iframe class="doc-places-map-iframe" title="Places map" '
+        'data-srcdoc-from="places-srcdoc-lab" src="about:blank" '
+        'style="width:100%;height:100%;min-height:500px;border:none;"></iframe>'
+    )
+
+
+def _build_per_document_viz_section(
+    doc_id: str,
+    comparison_by_doc: Dict[str, Dict[str, Any]],
+    documents: List[Dict[str, Any]],
+    config: Dict[str, Any],
+    cat_colours: Dict[str, str],
+    fram_colours: Dict[str, str],
+    glossary_categories: Optional[List[Dict[str, Any]]],
+    glossary_framings: Optional[List[Dict[str, Any]]],
+    taxonomy_framings: Optional[List[Dict[str, Any]]],
+) -> str:
+    """Collapsible HTML block: Research Lab charts filtered to one document."""
+    if not doc_id:
+        return ""
+    suffix = _viz_dom_suffix(doc_id)
+    docs_one = [d for d in documents if d.get("document_id") == doc_id]
+    comp_one = {doc_id: comparison_by_doc.get(doc_id, {})}
+    if not docs_one:
+        return ""
+    stats = _compute_dataset_stats(comp_one, docs_one)
+    cat_order, fram_order, cat_ids = _taxonomy_orders_for_viz(
+        stats, glossary_categories, glossary_framings, taxonomy_framings, config,
+    )
+    viz_config = config.get("report", {}).get("visualizations", {})
+    wc_cfg = viz_config.get("word_cloud", {})
+    stopwords_eng = set(wc_cfg.get("stopwords_eng", [])) | set(wc_cfg.get("stopwords", []))
+    stopwords_rus = set(wc_cfg.get("stopwords_rus", [])) | set(wc_cfg.get("stopwords", []))
+    word_data_eng, word_data_rus = _word_frequencies_from_documents(
+        docs_one,
+        min_len=wc_cfg.get("min_word_length", 3),
+        stopwords_eng=stopwords_eng if stopwords_eng else None,
+        stopwords_rus=stopwords_rus if stopwords_rus else None,
+    )
+    agreement_stats = _compute_agreement_stats(comp_one, docs_one, config)
+    terms_by_cat, terms_by_fram = _compute_terms_counts_for_viz(comp_one)
+    vocab_diversity = _compute_vocab_diversity(docs_one)
+    segment_length_vs_accuracy = _compute_segment_length_vs_accuracy(comp_one, docs_one)
+    mismatch_flow = _compute_mismatch_flow(comp_one, fram_order)
+    doc_fingerprint = _compute_document_fingerprint(stats, fram_order)
+    terms_by_framing_detailed = _compute_terms_by_framing_detailed(comp_one, fram_order)
+    term_framing_heatmap = _compute_term_framing_heatmap(comp_one, fram_order)
+
+    fram_colours_for_viz = _fram_colours_for_viz_order(fram_order, fram_colours)
+
+    viz_data: Dict[str, Any] = {
+        "wordCloudEng": [[w, c] for w, c in word_data_eng],
+        "wordCloudRus": [[w, c] for w, c in word_data_rus],
+        "perDoc": [
+            {
+                "doc_id": pd["doc_id"],
+                "display_name": pd["display_name"],
+                "categories": pd["categories"],
+                "framings": _filter_framing_counts_dict_for_report_ui(pd.get("framings", {}), cat_ids, config),
+            }
+            for pd in stats["per_doc"]
+        ],
+        "catColours": cat_colours,
+        "framColours": fram_colours_for_viz,
+        "categories": stats["categories"],
+        "framings": _filter_framing_counts_dict_for_report_ui(dict(stats["framings"]), cat_ids, config),
+        "catOrder": cat_order,
+        "framOrder": fram_order,
+        "termsByCat": terms_by_cat,
+        "termsByFram": _filter_framing_counts_dict_for_report_ui(dict(terms_by_fram), cat_ids, config),
+        "vocabDiversity": vocab_diversity,
+        "segmentLengthVsAccuracy": segment_length_vs_accuracy,
+        "agreementStats": agreement_stats,
+        "placesMap": [],
+        "mismatchFlow": mismatch_flow,
+        "docFingerprint": doc_fingerprint,
+        "termsByFramingDetailed": terms_by_framing_detailed,
+        "termFramingHeatmap": term_framing_heatmap,
+        "configDefaults": {
+            "word_cloud": {
+                "max_words": wc_cfg.get("max_words", 80),
+                "weight_factor": wc_cfg.get("weight_factor", 15),
+                "min_word_length": wc_cfg.get("min_word_length", 3),
+                "language": wc_cfg.get("language", "both"),
+                "stopwords_extra": "",
+            },
+            "segment_length": {"scale": 100, "x_tick_step": 0},
+        },
+    }
+    viz_json = json.dumps(viz_data, ensure_ascii=False)
+    heatmap_html = _heatmap_html(stats, cat_ids=cat_ids, config=config)
+
+    places_html = _build_places_map_html(config, embedded=True, doc_id_filter=doc_id)
+    if places_html:
+        places_map_srcdoc = _places_map_doc_embed_markup(suffix, places_html)
+    else:
+        places_map_srcdoc = (
+            '<p style="padding:2rem;color:#6b7280;">No places data for this document.</p>'
+        )
+
+    return _per_document_viz_section(suffix, viz_json, heatmap_html, places_map_srcdoc)
+
+
+def _build_places_map_html(config: Dict[str, Any], embedded: bool = False, doc_id_filter: Optional[str] = None) -> str:
     """Build places map HTML. If embedded=True, View links use parent.location.hash for same-doc navigation."""
     places = _load_places_map_data_enriched(config)
+    if doc_id_filter:
+        places = _filter_places_enriched_for_doc(places, doc_id_filter)
     if not places:
         return ""
     report_name = config.get("output", {}).get("report_html", "manual_analysis_report.html")
@@ -1226,16 +1842,19 @@ def _compute_dataset_stats(
         doc_cats: Counter = Counter()
         doc_frams: Counter = Counter()
         for r in aligned:
-            cat = r.get("llm_category") or r.get("human_category") or ""
-            fram = r.get("llm_framing") or r.get("human_framing") or ""
+            cat_raw = r.get("llm_category") or r.get("human_category") or ""
+            fram_raw = r.get("llm_framing") or r.get("human_framing") or ""
+            cat_fold = display_content_category_for_ui(cat_raw.strip()) if cat_raw else ""
+            cat = canonical_content_category_id(cat_fold) if cat_fold else None
+            fram_n = _normalize_framing_label(str(fram_raw)) if fram_raw else ""
             if cat:
                 cat_counts[cat] += 1
                 doc_cats[cat] += 1
-            if fram:
-                fram_counts[fram] += 1
-                doc_frams[fram] += 1
-            if cat and fram:
-                heatmap[(cat, fram)] += 1
+            if fram_n:
+                fram_counts[fram_n] += 1
+                doc_frams[fram_n] += 1
+            if cat and fram_n:
+                heatmap[(cat, fram_n)] += 1
             total_segments += 1
         per_doc.append({
             "doc_id": doc_id,
@@ -1258,6 +1877,7 @@ def _compute_dataset_stats(
 def _compute_agreement_stats(
     comparison_by_doc: Dict[str, Dict[str, Any]],
     documents: List[Dict[str, Any]],
+    config: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Compute agreement/accuracy stats: confusion matrices, agreement by category/framing, mismatch breakdown.
     Used for HIDDEN agreement/accuracy visualizations."""
@@ -1271,10 +1891,10 @@ def _compute_agreement_stats(
         doc_id = doc.get("document_id", "")
         comp = comparison_by_doc.get(doc_id, {})
         for r in comp.get("aligned_rows", []):
-            human_cat = _normalize_for_group(r.get("human_category") or "")
-            human_fram = _normalize_for_group(r.get("human_framing") or "")
-            llm_cat = _normalize_for_group(r.get("llm_category") or "")
-            llm_fram = _normalize_for_group(r.get("llm_framing") or "")
+            human_cat = display_content_category_for_ui(str(r.get("human_category") or ""))
+            llm_cat = display_content_category_for_ui(str(r.get("llm_category") or ""))
+            human_fram = _normalize_framing_label(str(r.get("human_framing") or ""))
+            llm_fram = _normalize_framing_label(str(r.get("llm_framing") or ""))
             cat_match = r.get("category_match", False)
             fram_match = r.get("framing_match", False)
             both_match = r.get("both_match", False)
@@ -1298,11 +1918,25 @@ def _compute_agreement_stats(
                 mismatch_breakdown["cat_only_mismatch"] += 1
             else:
                 mismatch_breakdown["both_mismatch"] += 1
+    fram_confusion_rows = [{"human": h, "llm": l, "count": c} for (h, l), c in fram_confusion.items()]
+    agreement_by_fram_out = dict(agreement_by_fram)
+    if config and _framings_excluded_from_document_ui(config):
+        fram_confusion_rows = [
+            row
+            for row in fram_confusion_rows
+            if not _framing_label_excluded_from_report_ui(row.get("human"), config)
+            and not _framing_label_excluded_from_report_ui(row.get("llm"), config)
+        ]
+        agreement_by_fram_out = {
+            k: v
+            for k, v in agreement_by_fram.items()
+            if not _framing_label_excluded_from_report_ui(k, config)
+        }
     return {
         "cat_confusion": [{"human": h, "llm": l, "count": c} for (h, l), c in cat_confusion.items()],
-        "fram_confusion": [{"human": h, "llm": l, "count": c} for (h, l), c in fram_confusion.items()],
+        "fram_confusion": fram_confusion_rows,
         "agreement_by_cat": agreement_by_cat,
-        "agreement_by_fram": agreement_by_fram,
+        "agreement_by_fram": agreement_by_fram_out,
         "mismatch_breakdown": mismatch_breakdown,
     }
 
@@ -1503,12 +2137,15 @@ def _compute_trends(
         doc_cats: Counter = Counter()
         doc_frams: Counter = Counter()
         for r in aligned:
-            cat = r.get("llm_category") or r.get("human_category") or ""
-            fram = r.get("llm_framing") or r.get("human_framing") or ""
+            cat_raw = r.get("llm_category") or r.get("human_category") or ""
+            fram_raw = r.get("llm_framing") or r.get("human_framing") or ""
+            cat_fold = display_content_category_for_ui(cat_raw.strip()) if cat_raw else ""
+            cat = canonical_content_category_id(cat_fold) if cat_fold else None
+            fram_n = _normalize_framing_label(str(fram_raw)) if fram_raw else ""
             if cat:
                 doc_cats[cat] += 1
-            if fram:
-                doc_frams[fram] += 1
+            if fram_n:
+                doc_frams[fram_n] += 1
         for c in cat_order:
             cat_data[c].append(doc_cats.get(c, 0))
         for f in fram_order:
@@ -1579,7 +2216,11 @@ def _heatmap_colour(intensity: float) -> str:
     return _HEATMAP_COLOUR_STOPS[-1][1]
 
 
-def _heatmap_html(stats: Dict[str, Any], cat_ids: Optional[Set[str]] = None) -> str:
+def _heatmap_html(
+    stats: Dict[str, Any],
+    cat_ids: Optional[Set[str]] = None,
+    config: Optional[Dict[str, Any]] = None,
+) -> str:
     """Render category x framing heatmap as HTML table with teal gradient.
     Excludes content categories (e.g. Legal Framework) from framing axis."""
     heatmap = {(h["cat"], h["fram"]): h["count"] for h in stats.get("heatmap", [])}
@@ -1587,6 +2228,8 @@ def _heatmap_html(stats: Dict[str, Any], cat_ids: Optional[Set[str]] = None) -> 
     all_frams = sorted(stats.get("framings", {}).keys(), key=lambda f: -stats["framings"].get(f, 0))
     cat_ids = cat_ids or set()
     frams = [f for f in all_frams if f not in cat_ids and _normalize_for_group(f) not in cat_ids]
+    if config and _framings_excluded_from_document_ui(config):
+        frams = [f for f in frams if not _framing_label_excluded_from_report_ui(f, config)]
     if not cats or not frams:
         return '<p class="viz-intro" data-i18n="no_data">No data available.</p>'
     max_val = max(heatmap.values()) if heatmap else 1
@@ -1621,8 +2264,8 @@ def _taxonomy_reference_section(
         for c in categories:
             cid = c.get("id", "")
             label = c.get("label_en", cid)
-            desc = c.get("description", "")
-            examples = c.get("examples", "")
+            desc = scrub_retired_multiword_category_labels(c.get("description", "") or "")
+            examples = scrub_retired_multiword_category_labels(c.get("examples", "") or "")
             colour = cat_colours.get(cid, "#8b7355")
             parts.append(
                 f'<div class="taxonomy-ref-item" style="margin-bottom: 1rem; padding: 1rem; background: #fffef9; border-radius: 4px; border-left: 4px solid {colour}; border: 1px solid rgba(139,115,85,0.25); border-left: 4px solid {colour};">'
@@ -1640,8 +2283,8 @@ def _taxonomy_reference_section(
         for f in framings:
             fid = f.get("id", "")
             label = f.get("label_en", fid)
-            desc = f.get("description", "")
-            examples = f.get("examples", "")
+            desc = scrub_retired_multiword_category_labels(f.get("description", "") or "")
+            examples = scrub_retired_multiword_category_labels(f.get("examples", "") or "")
             colour = fram_colours.get(fid, "#8b7355")
             parts.append(
                 f'<div class="taxonomy-ref-item" style="margin-bottom: 1rem; padding: 1rem; background: #fffef9; border-radius: 4px; border-left: 4px solid {colour}; border: 1px solid rgba(139,115,85,0.25); border-left: 4px solid {colour};">'
@@ -1678,6 +2321,39 @@ def _intro_tab() -> str:
 </div>"""
 
 
+def _label_suggestion_modal_html() -> str:
+    """Modal + visually hidden JSON store for comparison-table label suggestions (main report only)."""
+    return """
+<div id="label-suggestion-modal" class="label-suggestion-modal" role="dialog" aria-modal="true" aria-labelledby="label-suggestion-modal-title" aria-hidden="true">
+  <div class="label-suggestion-modal-backdrop" data-close-label-modal="1"></div>
+  <div class="label-suggestion-modal-panel" tabindex="-1">
+    <h3 id="label-suggestion-modal-title" data-i18n="label_suggestion_modal_title">Suggest alternative labels</h3>
+    <div id="label-suggestion-context" class="label-suggestion-context" aria-live="polite"></div>
+    <div class="label-suggestion-field">
+      <label for="label-suggestion-cat" data-i18n="label_suggestion_suggested_category">Suggested specific detail</label>
+      <select id="label-suggestion-cat" autocomplete="off"></select>
+    </div>
+    <div class="label-suggestion-field">
+      <label for="label-suggestion-fram" data-i18n="label_suggestion_suggested_framing">Suggested ideological layer</label>
+      <select id="label-suggestion-fram" autocomplete="off"></select>
+    </div>
+    <div class="label-suggestion-field">
+      <label for="label-suggestion-notes" data-i18n="label_suggestion_notes">Notes (optional)</label>
+      <textarea id="label-suggestion-notes" rows="3" data-i18n-placeholder="label_suggestion_notes_placeholder" placeholder="Reasoning, citations, or other context…"></textarea>
+    </div>
+    <p class="label-suggestion-hint" style="font-size:0.8rem;color:#6b7280;margin:0 0 0.5rem;line-height:1.4;" data-i18n="label_suggestion_hidden_json_hint"></p>
+    <div id="label-suggestion-status" class="label-suggestion-status" role="status"></div>
+    <div class="label-suggestion-actions">
+      <button type="button" class="label-suggestion-save-btn" id="label-suggestion-save-btn" data-i18n="label_suggestion_save">Save suggestion</button>
+      <button type="button" class="label-suggestion-cancel-btn" id="label-suggestion-cancel-btn" data-i18n="label_suggestion_cancel">Cancel</button>
+      <button type="button" class="label-suggestion-download-btn" id="label-suggestion-download-btn" data-i18n="label_suggestion_download">Download all suggestions (JSON)</button>
+    </div>
+  </div>
+</div>
+<script type="application/json" id="label-suggestions-export-json" class="label-suggestions-json-store">[]</script>
+"""
+
+
 def _homepage(
     comparison_by_doc: Dict[str, Dict[str, Any]],
     documents: List[Dict[str, Any]],
@@ -1703,43 +2379,10 @@ def _homepage(
     feedback_url = config.get("feedback", {}).get("url", "")
     feedback_email = config.get("feedback", {}).get("email", "")
 
-    cat_order = sorted(stats["categories"].keys(), key=lambda c: -stats["categories"].get(c, 0))
-    cat_ids = {c.get("id", "").strip() for c in (glossary_categories or []) if c.get("id")}
-    # Build fram_order from taxonomy framings only (exclude content categories like Legal Framework)
-    canonical_fram_ids: List[str] = []
-    seen_norm = set()
-    for f in (glossary_framings or []):
-        fid = (f.get("id") or "").strip()
-        if not fid or fid in cat_ids:
-            continue
-        norm = _normalize_for_group(fid)
-        if norm and norm not in seen_norm:
-            seen_norm.add(norm)
-            canonical_fram_ids.append(norm)
-    if canonical_fram_ids:
-        fram_order = sorted(
-            canonical_fram_ids,
-            key=lambda f: -sum(stats["framings"].get(k, 0) for k in stats["framings"] if _normalize_for_group(k) == f),
-        )
-    else:
-        filtered = [f for f in stats["framings"] if f not in cat_ids and _normalize_for_group(f) not in cat_ids]
-        if filtered:
-            fram_order = sorted(filtered, key=lambda f: -stats["framings"].get(f, 0))
-        else:
-            src = (glossary_framings or []) or (taxonomy_framings or [])
-            fallback_ids = [f.get("id") for f in src if f.get("id") and f.get("id") not in cat_ids]
-            seen_f = set()
-            deduped = []
-            for fid in fallback_ids:
-                norm = _normalize_for_group(fid)
-                if norm and norm not in seen_f:
-                    seen_f.add(norm)
-                    deduped.append(norm)
-            fram_order = sorted(
-                deduped,
-                key=lambda f: -sum(stats["framings"].get(k, 0) for k in stats["framings"] if _normalize_for_group(k) == f or k == f),
-            ) if deduped else []
-    agreement_stats = _compute_agreement_stats(comparison_by_doc, documents)
+    cat_order, fram_order, cat_ids = _taxonomy_orders_for_viz(
+        stats, glossary_categories, glossary_framings, taxonomy_framings, config,
+    )
+    agreement_stats = _compute_agreement_stats(comparison_by_doc, documents, config)
     terms_by_cat, terms_by_fram = _compute_terms_counts_for_viz(comparison_by_doc)
     vocab_diversity = _compute_vocab_diversity(documents)
     segment_length_vs_accuracy = _compute_segment_length_vs_accuracy(comparison_by_doc, documents)
@@ -1750,26 +2393,28 @@ def _homepage(
     terms_by_framing_detailed = _compute_terms_by_framing_detailed(comparison_by_doc, fram_order)
     term_framing_heatmap = _compute_term_framing_heatmap(comparison_by_doc, fram_order)
 
-    fram_colours_for_viz = dict(fram_colours)
-    for f in fram_order:
-        if f not in fram_colours_for_viz:
-            fram_colours_for_viz[f] = next(
-                (fram_colours_for_viz[k] for k in fram_colours_for_viz if _normalize_for_group(k) == f),
-                "#8b7355",
-            )
+    fram_colours_for_viz = _fram_colours_for_viz_order(fram_order, fram_colours)
 
     viz_data = {
         "wordCloudEng": [[w, c] for w, c in word_data_eng],
         "wordCloudRus": [[w, c] for w, c in word_data_rus],
-        "perDoc": [{"doc_id": pd["doc_id"], "display_name": pd["display_name"], "categories": pd["categories"], "framings": {k: v for k, v in pd.get("framings", {}).items() if k not in cat_ids and _normalize_for_group(k) not in cat_ids}} for pd in stats["per_doc"]],
+        "perDoc": [
+            {
+                "doc_id": pd["doc_id"],
+                "display_name": pd["display_name"],
+                "categories": pd["categories"],
+                "framings": _filter_framing_counts_dict_for_report_ui(pd.get("framings", {}), cat_ids, config),
+            }
+            for pd in stats["per_doc"]
+        ],
         "catColours": cat_colours,
         "framColours": fram_colours_for_viz,
         "categories": stats["categories"],
-        "framings": {k: v for k, v in stats["framings"].items() if k not in cat_ids and _normalize_for_group(k) not in cat_ids},
+        "framings": _filter_framing_counts_dict_for_report_ui(dict(stats["framings"]), cat_ids, config),
         "catOrder": cat_order,
         "framOrder": fram_order,
         "termsByCat": terms_by_cat,
-        "termsByFram": {k: v for k, v in terms_by_fram.items() if k not in cat_ids and _normalize_for_group(k) not in cat_ids},
+        "termsByFram": _filter_framing_counts_dict_for_report_ui(dict(terms_by_fram), cat_ids, config),
         "vocabDiversity": vocab_diversity,
         "segmentLengthVsAccuracy": segment_length_vs_accuracy,
         "trends": trends,
@@ -1785,7 +2430,7 @@ def _homepage(
         "configDefaults": {
             "word_cloud": {
                 "max_words": wc_cfg.get("max_words", 80),
-                "weight_factor": wc_cfg.get("weight_factor", 4),
+                "weight_factor": wc_cfg.get("weight_factor", 15),
                 "min_word_length": wc_cfg.get("min_word_length", 3),
                 "language": wc_cfg.get("language", "both"),
                 "stopwords_extra": "",
@@ -1802,7 +2447,7 @@ def _homepage(
         },
     }
     viz_json = json.dumps(viz_data, ensure_ascii=False)
-    heatmap_html = _heatmap_html(stats, cat_ids=cat_ids)
+    heatmap_html = _heatmap_html(stats, cat_ids=cat_ids, config=config)
 
     feedback_form = ""
     if feedback_url:
@@ -1827,8 +2472,7 @@ def _homepage(
 
     places_map_html = _build_places_map_html(config, embedded=True)
     if places_map_html:
-        srcdoc_escaped = places_map_html.replace("&", "&amp;").replace('"', "&quot;")
-        places_map_srcdoc = f'<iframe src="about:blank" srcdoc="{srcdoc_escaped}" style="width:100%;height:100%;min-height:500px;border:none;"></iframe>'
+        places_map_srcdoc = _places_map_lab_embed_markup(places_map_html)
     else:
         places_map_srcdoc = '<p style="padding:2rem;color:#6b7280;">No places data. Run scripts/extract_places.py and scripts/geocode_places.py to generate places_geocoded.json.</p>'
 
@@ -1904,23 +2548,33 @@ def _doc_tab(
     active: bool = False,
     pdf_href: Optional[str] = None,
     comparison_json_script: str = "[]",
+    doc_viz_section_html: str = "",
+    viz_dom_suffix: str = "",
 ) -> str:
     active_class = " active" if active else ""
     rows_html = []
     for row_idx, r in enumerate(aligned):
         cat_cls = "category-match" if r.get("category_match") else "category-mismatch"
         fram_cls = "framing-match" if r.get("framing_match") else "framing-mismatch"
-        cat_style_llm = f"color: {cat_colours.get(r.get('llm_category',''), '#333')}; font-weight: 600;"
-        cat_style_human = f"color: {cat_colours.get(r.get('human_category',''), '#333')}; font-weight: 600;"
-        fram_style_llm = f"color: {fram_colours.get(r.get('llm_framing',''), '#333')}; font-weight: 600;"
-        fram_style_human = f"color: {fram_colours.get(r.get('human_framing',''), '#333')}; font-weight: 600;"
+        llm_cat_raw = str(r.get("llm_category", "") or "")
+        human_cat_raw = str(r.get("human_category", "") or "")
+        llm_fram_raw = str(r.get("llm_framing", "") or "")
+        human_fram_raw = str(r.get("human_framing", "") or "")
+        llm_cat_disp = display_content_category_for_ui(llm_cat_raw)
+        human_cat_disp = display_content_category_for_ui(human_cat_raw)
+        llm_fram_disp = _normalize_framing_label(llm_fram_raw)
+        human_fram_disp = _normalize_framing_label(human_fram_raw)
+        cat_style_llm = f"color: {_report_category_colour(llm_cat_raw, cat_colours)}; font-weight: 600;"
+        cat_style_human = f"color: {_report_category_colour(human_cat_raw, cat_colours)}; font-weight: 600;"
+        fram_style_llm = f"color: {_report_framing_colour(llm_fram_raw, fram_colours)}; font-weight: 600;"
+        fram_style_human = f"color: {_report_framing_colour(human_fram_raw, fram_colours)}; font-weight: 600;"
         section = html_module.escape(str(r.get('section', '')))
         entry_eng = html_module.escape(str(r.get('entry_eng', '')))
         entry_rus = html_module.escape(str(r.get('entry_rus', '')))
-        llm_cat = html_module.escape(str(r.get('llm_category', '')))
-        human_cat = html_module.escape(str(r.get('human_category', '')))
-        llm_fram = html_module.escape(str(r.get('llm_framing', '')))
-        human_fram = html_module.escape(str(r.get('human_framing', '')))
+        llm_cat = html_module.escape(llm_cat_disp)
+        human_cat = html_module.escape(human_cat_disp)
+        llm_fram = html_module.escape(llm_fram_disp)
+        human_fram = html_module.escape(human_fram_disp)
         context = html_module.escape(str(r.get('context', '')))
         data_attrs = (
             f' data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}"'
@@ -1929,18 +2583,33 @@ def _doc_tab(
             f' data-row-index="{row_idx}"'
         )
         section_btn = f'<button type="button" class="section-click-to-view" data-tab="{doc_id}" data-row-index="{row_idx}" title="Open document text view and highlight this entry">{r.get("section","")}</button>'
-        suggest_btn = f'<button type="button" class="suggest-label-btn" data-doc="{doc_id}" data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}" data-llm-cat="{llm_cat}" data-human-cat="{human_cat}" data-llm-fram="{llm_fram}" data-human-fram="{human_fram}" data-i18n-title="suggest_label_tooltip">+</button>'
+        doc_id_esc = html_module.escape(doc_id)
+        suggest_btn = f'<button type="button" class="suggest-label-btn" data-doc="{doc_id_esc}" data-row-index="{row_idx}" data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}" data-llm-cat="{llm_cat}" data-human-cat="{human_cat}" data-llm-fram="{llm_fram}" data-human-fram="{human_fram}" data-i18n-title="suggest_label_tooltip">+</button>'
         rows_html.append(
             f"<tr{data_attrs}>"
             f"<td class=\"section-cell\">{section_btn} {suggest_btn}</td>"
             f"<td>{r.get('entry_eng','')}</td>"
             f"<td>{r.get('entry_rus','')}</td>"
-            f"<td class=\"{cat_cls}\"><strong>LLM:</strong> <span style=\"{cat_style_llm}\">{r.get('llm_category','')}</span><br/><strong>Human:</strong> <span style=\"{cat_style_human}\">{r.get('human_category','')}</span></td>"
-            f"<td class=\"{fram_cls}\"><strong>LLM:</strong> <span style=\"{fram_style_llm}\">{r.get('llm_framing','')}</span><br/><strong>Human:</strong> <span style=\"{fram_style_human}\">{r.get('human_framing','')}</span></td>"
+            f"<td class=\"{cat_cls}\"><strong><span data-i18n=\"comparison_model_side_short\">LLM</span>:</strong>"
+            f' <span style="{cat_style_llm}">{html_module.escape(llm_cat_disp)}</span><br/>'
+            f"<strong><span data-i18n=\"comparison_human_side_short\">Human</span>:</strong>"
+            f' <span style="{cat_style_human}">{html_module.escape(human_cat_disp)}</span></td>'
+            f"<td class=\"{fram_cls}\"><strong><span data-i18n=\"comparison_model_side_short\">LLM</span>:</strong>"
+            f' <span style="{fram_style_llm}">{html_module.escape(llm_fram_disp)}</span><br/>'
+            f"<strong><span data-i18n=\"comparison_human_side_short\">Human</span>:</strong>"
+            f' <span style="{fram_style_human}">{html_module.escape(human_fram_disp)}</span></td>'
             f"<td class=\"context-cell\">{r.get('context','')}</td>"
             f"</tr>"
         )
     table_body = "\n".join(rows_html)
+    doc_cyrillic_popup = (
+        f'<div class="doc-tab-cyrillic-keyboard">'
+        f'<div class="cyrillic-keyboard-popup-wrap doc-cyrillic-popup-floating" id="cyrillic-popup-{doc_id}" '
+        f'role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="cyrillic-popup-label-{doc_id}">'
+        f'<p class="cyrillic-keyboard-label" id="cyrillic-popup-label-{doc_id}" data-i18n="cyrillic_keyboard_label">Cyrillic keyboard</p>'
+        f"{_cyrillic_keyboard_html(doc_id)}"
+        f"</div></div>"
+    )
     cat_opts = "".join(f'<option value="{html_module.escape(c.get("id", ""))}">{html_module.escape(c.get("id", ""))}</option>' for c in categories if c.get("id"))
     fram_opts = "".join(f'<option value="{html_module.escape(f.get("id", ""))}">{html_module.escape(f.get("id", ""))}</option>' for f in framings if f.get("id"))
     if full_text_eng or full_text_rus:
@@ -1993,8 +2662,12 @@ def _doc_tab(
     <div class="pdf-view-placeholder" data-i18n="pdf_view_missing">No PDF configured.</div>
   </div>
 </details>"""
+    tab_attrs = f'<div class="tab-content{active_class}" id="tab-{doc_id}"'
+    if viz_dom_suffix:
+        tab_attrs += f' data-doc-viz-suffix="{viz_dom_suffix}"'
+    tab_attrs += ">"
     return f"""
-<div class="tab-content{active_class}" id="tab-{doc_id}">
+{tab_attrs}
 <div class="header"><h2>{display_name}</h2></div>
 {hidden_stats}
 {pdf_section}
@@ -2004,16 +2677,25 @@ def _doc_tab(
     {text_view}
   </div>
 </details>
+{doc_viz_section_html}
 <details class="collapsible-section" id="doc-section-compare-{doc_id}">
   <summary data-i18n="comparison_table">Comparison table</summary>
   <div class="collapsible-body">
     <div class="comparison-table-controls" data-tab="{doc_id}">
       <input type="text" id="table-search-{doc_id}" class="comparison-table-search" placeholder="Search in table..." data-tab="{doc_id}" data-i18n="table_search_placeholder"/>
-      <select id="table-cat-{doc_id}" class="comparison-table-cat" data-tab="{doc_id}"><option value="" data-i18n="table_all_categories">All specific details</option>{cat_opts}</select>
-      <select id="table-fram-{doc_id}" class="comparison-table-fram" data-tab="{doc_id}"><option value="" data-i18n="table_all_framings">All ideological layers</option>{fram_opts}</select>
-      <div class="comparison-toolbar-actions">
-        <button type="button" class="comparison-export-json" data-doc-id="{html_module.escape(doc_id)}" data-i18n="export_comparison_json">Export JSON</button>
-        <button type="button" class="comparison-table-clear" data-tab="{doc_id}" data-i18n="clear_filters">Clear filters</button>
+      <div class="comparison-table-controls-filters">
+        <div class="ctl-group">
+          <span class="document-text-filter-head" data-i18n="specific_detail_filter_head">Specific Details</span>
+          <select id="table-cat-{doc_id}" class="comparison-table-cat" data-tab="{doc_id}"><option value="" data-i18n="table_all_categories">All specific details</option>{cat_opts}</select>
+        </div>
+        <div class="ctl-group">
+          <span class="document-text-filter-head" data-i18n="ideological_layer_filter_head">Ideological Layers</span>
+          <select id="table-fram-{doc_id}" class="comparison-table-fram" data-tab="{doc_id}"><option value="" data-i18n="table_all_framings">All ideological layers</option>{fram_opts}</select>
+        </div>
+        <div class="comparison-toolbar-actions">
+          <button type="button" class="comparison-export-json" data-doc-id="{html_module.escape(doc_id)}" data-i18n="export_comparison_json">Export JSON</button>
+          <button type="button" class="comparison-table-clear" data-tab="{doc_id}" data-i18n="clear_filters">Clear filters</button>
+        </div>
       </div>
     </div>
     <script type="application/json" id="comparison-export-{doc_id}" class="hidden-comparison-json">{comparison_json_script}</script>
@@ -2023,6 +2705,7 @@ def _doc_tab(
     </table>
   </div>
 </details>
+{doc_cyrillic_popup}
 </div>"""
 
 
@@ -2089,18 +2772,14 @@ def _document_text_view(
     """Block: search, category/framing filters; two panels show full document text (with aligned segments as spans when provided)."""
     legend = _colour_legend(categories, framings)
     esc_id = html_module.escape(doc_id)
-    cyr_btns = "".join(
-        f'<button type="button" class="cyr-key-ins" data-tab="{esc_id}" data-char="{html_module.escape(ch)}">{html_module.escape(ch)}</button>'
-        for ch in _CYRILLIC_KEYBOARD_CHARS
-    )
     return f"""
 <div class="document-text-view layout-split" data-tab-id="{esc_id}">
   <div class="document-text-controls-sticky">
-    <div class="document-text-controls document-text-controls-row1">
-      <input type="text" id="doc-search-{esc_id}" class="document-search" placeholder="Search in text (English or Russian)..." data-tab="{esc_id}" data-i18n="search_placeholder"/>
+    <div class="document-search-cyrillic-anchor">
+      <div class="document-text-controls document-text-controls-row1">
+        <input type="text" id="doc-search-{esc_id}" class="document-search" placeholder="Search in text (English or Russian)..." data-tab="{esc_id}" data-i18n="search_placeholder" autocomplete="off"/>
+      </div>
     </div>
-    <p class="cyrillic-keyboard-label" data-i18n="cyrillic_keyboard_label">Cyrillic keyboard</p>
-    <div class="cyrillic-keyboard-row">{cyr_btns}</div>
     <div class="document-text-controls document-text-controls-filters">
       <div class="ctl-group">
         <span class="document-text-filter-head" data-i18n="specific_detail_filter_head">Specific Details</span>
@@ -2167,12 +2846,7 @@ def _load_glossary_taxonomy_from_categories_explained(config: Dict[str, Any]) ->
 
 def _normalize_for_group(s: str) -> str:
     """Map variant labels to canonical form for grouping (e.g. Generic/Neutral variants)."""
-    if not s:
-        return ""
-    t = s.strip()
-    if t in ("Generic / Neutral", "Generic / Neutral Language"):
-        return "Generic / Neutral Language"
-    return t
+    return _normalize_framing_label(s)
 
 
 def _collect_terms_from_comparison(
@@ -2201,7 +2875,9 @@ def _collect_terms_from_comparison(
             all_terms.add(pair)
             term_docs.setdefault(pair, set()).add(doc_id)
             term_locations.setdefault(pair, []).append((doc_id, row_idx))
-            cat = _normalize_for_group(r.get("llm_category") or "")
+            cat_raw = r.get("llm_category") or ""
+            cat_fold = display_content_category_for_ui(cat_raw.strip()) if cat_raw else ""
+            cat = canonical_content_category_id(cat_fold) if cat_fold else ""
             fram = _normalize_for_group(r.get("llm_framing") or "")
             if cat:
                 terms_by_cat.setdefault(cat, set()).add(pair)
@@ -2255,10 +2931,17 @@ def _glossary_tab(
     fram_colours: Dict[str, str],
     *,
     from_categories_explained: bool = False,
+    config: Optional[Dict[str, Any]] = None,
 ) -> str:
     terms_by_cat, terms_by_fram, all_terms, term_docs, term_locations = _collect_terms_from_comparison(
         comparison_by_doc
     )
+    if _framings_excluded_from_document_ui(config):
+        terms_by_fram = {
+            k: v
+            for k, v in terms_by_fram.items()
+            if not _framing_label_excluded_from_report_ui(k, config)
+        }
     total_unique = len(all_terms)
     n_cat_with_terms = len(terms_by_cat)
     n_fram_with_terms = len(terms_by_fram)
@@ -2280,8 +2963,8 @@ def _glossary_tab(
         cid = c.get("id", "")
         if not cid:
             continue
-        desc = c.get("description") or c.get("label_en", "")
-        examples = c.get("examples", "")
+        desc = scrub_retired_multiword_category_labels((c.get("description") or c.get("label_en", "") or ""))
+        examples = scrub_retired_multiword_category_labels(str(c.get("examples", "") or ""))
         colour = cat_colours.get(cid, "#8b7355")
         terms_set = terms_by_cat.get(cid) or terms_by_cat.get(c.get("label_en", "")) or set()
         n_terms = len(terms_set)
@@ -2312,8 +2995,8 @@ def _glossary_tab(
         fid = f.get("id", "")
         if not fid:
             continue
-        desc = f.get("description") or f.get("label_en", "")
-        examples = f.get("examples", "")
+        desc = scrub_retired_multiword_category_labels((f.get("description") or f.get("label_en", "") or ""))
+        examples = scrub_retired_multiword_category_labels(str(f.get("examples", "") or ""))
         colour = fram_colours.get(fid, "#8b7355")
         canon = _normalize_for_group(fid) or _normalize_for_group(f.get("label_en", ""))
         terms_set = terms_by_fram.get(fid) or terms_by_fram.get(canon) or terms_by_fram.get(f.get("label_en", "")) or set()
@@ -2358,6 +3041,7 @@ def _glossary_tab(
         for doc in (documents or [])
         if doc.get("document_id")
     )
+    glossary_cyr = _cyrillic_keyboard_html("glossary")
     return (
         """<div class="tab-content" id="tab-glossary">
 <div class="header">
@@ -2366,7 +3050,15 @@ def _glossary_tab(
 </div>
 <div style="background: #fffef9; padding: 2rem; border-radius: 4px; border: 1px solid #8b7355; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 2rem;">
 <div class="glossary-controls">
-<input type="search" id="glossary-search" class="glossary-search" placeholder="Search glossary by name or definition..." data-i18n="glossary_search_placeholder"/>
+<div class="glossary-search-cyrillic-anchor">
+<input type="search" id="glossary-search" class="glossary-search" placeholder="Search glossary by name or definition..." data-i18n="glossary_search_placeholder" autocomplete="off"/>
+<div class="cyrillic-keyboard-popup-wrap" id="cyrillic-popup-glossary" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="cyrillic-popup-label-glossary">
+<p class="cyrillic-keyboard-label" id="cyrillic-popup-label-glossary" data-i18n="cyrillic_keyboard_label">Cyrillic keyboard</p>
+"""
+        + glossary_cyr
+        + """
+</div>
+</div>
 <div class="glossary-filter-wrap">
 <label for="glossary-doc-filter" data-i18n="filter_by_document">Filter by document:</label>
 <select id="glossary-doc-filter" class="glossary-doc-filter">
@@ -2376,7 +3068,7 @@ def _glossary_tab(
 </select>
 </div>
 </div>
-<p class="glossary-search-hint" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.5rem; margin-bottom: 1.5rem;" data-i18n="glossary_search_hint">Search supports plain text (e.g. arrest) or regex when wrapped in slashes (e.g. /arrest|detain/ for either term, /arrest.*ed/ for variants).</p>
+<p class="glossary-search-hint" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.5rem; margin-bottom: 1.5rem;" data-i18n-html="glossary_search_hint">Plain text matches anywhere (case-insensitive). Regex: /pattern/ or /pattern/flags. <strong>CLOSING SLASH REQUIRED</strong> after the pattern.</p>
 <h3 style="color: #4a5568; margin-bottom: 1.5rem; font-size: 1.5rem;" data-i18n="content_categories">Content Categories</h3>
 <p style="margin-bottom: 2rem; color: #4a5568; font-style: italic;" data-i18n="content_categories_desc">Specific details describe WHAT the text refers to at surface level (aligned with content-category labels in the data model). In technical materials these correspond to content categories.</p>
 """
@@ -2399,20 +3091,24 @@ def _script(
     term_synonyms: Optional[Dict[str, Dict[str, Any]]] = None,
     *,
     standalone_viz: bool = False,
+    ui_translations: Optional[Dict[str, Any]] = None,
 ) -> str:
     cat_ids = [c.get("id", "") for c in categories if c.get("id")]
     fram_ids = [f.get("id", "") for f in framings if f.get("id")]
     cat_json = json.dumps(cat_ids)
     fram_json = json.dumps(fram_ids)
+    cat_redirect_json = json.dumps(GROUND_TRUTH_CONTENT_CATEGORY_REDIRECT, ensure_ascii=False)
     term_synonyms = term_synonyms or {}
     term_synonyms_json = json.dumps(term_synonyms, ensure_ascii=False)
-    ui_translations_json = json.dumps(_UI_TRANSLATIONS, ensure_ascii=False)
+    tr_src = ui_translations if ui_translations is not None else _UI_TRANSLATIONS
+    ui_translations_json = json.dumps(tr_src, ensure_ascii=False)
     standalone_js = "var STANDALONE_VIZ = true;\n" if standalone_viz else "var STANDALONE_VIZ = false;\n"
     prefix = (
         "\n<script>\n"
         + standalone_js
         + "var TAXONOMY_ALL_CATEGORIES = " + cat_json + ";\n"
         "var TAXONOMY_ALL_FRAMINGS = " + fram_json + ";\n"
+        "var CATEGORY_LABEL_REDIRECT = " + cat_redirect_json + ";\n"
         "var TERM_SYNONYMS = " + term_synonyms_json + ";\n"
         "var UI_TRANSLATIONS = " + ui_translations_json + ";\n"
     )
@@ -2423,6 +3119,160 @@ function t(key, params) {
   var s = tr ? (tr[UI_LANG] || tr['en'] || key) : key;
   if (params && typeof params === 'object') { for (var k in params) s = s.replace(new RegExp('\\\\{' + k + '\\\\}', 'g'), params[k]); }
   return s;
+}
+var LABEL_SUGGESTIONS_STORAGE_KEY = 'vozmezdie_label_suggestions_v1';
+var labelSuggestionDraft = null;
+function escapeHtmlLS(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function getLabelSuggestions() {
+  try {
+    var raw = localStorage.getItem(LABEL_SUGGESTIONS_STORAGE_KEY);
+    if (!raw) return [];
+    var parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e1) {
+    return [];
+  }
+}
+function saveLabelSuggestions(arr) {
+  try {
+    localStorage.setItem(LABEL_SUGGESTIONS_STORAGE_KEY, JSON.stringify(arr));
+  } catch (e2) {}
+  syncLabelSuggestionsHiddenJson();
+}
+function syncLabelSuggestionsHiddenJson() {
+  var el = document.getElementById('label-suggestions-export-json');
+  if (!el) return;
+  el.textContent = JSON.stringify(getLabelSuggestions(), null, 2);
+}
+function fillLabelSuggestionTaxonomySelects() {
+  var catSel = document.getElementById('label-suggestion-cat');
+  var framSel = document.getElementById('label-suggestion-fram');
+  if (!catSel || !framSel) return;
+  var blankLabel = t('label_suggestion_optional_blank');
+  catSel.innerHTML = '';
+  framSel.innerHTML = '';
+  var blankOpt = document.createElement('option');
+  blankOpt.value = '';
+  blankOpt.textContent = blankLabel;
+  catSel.appendChild(blankOpt.cloneNode(true));
+  framSel.appendChild(blankOpt.cloneNode(true));
+  (typeof TAXONOMY_ALL_CATEGORIES !== 'undefined' ? TAXONOMY_ALL_CATEGORIES : []).forEach(function(cid) {
+    var oc = document.createElement('option');
+    oc.value = cid;
+    oc.textContent = cid;
+    catSel.appendChild(oc);
+  });
+  (typeof TAXONOMY_ALL_FRAMINGS !== 'undefined' ? TAXONOMY_ALL_FRAMINGS : []).forEach(function(fid) {
+    var of = document.createElement('option');
+    of.value = fid;
+    of.textContent = fid;
+    framSel.appendChild(of);
+  });
+}
+function openLabelSuggestionModal(btn) {
+  var modal = document.getElementById('label-suggestion-modal');
+  if (!modal || !btn) return;
+  fillLabelSuggestionTaxonomySelects();
+  var docId = btn.getAttribute('data-doc') || '';
+  var rowIdx = btn.getAttribute('data-row-index');
+  var section = btn.getAttribute('data-section') || '';
+  var entryEng = btn.getAttribute('data-entry-eng') || '';
+  var entryRus = btn.getAttribute('data-entry-rus') || '';
+  var llmCat = btn.getAttribute('data-llm-cat') || '';
+  var humanCat = btn.getAttribute('data-human-cat') || '';
+  var llmFram = btn.getAttribute('data-llm-fram') || '';
+  var humanFram = btn.getAttribute('data-human-fram') || '';
+  labelSuggestionDraft = {
+    document_id: docId,
+    row_index: rowIdx !== null && rowIdx !== '' ? parseInt(rowIdx, 10) : null,
+    section: section,
+    entry_eng: entryEng,
+    entry_rus: entryRus,
+    current_model_category: llmCat,
+    current_human_category: humanCat,
+    current_model_framing: llmFram,
+    current_human_framing: humanFram
+  };
+  var ctx = document.getElementById('label-suggestion-context');
+  if (ctx) {
+    var curLbl = t('comparison_model_side_short') + ': ' + llmCat + ' / ' + llmFram + '; ' + t('comparison_human_side_short') + ': ' + humanCat + ' / ' + humanFram;
+    ctx.innerHTML =
+      '<p style="margin:0 0 0.5rem;font-weight:600;color:#4a5568;font-size:0.82rem;">' + escapeHtmlLS(t('label_suggestion_context_intro')) + '</p>' +
+      '<dl class="label-suggestion-dl">' +
+      '<dt>' + escapeHtmlLS(t('label_suggestion_document_id')) + '</dt><dd>' + escapeHtmlLS(docId) + '</dd>' +
+      '<dt>' + escapeHtmlLS(t('label_suggestion_row_index')) + '</dt><dd>' + escapeHtmlLS(rowIdx !== null && rowIdx !== '' ? String(rowIdx) : '') + '</dd>' +
+      '<dt>' + escapeHtmlLS(t('section')) + '</dt><dd>' + escapeHtmlLS(section) + '</dd>' +
+      '<dt>' + escapeHtmlLS(t('entry_eng')) + '</dt><dd>' + escapeHtmlLS(entryEng) + '</dd>' +
+      '<dt>' + escapeHtmlLS(t('entry_rus')) + '</dt><dd>' + escapeHtmlLS(entryRus) + '</dd>' +
+      '<dt>' + escapeHtmlLS(t('label_suggestion_current_labels')) + '</dt><dd>' + escapeHtmlLS(curLbl) + '</dd>' +
+      '</dl>';
+  }
+  var notes = document.getElementById('label-suggestion-notes');
+  if (notes) notes.value = '';
+  var catSel2 = document.getElementById('label-suggestion-cat');
+  var framSel2 = document.getElementById('label-suggestion-fram');
+  if (catSel2) catSel2.value = '';
+  if (framSel2) framSel2.value = '';
+  var st = document.getElementById('label-suggestion-status');
+  if (st) st.textContent = '';
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
+  var panel = modal.querySelector('.label-suggestion-modal-panel');
+  if (panel) panel.focus();
+}
+function closeLabelSuggestionModal() {
+  var modal = document.getElementById('label-suggestion-modal');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden', 'true');
+  labelSuggestionDraft = null;
+}
+function saveLabelSuggestionFromModal() {
+  if (!labelSuggestionDraft) return;
+  var catSel = document.getElementById('label-suggestion-cat');
+  var framSel = document.getElementById('label-suggestion-fram');
+  var notes = document.getElementById('label-suggestion-notes');
+  var rec = {
+    id: 'ls-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10),
+    saved_at: new Date().toISOString(),
+    document_id: labelSuggestionDraft.document_id,
+    row_index: labelSuggestionDraft.row_index,
+    section: labelSuggestionDraft.section,
+    entry_eng: labelSuggestionDraft.entry_eng,
+    entry_rus: labelSuggestionDraft.entry_rus,
+    current_model_category: labelSuggestionDraft.current_model_category,
+    current_human_category: labelSuggestionDraft.current_human_category,
+    current_model_framing: labelSuggestionDraft.current_model_framing,
+    current_human_framing: labelSuggestionDraft.current_human_framing,
+    suggested_category: catSel ? (catSel.value || '') : '',
+    suggested_framing: framSel ? (framSel.value || '') : '',
+    notes: notes ? (notes.value || '').trim() : ''
+  };
+  var arr = getLabelSuggestions();
+  arr.push(rec);
+  saveLabelSuggestions(arr);
+  var st = document.getElementById('label-suggestion-status');
+  if (st) st.textContent = t('label_suggestion_saved_ok');
+  var btnSave = document.getElementById('label-suggestion-save-btn');
+  if (btnSave) btnSave.disabled = true;
+  setTimeout(function() {
+    if (btnSave) btnSave.disabled = false;
+    closeLabelSuggestionModal();
+  }, 850);
+}
+function downloadLabelSuggestionsJson() {
+  var arr = getLabelSuggestions();
+  var blob = new Blob([JSON.stringify(arr, null, 2)], { type: 'application/json;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'label_suggestions.json';
+  a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(a.href); }, 1500);
 }
 function setLanguage(lang) {
   if (lang !== 'en' && lang !== 'uk') return;
@@ -2463,13 +3313,26 @@ function setLanguage(lang) {
     var dataEl = document.getElementById('viz-data');
     if (dataEl) { try { var d = JSON.parse(dataEl.textContent); buildConfigPanel('viz-' + vizSel.value, d); } catch(e){} }
   }
+  document.querySelectorAll('[data-doc-viz-root]').forEach(function(sec) {
+    var sfx = sec.getAttribute('data-doc-viz-root');
+    if (!sfx || sec.getAttribute('data-doc-viz-inited') !== '1') return;
+    var selEl = document.getElementById('viz-select-' + sfx);
+    var dEl = document.getElementById('viz-data-' + sfx);
+    if (!selEl || !dEl || typeof buildConfigPanel !== 'function') return;
+    try {
+      var dDoc = JSON.parse(dEl.textContent);
+      buildConfigPanel('viz-' + selEl.value, dDoc, { suffix: sfx, root: sec });
+    } catch (e2) {}
+  });
   var visibleTab = document.querySelector('.tab-content.active');
   if (visibleTab && visibleTab.id && visibleTab.id.indexOf('tab-glossary') === -1 && visibleTab.id !== 'tab-home' && visibleTab.id !== 'tab-intro') {
     var tid = visibleTab.id.replace('tab-', '');
     if (tid && typeof onDocumentTabShown === 'function') onDocumentTabShown(tid);
   }
+  if (typeof refreshAllCyrillicKeyboards === 'function') refreshAllCyrillicKeyboards();
 }
 function showTab(tabId) {
+  if (typeof closeAllCyrillicKeyboardPopups === 'function') closeAllCyrillicKeyboardPopups();
   document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); });
   document.querySelectorAll('.sidebar-nav-item').forEach(function(el) { el.classList.remove('active'); });
   var tab = document.getElementById(tabId);
@@ -2522,29 +3385,38 @@ function resolveFramingColour(fram, attrColour) {
 }
 function canonicalFramingOption(fram) {
   if (!fram) return fram;
-  var lower = (fram + '').trim().toLowerCase();
-  if (lower === 'generic / neutral' || lower === 'generic / neutral language') return 'Generic / Neutral Language';
-  return (fram + '').trim();
+  var t = ('' + fram).trim();
+  var lower = t.toLowerCase();
+  if (lower === 'generic / neutral' || lower === 'generic / neutral language' || lower === 'generic') return 'Generic / Neutral Language';
+  return t;
 }
 function framingMatch(spanFram, filterVal) {
   if (!filterVal || filterVal === 'All') return true;
-  spanFram = (spanFram || '').trim();
-  var f = filterVal.trim();
+  spanFram = canonicalFramingOption((spanFram || '').trim());
+  var f = canonicalFramingOption((filterVal || '').trim());
+  if (!spanFram && !f) return true;
   if (spanFram === f) return true;
   if (spanFram.toLowerCase() === f.toLowerCase()) return true;
-  var genericNeutral = ['generic / neutral', 'generic / neutral language'];
+  var genericNeutral = ['generic / neutral', 'generic / neutral language', 'generic'];
   var spanLower = spanFram.toLowerCase();
   var filterLower = f.toLowerCase();
   if (genericNeutral.indexOf(spanLower) !== -1 && genericNeutral.indexOf(filterLower) !== -1) return true;
   return false;
 }
+function canonicalCategoryOption(cat) {
+  if (cat == null || cat === '') return '';
+  var t = ('' + cat).trim();
+  if (!t) return '';
+  if (typeof CATEGORY_LABEL_REDIRECT !== 'undefined' && CATEGORY_LABEL_REDIRECT[t]) return CATEGORY_LABEL_REDIRECT[t];
+  return t;
+}
 function categoryMatch(spanCat, filterVal) {
   if (!filterVal || filterVal === 'All') return true;
-  spanCat = (spanCat || '').trim();
-  var f = (filterVal || '').trim();
-  if (!spanCat && !f) return true;
-  if (spanCat === f) return true;
-  if (spanCat.toLowerCase() === f.toLowerCase()) return true;
+  var sc = canonicalCategoryOption((spanCat || '').trim());
+  var fc = canonicalCategoryOption((filterVal || '').trim());
+  if (!sc && !fc) return true;
+  if (sc === fc) return true;
+  if (sc.toLowerCase() === fc.toLowerCase()) return true;
   return false;
 }
 function evaluateSegmentFilters(seg, search, catFilter, framFilter, colourBy) {
@@ -2552,7 +3424,13 @@ function evaluateSegmentFilters(seg, search, catFilter, framFilter, colourBy) {
   var bothMatch = categoryMatch(cat, humanCat) && framingMatch(fram, humanFram);
   var effCat = colourBy === 'human' ? humanCat : cat;
   var effFram = colourBy === 'human' ? humanFram : fram;
-  var passSearch = !search || (seg.text || '').toLowerCase().indexOf(search) !== -1;
+  var eng = (seg.entryEng || '').toLowerCase();
+  var rus = (seg.entryRus || '').toLowerCase();
+  var panel = (seg.text || '').toLowerCase();
+  /* Visibility: match either language so users can find a row from EN or RU query. */
+  var passSearch = !search || eng.indexOf(search) !== -1 || rus.indexOf(search) !== -1 || panel.indexOf(search) !== -1;
+  /* Highlight only text that actually appears in this panel (avoid yellow on RU when only EN matched). */
+  var passSearchInPanel = !search || panel.indexOf(search) !== -1;
   var passCat = !catFilter || catFilter === 'All' || (colourBy === 'both' ? (bothMatch && categoryMatch(cat, catFilter)) : categoryMatch(effCat, catFilter));
   var passFram = !framFilter || framFilter === 'All' || (colourBy === 'both' ? (bothMatch && framingMatch(fram, framFilter)) : framingMatch(effFram, framFilter));
   var visible = passSearch && passCat && passFram;
@@ -2560,7 +3438,7 @@ function evaluateSegmentFilters(seg, search, catFilter, framFilter, colourBy) {
   var useFramColour = framFilter !== '' && (framFilter === 'All' || (colourBy === 'both' ? (bothMatch && framingMatch(fram, framFilter)) : framingMatch(effFram, framFilter)));
   var catCol = seg.catCol || '#333', framCol = seg.framCol || '#333';
   if (colourBy === 'human') { catCol = seg.humanCatCol || catCol; framCol = seg.humanFramCol || framCol; }
-  return { visible: visible, useCatHighlight: useCatHighlight, useFramColour: useFramColour, catCol: catCol, framCol: framCol, passSearch: passSearch };
+  return { visible: visible, useCatHighlight: useCatHighlight, useFramColour: useFramColour, catCol: catCol, framCol: framCol, passSearch: passSearch, passSearchInPanel: passSearchInPanel };
 }
 function buildDocumentTextView(tid) {
   var tabEl = document.getElementById('tab-' + tid);
@@ -2588,10 +3466,10 @@ function buildDocumentTextView(tid) {
       var humanCatSpan = catSpans.length >= 2 ? catSpans[1] : catSpans[0];
       var llmFramSpan = framSpans[0] || null;
       var humanFramSpan = framSpans.length >= 2 ? framSpans[1] : framSpans[0];
-      var catText = llmCatSpan ? llmCatSpan.textContent.trim() : '';
-      var framText = llmFramSpan ? llmFramSpan.textContent.trim() : '';
-      var humanCatText = humanCatSpan ? humanCatSpan.textContent.trim() : '';
-      var humanFramText = humanFramSpan ? humanFramSpan.textContent.trim() : '';
+      var catText = canonicalCategoryOption(llmCatSpan ? llmCatSpan.textContent.trim() : '');
+      var framText = canonicalFramingOption(llmFramSpan ? llmFramSpan.textContent.trim() : '');
+      var humanCatText = canonicalCategoryOption(humanCatSpan ? humanCatSpan.textContent.trim() : '');
+      var humanFramText = canonicalFramingOption(humanFramSpan ? humanFramSpan.textContent.trim() : '');
       var catColor = llmCatSpan && llmCatSpan.style.color ? llmCatSpan.style.color : '#333';
       var framColor = (framText && typeof resolveFramingColour === 'function') ? resolveFramingColour(framText, (llmFramSpan && llmFramSpan.style.color ? llmFramSpan.style.color : '#333')) : '#333';
       var humanCatColor = humanCatSpan && humanCatSpan.style.color ? humanCatSpan.style.color : '#333';
@@ -2723,6 +3601,102 @@ function wrapOrphanTextNodes(container) {
     textNode.parentNode.replaceChild(span, textNode);
   });
 }
+/** Replace span contents with plain text + optional <mark> around each case-insensitive substring hit. */
+function fillDocEntrySearchMarks(el, plain, searchLower) {
+  while (el.firstChild) el.removeChild(el.firstChild);
+  if (!plain) return;
+  var q = searchLower || '';
+  if (!q) {
+    el.appendChild(document.createTextNode(plain));
+    return;
+  }
+  var lower = plain.toLowerCase();
+  var qlen = q.length;
+  if (qlen === 0 || lower.indexOf(q) === -1) {
+    el.appendChild(document.createTextNode(plain));
+    return;
+  }
+  var pos = 0;
+  while (pos < plain.length) {
+    var idx = lower.indexOf(q, pos);
+    if (idx === -1) {
+      el.appendChild(document.createTextNode(plain.slice(pos)));
+      break;
+    }
+    if (idx > pos) el.appendChild(document.createTextNode(plain.slice(pos, idx)));
+    var mk = document.createElement('mark');
+    mk.className = 'doc-search-hit';
+    mk.appendChild(document.createTextNode(plain.slice(idx, idx + qlen)));
+    el.appendChild(mk);
+    pos = idx + qlen;
+  }
+}
+function refreshCyrillicKeyboardLabels(kbd) {
+  if (!kbd) return;
+  var caps = kbd.getAttribute('data-caps-on') === '1';
+  kbd.querySelectorAll('.cyr-key-ins[data-base]').forEach(function(btn) {
+    var base = btn.getAttribute('data-base');
+    if (base === null) return;
+    if (base === ' ') {
+      btn.textContent = typeof t === 'function' ? t('cyrillic_key_space') : 'Space';
+      return;
+    }
+    if (base.length !== 1) return;
+    var lo = base.toLowerCase();
+    btn.textContent = caps ? lo.toUpperCase() : lo;
+  });
+  var capBtn = kbd.querySelector('.cyr-key-caps');
+  if (capBtn) capBtn.classList.toggle('active', caps);
+  var shBtn = kbd.querySelector('.cyr-key-shift');
+  if (shBtn) shBtn.classList.toggle('active', kbd.getAttribute('data-shift-next') === '1');
+}
+function refreshAllCyrillicKeyboards() {
+  document.querySelectorAll('.cyrillic-keyboard').forEach(refreshCyrillicKeyboardLabels);
+}
+function closeAllCyrillicKeyboardPopups() {
+  document.querySelectorAll('.cyrillic-keyboard-popup-wrap.is-open').forEach(function(w) {
+    w.classList.remove('is-open');
+    w.setAttribute('aria-hidden', 'true');
+  });
+}
+var activeCyrillicInputByTab = {};
+function openCyrillicKeyboardPopup(tid) {
+  var wrap = document.getElementById('cyrillic-popup-' + tid);
+  if (!wrap) return;
+  closeAllCyrillicKeyboardPopups();
+  wrap.classList.add('is-open');
+  wrap.setAttribute('aria-hidden', 'false');
+  var kbd = wrap.querySelector('.cyrillic-keyboard');
+  if (kbd) refreshCyrillicKeyboardLabels(kbd);
+}
+function getSearchInputForCyrillicTab(tid) {
+  if (tid === 'glossary') return document.getElementById('glossary-search');
+  var tracked = activeCyrillicInputByTab[tid];
+  if (tracked && document.body.contains(tracked)) return tracked;
+  return document.getElementById('doc-search-' + tid);
+}
+function notifyCyrillicSearchChanged(tid) {
+  if (tid === 'glossary') { if (typeof applyGlossaryFilters === 'function') applyGlossaryFilters(); return; }
+  var el = activeCyrillicInputByTab[tid];
+  if (el && el.id && el.id.indexOf('table-search-') === 0) {
+    applyComparisonTableFilters(tid);
+    return;
+  }
+  applyDocumentSearchAndFilter(tid);
+}
+function effectiveCyrillicChar(kbd, baseRaw) {
+  var base = baseRaw != null ? String(baseRaw) : '';
+  if (base === ' ') return ' ';
+  if (base.length !== 1) return base;
+  var caps = kbd.getAttribute('data-caps-on') === '1';
+  var shiftNext = kbd.getAttribute('data-shift-next') === '1';
+  var upper = caps !== shiftNext;
+  if (shiftNext) kbd.setAttribute('data-shift-next', '0');
+  var lo = base.toLowerCase();
+  var ch = upper ? lo.toUpperCase() : lo;
+  refreshCyrillicKeyboardLabels(kbd);
+  return ch;
+}
 function applyDocumentSearchAndFilter(tid) {
   var containerEng = document.getElementById('doc-text-eng-' + tid);
   var containerRus = document.getElementById('doc-text-rus-' + tid);
@@ -2742,8 +3716,12 @@ function applyDocumentSearchAndFilter(tid) {
   containerRus.classList.toggle('filter-active', !!hasFilter);
   function applyToSpan(el) {
     var cat = el.getAttribute('data-category') || '', fram = el.getAttribute('data-framing') || '';
+    var entryEng = el.getAttribute('data-entry-eng') || '';
+    var entryRus = el.getAttribute('data-entry-rus') || '';
+    var panelPlain = el.textContent || '';
     var seg = {
-      text: el.textContent || '',
+      text: panelPlain,
+      entryEng: entryEng, entryRus: entryRus,
       cat: cat, fram: fram,
       humanCat: el.getAttribute('data-human-category') || '',
       humanFram: el.getAttribute('data-human-framing') || '',
@@ -2770,7 +3748,8 @@ function applyDocumentSearchAndFilter(tid) {
       el.classList.remove('filter-match');
       el.classList.remove('dimmed');
     }
-    el.classList.toggle('search-highlight', search && r.passSearch && (seg.text || '').toLowerCase().indexOf(search) !== -1);
+    var hlQuery = (search && r.passSearchInPanel) ? search : '';
+    fillDocEntrySearchMarks(el, panelPlain, hlQuery);
   }
   containerEng.querySelectorAll('.doc-entry').forEach(applyToSpan);
   containerRus.querySelectorAll('.doc-entry').forEach(applyToSpan);
@@ -2843,39 +3822,80 @@ function onDocumentTabShown(tid) {
   applyDocumentSearchAndFilter(tid);
   applyComparisonTableFilters(tid);
   if (typeof initScrollSyncForDoc === 'function') initScrollSyncForDoc(tid);
+  var tabEl = document.getElementById('tab-' + tid);
+  if (tabEl) {
+    var detOpen = tabEl.querySelector('details.doc-viz-details[open]');
+    if (detOpen) {
+      var sec = detOpen.querySelector('[data-doc-viz-root]');
+      if (sec && typeof initDocViz === 'function') initDocViz(sec);
+    }
+  }
+}
+function glossaryParseSlashRegex(query) {
+  var q = query || '';
+  if (!q || q.charAt(0) !== '/') return null;
+  var i = 1;
+  var body = '';
+  while (i < q.length) {
+    var c = q.charAt(i);
+    if (c === '\\\\' && i + 1 < q.length) {
+      body += q.charAt(i) + q.charAt(i + 1);
+      i += 2;
+      continue;
+    }
+    if (c === '/') {
+      var rawFlags = q.slice(i + 1);
+      var flagPart = rawFlags.replace(/[^gimsuy]/gi, '');
+      return { body: body, flags: flagPart };
+    }
+    body += c;
+    i++;
+  }
+  return null;
+}
+function glossarySearchMatcher(query) {
+  var q = (query || '').trim();
+  if (!q) return function() { return true; };
+  var parsed = glossaryParseSlashRegex(q);
+  if (parsed && parsed.body.length > 0) {
+    try {
+      var fp = parsed.flags || '';
+      var flagSet = new Set(['u', 'i']);
+      if (/m/i.test(fp)) flagSet.add('m');
+      if (/s/i.test(fp)) flagSet.add('s');
+      if (/g/i.test(fp)) flagSet.add('g');
+      if (/y/i.test(fp)) flagSet.add('y');
+      var flags = Array.from(flagSet).join('');
+      var re = new RegExp(parsed.body, flags);
+      return function(text) { return re.test(text || ''); };
+    } catch (e) { /* fall through to plain text */ }
+  }
+  var qLower = q.toLowerCase();
+  return function(text) { return (text || '').toLowerCase().indexOf(qLower) !== -1; };
 }
 function applyGlossaryFilters() {
   var searchEl = document.getElementById('glossary-search');
   var filterEl = document.getElementById('glossary-doc-filter');
   var q = (searchEl && searchEl.value) ? (searchEl.value || '').trim() : '';
   var docId = (filterEl && filterEl.value) ? filterEl.value : '';
-  var matchFn = (function() {
-    if (!q) return function() { return true; };
-    var isRegex = /^\/.+\/$/.test(q);
-    if (isRegex) {
-      try {
-        var pattern = q.slice(1, -1);
-        var re = new RegExp(pattern, 'i');
-        return function(text) { return re.test(text || ''); };
-      } catch (e) { return function(text) { return (text || '').toLowerCase().indexOf(q.toLowerCase()) !== -1; }; }
-    }
-    var qLower = q.toLowerCase();
-    return function(text) { return (text || '').toLowerCase().indexOf(qLower) !== -1; };
-  })();
+  var matchFn = glossarySearchMatcher(q);
   var sections = document.querySelectorAll('#tab-glossary .glossary-searchable-section');
   sections.forEach(function(s) {
+    var sectionBlob = s.getAttribute('data-text') || '';
+    var sectionMatchesSearch = !q || matchFn(sectionBlob);
     var items = s.querySelectorAll('.glossary-term-item');
     items.forEach(function(it) {
       var termText = it.textContent || '';
-      var termMatchesSearch = matchFn(termText);
+      var termMatchesSearch = !q || matchFn(termText);
       var docs = (it.getAttribute('data-docs') || '').split(',').map(function(d) { return d.trim(); }).filter(Boolean);
       var docMatch = !docId || docs.indexOf(docId) !== -1;
-      var visible = (q ? termMatchesSearch : true) && docMatch;
+      var visible = (!q || termMatchesSearch || sectionMatchesSearch) && docMatch;
       it.classList.toggle('hidden', !visible);
     });
     var visibleCount = 0;
     items.forEach(function(it) { if (!it.classList.contains('hidden')) visibleCount++; });
-    var sectionVisible = visibleCount > 0;
+    var hasTermItems = items.length > 0;
+    var sectionVisible = hasTermItems ? visibleCount > 0 : (!q || sectionMatchesSearch);
     s.classList.toggle('hidden', !sectionVisible);
     var summaryEl = s.querySelector('summary');
     if (summaryEl) {
@@ -2924,7 +3944,7 @@ function renderVizPanel(panelId, data) {
   var framCols = data.framColours || {};
   var wcCfg = cfg.config.word_cloud || {};
   var maxWords = Math.min(parseInt(wcCfg.max_words, 10) || 80, 150);
-  var weightFactor = parseFloat(wcCfg.weight_factor) || 4;
+  var weightFactor = parseFloat(wcCfg.weight_factor) || 15;
   var lang = wcCfg.language || 'both';
   var extraStop = (wcCfg.stopwords_extra || '').toLowerCase().split(new RegExp('[\\n\\r,;]+')).map(function(s){ return s.trim(); }).filter(Boolean);
   var wcPalette = ['#8b0000', '#2d5a27', '#4a5568', '#8b7355', '#2563eb', '#ca8a04', '#0d9488', '#7c3aed', '#dc2626', '#15803d'];
@@ -3067,7 +4087,11 @@ function renderVizPanel(panelId, data) {
       vizChartInstances[panelId] = new Chart(el9, { type: 'scatter', data: { datasets: [{ label: 'Match', data: matchPts, backgroundColor: 'rgba(21,128,61,0.5)', pointRadius: 3 }, { label: 'Mismatch', data: noMatchPts, backgroundColor: 'rgba(220,38,38,0.5)', pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: xScale, y: { min: -0.2, max: 1.2, ticks: { callback: function(v){ return v>=0.9?'Match':v<=0.1?'Mismatch':''; } } } } } });
     }
   } else if (panelId === 'viz-places-map') {
-    /* Map content is embedded in the report via iframe srcdoc; no runtime rendering */
+    var labMapWrap = document.getElementById('places-map-embed-wrap');
+    if (labMapWrap) {
+      var labIframe = labMapWrap.querySelector('iframe.doc-places-map-iframe');
+      if (labIframe && typeof ensureDocPlacesMapSrcdoc === 'function') ensureDocPlacesMapSrcdoc(labIframe);
+    }
   } else if (panelId === 'viz-voyant') {
     /* Voyant Cirrus iframe; no runtime rendering */
   } else if (panelId === 'viz-voyant-links') {
@@ -3287,10 +4311,365 @@ function renderVizPanel(panelId, data) {
     }
   }
 }
-function buildConfigPanel(panelId, data) {
-  var body = document.getElementById('viz-config-body');
+function docVizChartKey(suffix, vizKind) {
+  return 'doc:' + suffix + ':' + vizKind;
+}
+function docVizDestroyChart(suffix, vizKind) {
+  var k = docVizChartKey(suffix, vizKind);
+  if (vizChartInstances[k]) {
+    vizChartInstances[k].destroy();
+    vizChartInstances[k] = null;
+  }
+}
+function docVizChart(root, name) {
+  return root.querySelector('.doc-viz-chart[data-doc-chart="' + name + '"]');
+}
+function docVizHost(root, name) {
+  return root.querySelector('.doc-viz-html-host[data-doc-host="' + name + '"]');
+}
+function ensureDocPlacesMapSrcdoc(iframeEl) {
+  if (!iframeEl || iframeEl.getAttribute('data-srcdoc-loaded') === '1') return;
+  var tid = iframeEl.getAttribute('data-srcdoc-from');
+  var ta = tid ? document.getElementById(tid) : null;
+  if (!ta) return;
+  try {
+    iframeEl.srcdoc = ta.value;
+    iframeEl.setAttribute('data-srcdoc-loaded', '1');
+  } catch (e) {}
+}
+function renderDocVizPanel(root, vizKind, data) {
+  if (!root || !data) return;
+  var suffix = root.getAttribute('data-doc-viz-root') || '';
+  var ck = docVizChartKey(suffix, vizKind);
+  docVizDestroyChart(suffix, vizKind);
+  var cfg = getVizConfig();
+  var catOrder = data.catOrder || [];
+  var framOrder = data.framOrder || [];
+  var catCols = data.catColours || {};
+  var framCols = data.framColours || {};
+  var wcCfg = cfg.config.word_cloud || {};
+  var maxWords = Math.min(parseInt(wcCfg.max_words, 10) || 80, 150);
+  var weightFactor = parseFloat(wcCfg.weight_factor) || 15;
+  var lang = wcCfg.language || 'both';
+  var extraStop = (wcCfg.stopwords_extra || '').toLowerCase().split(new RegExp('[\\n\\r,;]+')).map(function(s){ return s.trim(); }).filter(Boolean);
+  var wcPalette = ['#8b0000', '#2d5a27', '#4a5568', '#8b7355', '#2563eb', '#ca8a04', '#0d9488', '#7c3aed', '#dc2626', '#15803d'];
+  function hashStr(s) { var h = 0; for (var i = 0; i < (s||'').length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0; return Math.abs(h); }
+  var wcColorFn = function(word) { return wcPalette[hashStr(word) % wcPalette.length]; };
+  function filterStop(list) { return list.filter(function(x) { return extraStop.indexOf(x[0].toLowerCase()) === -1; }); }
+  if (vizKind === 'wordcloud' && typeof WordCloud !== 'undefined') {
+    var engWrap = root.querySelector('.doc-viz-wc-eng-wrap');
+    var rusWrap = root.querySelector('.doc-viz-wc-rus-wrap');
+    if (engWrap) engWrap.classList.toggle('hidden', lang === 'ru');
+    if (rusWrap) rusWrap.classList.toggle('hidden', lang === 'en');
+    var engList = filterStop(data.wordCloudEng || []).slice(0, maxWords);
+    var rusList = filterStop(data.wordCloudRus || []).slice(0, maxWords);
+    var wcEng = docVizChart(root, 'wordcloud-eng');
+    if (wcEng && (lang === 'en' || lang === 'both') && engList.length > 0) {
+      WordCloud(wcEng, { list: engList, gridSize: 8, weightFactor: weightFactor, fontFamily: 'Crimson Text, Georgia, serif', color: wcColorFn, rotateRatio: 0.25, backgroundColor: '#fff', shuffle: false });
+    }
+    var wcRus = docVizChart(root, 'wordcloud-rus');
+    if (wcRus && (lang === 'ru' || lang === 'both') && rusList.length > 0) {
+      WordCloud(wcRus, { list: rusList, gridSize: 8, weightFactor: weightFactor, fontFamily: 'Crimson Text, Georgia, serif', color: wcColorFn, rotateRatio: 0.25, backgroundColor: '#fff', shuffle: false });
+    }
+    return;
+  }
+  if (vizKind === 'heatmap') return;
+  if (vizKind === 'places-map') {
+    var mapWrap = root.querySelector('.doc-viz-places-embed-wrap');
+    if (mapWrap) {
+      var mapIframe = mapWrap.querySelector('iframe.doc-places-map-iframe');
+      if (mapIframe && typeof ensureDocPlacesMapSrcdoc === 'function') ensureDocPlacesMapSrcdoc(mapIframe);
+    }
+    return;
+  }
+  if (typeof Chart === 'undefined') return;
+  if (vizKind === 'per-doc-cat') {
+    var el = docVizChart(root, 'per-doc-cat');
+    if (el && data.perDoc && data.perDoc.length > 0 && catOrder.length > 0) {
+      var labels = data.perDoc.map(function(d) { return d.display_name; });
+      var ds = catOrder.map(function(c) { return { label: c, data: data.perDoc.map(function(d) { return (d.categories && d.categories[c]) || 0; }), backgroundColor: catCols[c] || '#8b7355', borderColor: catCols[c] || '#8b7355', borderWidth: 1 }; });
+      vizChartInstances[ck] = new Chart(el, { type: 'bar', data: { labels: labels, datasets: ds }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } } });
+    }
+  } else if (vizKind === 'per-doc-fram') {
+    var el2 = docVizChart(root, 'per-doc-fram');
+    if (el2 && data.perDoc && data.perDoc.length > 0 && framOrder.length > 0) {
+      var labels2 = data.perDoc.map(function(d) { return d.display_name; });
+      var ds2 = framOrder.map(function(f) { return { label: f, data: data.perDoc.map(function(d) { return (d.framings && d.framings[f]) || 0; }), backgroundColor: framCols[f] || '#8b7355', borderColor: framCols[f] || '#8b7355', borderWidth: 1 }; });
+      vizChartInstances[ck] = new Chart(el2, { type: 'bar', data: { labels: labels2, datasets: ds2 }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } } } });
+    }
+  } else if (vizKind === 'pie-cat') {
+    var el3 = docVizChart(root, 'pie-cat');
+    if (el3 && data.categories && Object.keys(data.categories).length > 0) {
+      var catData = catOrder.map(function(c) { return data.categories[c] || 0; });
+      var catColors = catOrder.map(function(c) { return catCols[c] || '#8b7355'; });
+      vizChartInstances[ck] = new Chart(el3, { type: 'pie', data: { labels: catOrder, datasets: [{ data: catData, backgroundColor: catColors, borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'right' } } } });
+    }
+  } else if (vizKind === 'pie-fram') {
+    var el4 = docVizChart(root, 'pie-fram');
+    if (el4 && data.framings && Object.keys(data.framings).length > 0) {
+      var framData = framOrder.map(function(f) { return data.framings[f] || 0; });
+      var framColors = framOrder.map(function(f) { return framCols[f] || '#8b7355'; });
+      vizChartInstances[ck] = new Chart(el4, { type: 'pie', data: { labels: framOrder, datasets: [{ data: framData, backgroundColor: framColors, borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true, position: 'right' } } } });
+    }
+  } else if (vizKind === 'terms-cat') {
+    var el5 = docVizChart(root, 'terms-cat');
+    var tb = data.termsByCat || {};
+    if (el5 && Object.keys(tb).length > 0) {
+      var tcLabels = Object.keys(tb).sort(function(a,b){ return tb[b]-tb[a]; });
+      var tcData = tcLabels.map(function(k){ return tb[k]; });
+      var tcCols = tcLabels.map(function(k){ return catCols[k] || '#8b7355'; });
+      vizChartInstances[ck] = new Chart(el5, { type: 'bar', data: { labels: tcLabels, datasets: [{ label: 'Unique terms', data: tcData, backgroundColor: tcCols, borderColor: tcCols, borderWidth: 1 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } } });
+    }
+  } else if (vizKind === 'terms-fram') {
+    var el6 = docVizChart(root, 'terms-fram');
+    var tbf = data.termsByFram || {};
+    if (el6 && Object.keys(tbf).length > 0) {
+      var tfLabels = Object.keys(tbf).sort(function(a,b){ return tbf[b]-tbf[a]; });
+      var tfData = tfLabels.map(function(k){ return tbf[k]; });
+      var tfCols = tfLabels.map(function(k){ return framCols[k] || '#8b7355'; });
+      vizChartInstances[ck] = new Chart(el6, { type: 'bar', data: { labels: tfLabels, datasets: [{ label: 'Unique terms', data: tfData, backgroundColor: tfCols, borderColor: tfCols, borderWidth: 1 }] }, options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true } } } });
+    }
+  } else if (vizKind === 'vocab-diversity') {
+    var el7 = docVizChart(root, 'vocab-diversity');
+    var vd = data.vocabDiversity || [];
+    if (el7 && vd.length > 0) {
+      var vdLabels = vd.map(function(d){ return d.display_name; });
+      var vdRatio = vd.map(function(d){ return d.ratio * 100; });
+      vizChartInstances[ck] = new Chart(el7, { type: 'bar', data: { labels: vdLabels, datasets: [{ label: 'Type-token ratio (%)', data: vdRatio, backgroundColor: '#0d9488', borderColor: '#0d9488', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+    }
+  } else if (vizKind === 'segment-length') {
+    var el9 = docVizChart(root, 'segment-length');
+    var sla = data.segmentLengthVsAccuracy || [];
+    var statEl = root.querySelector('.doc-viz-segment-length-stat');
+    if (statEl && sla.length > 0) {
+      var BIN_SIZE = 25;
+      var MIN_RANGE_SEGMENTS = 15;
+      var MIN_SINGLE_SEGMENTS = 5;
+      var MIN_LENGTH = 50;
+      var L = function(k){ return typeof t === 'function' ? t(k) : k; };
+      function compute(matchFn) {
+        var bins = {}, exact = {};
+        sla.forEach(function(p){
+          if (p.length < MIN_LENGTH) return;
+          var bin = Math.floor(p.length / BIN_SIZE) * BIN_SIZE;
+          bins[bin] = bins[bin] || { match: 0, total: 0 };
+          bins[bin].total++;
+          if (matchFn(p)) bins[bin].match++;
+          exact[p.length] = exact[p.length] || { match: 0, total: 0 };
+          exact[p.length].total++;
+          if (matchFn(p)) exact[p.length].match++;
+        });
+        var binsList = Object.keys(bins).map(Number).filter(function(b){ return bins[b].total >= MIN_RANGE_SEGMENTS; }).map(function(b){ return { lo: b, hi: b + BIN_SIZE - 1, acc: bins[b].match / bins[b].total, n: bins[b].total }; });
+        binsList.sort(function(a,b){ return b.acc - a.acc; });
+        var bestRange = binsList[0] || null;
+        var rangeTies = bestRange ? binsList.filter(function(x){ return Math.abs(x.acc - bestRange.acc) < 0.001; }) : [];
+        var exactList = Object.keys(exact).map(Number).filter(function(len){ return exact[len].total >= MIN_SINGLE_SEGMENTS; }).map(function(len){ return { len: len, acc: exact[len].match / exact[len].total, n: exact[len].total }; });
+        exactList.sort(function(a,b){ return b.acc - a.acc; });
+        var bestSingle = exactList[0] || null;
+        return { range: bestRange, rangeTies: rangeTies, single: bestSingle };
+      }
+      var both = compute(function(p){ return p.both_match; });
+      var cat = compute(function(p){ return p.category_match; });
+      var fram = compute(function(p){ return p.framing_match; });
+      function fmtRange(r){ return r.rangeTies.map(function(t){ return t.lo + '-' + t.hi + ' chars (' + Math.round(t.acc*100) + '%, ' + t.n + ' seg)'; }).join(', '); }
+      function fmtSingle(s){ return s ? s.len + ' chars (' + Math.round(s.acc*100) + '%, ' + s.n + ' seg)' : L('viz_segment_insufficient'); }
+      var html = '<strong>' + L('viz_segment_most_accurate') + ':</strong><br/>';
+      html += '<span style="font-weight:500;">' + L('viz_segment_both') + '</span> - ' + L('viz_segment_range') + ': ' + (both.range ? fmtRange(both) : L('viz_segment_insufficient')) + '; ' + L('viz_segment_single') + ': ' + fmtSingle(both.single) + '<br/>';
+      html += '<span style="font-weight:500;">' + L('viz_segment_category') + '</span> - ' + L('viz_segment_range') + ': ' + (cat.range ? fmtRange(cat) : L('viz_segment_insufficient')) + '; ' + L('viz_segment_single') + ': ' + fmtSingle(cat.single) + '<br/>';
+      html += '<span style="font-weight:500;">' + L('viz_segment_framing') + '</span> - ' + L('viz_segment_range') + ': ' + (fram.range ? fmtRange(fram) : L('viz_segment_insufficient')) + '; ' + L('viz_segment_single') + ': ' + fmtSingle(fram.single);
+      statEl.innerHTML = html;
+    }
+    if (el9 && sla.length > 0) {
+      function jitter(base, r) { return base + (Math.random() - 0.5) * r; }
+      var matchPts = sla.filter(function(p){ return p.both_match; }).map(function(p){ return { x: p.length, y: jitter(1, 0.15) }; });
+      var noMatchPts = sla.filter(function(p){ return !p.both_match; }).map(function(p){ return { x: p.length, y: jitter(0, 0.15) }; });
+      var slCfg = (cfg.config && cfg.config.segment_length) ? cfg.config.segment_length : { scale: 100, x_tick_step: 0 };
+      var scale = Math.max(25, Math.min(500, parseInt(slCfg.scale, 10) || 100));
+      var xTickStep = parseInt(slCfg.x_tick_step, 10) || 0;
+      var dataMax = Math.max.apply(null, sla.map(function(p){ return p.length; })) || 500;
+      var xMax = dataMax * (100 / scale);
+      var xTicks = xTickStep > 0 ? { stepSize: xTickStep } : { maxTicksLimit: 80 };
+      var xScale = { title: { display: true, text: 'Segment length (chars)' }, min: 0, max: Math.max(xMax, 50), ticks: xTicks };
+      vizChartInstances[ck] = new Chart(el9, { type: 'scatter', data: { datasets: [{ label: 'Match', data: matchPts, backgroundColor: 'rgba(21,128,61,0.5)', pointRadius: 3 }, { label: 'Mismatch', data: noMatchPts, backgroundColor: 'rgba(220,38,38,0.5)', pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: xScale, y: { min: -0.2, max: 1.2, ticks: { callback: function(v){ return v>=0.9?'Match':v<=0.1?'Mismatch':''; } } } } } });
+    }
+  } else if (vizKind === 'radar') {
+    var el10 = docVizChart(root, 'radar');
+    var perDoc = data.perDoc || [];
+    var radLabels = catOrder.map(function(c){ return c; });
+    if (el10 && perDoc.length > 0 && catOrder.length > 0) {
+      var doc = perDoc[0];
+      var radData = radLabels.map(function(c){ return (doc.categories && doc.categories[c]) || 0; });
+      vizChartInstances[ck] = new Chart(el10, { type: 'radar', data: { labels: radLabels, datasets: [{ label: doc.display_name, data: radData, backgroundColor: 'rgba(13,148,136,0.5)', borderColor: '#0d9488', borderWidth: 2 }] }, options: { responsive: true, maintainAspectRatio: false } });
+    }
+  } else if (vizKind === 'mismatch-flow') {
+    var mf = docVizHost(root, 'mismatch-flow');
+    var flow = data.mismatchFlow || [];
+    var fo = data.framOrder || [];
+    var shortNames = {};
+    fo.forEach(function(f){ shortNames[f] = f.length > 20 ? f.replace('Ideological Framing (Discrediting)','Ideol. (Discr.)').replace('Ideological Phrasing (Normalizing)','Ideol. (Norm.)').replace('Generic / Neutral Language','Generic').replace('Institutional / Bureaucratic Lingo','Institutional').replace('Action-Focused Language','Action-Focused') : f; });
+    if (mf && fo.length > 0) {
+      var matrix = {};
+      flow.forEach(function(x){ matrix[x.llm + '|' + x.human] = x.count; });
+      var mismatches = [];
+      fo.forEach(function(llm, ri){
+        fo.forEach(function(human, ci){
+          if (ri !== ci) { var c = matrix[llm + '|' + human] || 0; if (c > 0) mismatches.push({llm:llm,human:human,v:c}); }
+        });
+      });
+      mismatches.sort(function(a,b){ return b.v - a.v; });
+      var interp = function(llm, human) {
+        if ((llm.indexOf('Generic') >= 0 || llm === 'Generic / Neutral Language') && (human.indexOf('Ideological') >= 0 || human.indexOf('Discrediting') >= 0)) return 'LLM overgeneralizes';
+        if ((llm.indexOf('Ideological') >= 0) && (human.indexOf('Generic') >= 0 || human === 'Generic / Neutral Language')) return 'LLM over-specifies';
+        if (llm.indexOf('Discrediting') >= 0 && human.indexOf('Normalizing') >= 0) return 'LLM confuses discrediting vs normalizing';
+        if (llm.indexOf('Normalizing') >= 0 && human.indexOf('Discrediting') >= 0) return 'LLM confuses normalizing vs discrediting';
+        return 'Mismatch';
+      };
+      var callout = mismatches.length > 0 ? '<div class="confusions-callout"><h4>Top confusions (LLM said → Human said)</h4><ul>' + mismatches.slice(0,5).map(function(m){ return '<li><strong>' + (shortNames[m.llm]||m.llm) + ' → ' + (shortNames[m.human]||m.human) + ':</strong> ' + m.v + ' <span class="interpret">(' + interp(m.llm,m.human) + ')</span></li>'; }).join('') + '</ul></div>' : '';
+      var header1 = '<tr><th class="axis-corner"></th><th colspan="' + fo.length + '" class="axis-human">Human said</th></tr>';
+      var header2 = '<tr><th class="axis-llm">LLM said</th>' + fo.map(function(f){ return '<th>' + (shortNames[f]||f) + '</th>'; }).join('') + '</tr>';
+      var body = fo.map(function(llm, ri){
+        var cells = fo.map(function(human, ci){
+          var v = matrix[llm + '|' + human] || 0;
+          var cls = ri === ci ? 'cell-match' : (v > 0 ? 'cell-mismatch' : 'cell-empty');
+          return '<td class="' + cls + '">' + (v || '') + '</td>';
+        });
+        return '<tr><td class="row-label">' + (shortNames[llm]||llm) + '</td>' + cells.join('') + '</tr>';
+      }).join('');
+      mf.innerHTML = callout + '<table class="flow-matrix"><thead>' + header1 + header2 + '</thead><tbody>' + body + '</tbody></table>';
+    }
+  } else if (vizKind === 'doc-fingerprint') {
+    var fp = docVizHost(root, 'doc-fingerprint');
+    var leg = docVizHost(root, 'doc-fingerprint-legend');
+    var docs = data.docFingerprint || [];
+    var fo = data.framOrder || [];
+    var framCols2 = data.framColours || {};
+    if (fp && docs.length > 0 && fo.length > 0) {
+      fp.innerHTML = docs.map(function(d){
+        var total = d.mix.reduce(function(a,b){ return a+b; }, 0) || 1;
+        var bars = d.mix.map(function(v, i){
+          var pct = (v / total * 100);
+          var col = framCols2[fo[i]] || '#8b7355';
+          return '<span style="flex:' + pct + '; background:' + col + ';" title="' + (fo[i]||'') + ': ' + v + '"></span>';
+        }).join('');
+        return '<div class="fingerprint-item"><span class="fingerprint-doc">' + (d.display_name || d.doc_id) + '</span><div class="fingerprint-bar">' + bars + '</div></div>';
+      }).join('');
+      if (leg) leg.innerHTML = fo.map(function(f){ var col = framCols2[f] || '#8b7355'; return '<span><span class="swatch" style="background:' + col + '"></span>' + (f.length > 25 ? f.substring(0,22) + '...' : f) + '</span>'; }).join('');
+    }
+  } else if (vizKind === 'terms-by-framing') {
+    var tbf = docVizHost(root, 'terms-by-framing');
+    var tbfData = data.termsByFramingDetailed || {};
+    var fo = data.framOrder || [];
+    var framCols3 = data.framColours || {};
+    if (tbf && fo.length > 0) {
+      tbf.innerHTML = fo.map(function(fram){
+        var terms = tbfData[fram] || [];
+        var col = framCols3[fram] || '#8b7355';
+        var maxV = terms[0] ? terms[0][1] : 1;
+        var bars = terms.map(function(tx){ var pct = maxV ? (tx[1]/maxV*100) : 0; return '<div class="term-bar"><span class="label">' + (tx[0].substring(0,50) + (tx[0].length>50?'...':'')) + '</span><div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%; background:' + col + '"></div></div><span>' + tx[1] + '</span></div>'; }).join('');
+        return '<div class="framing-section"><h4 style="border-color:' + col + '">' + (fram.length > 30 ? fram.substring(0,27) + '...' : fram) + '</h4><div class="term-bars">' + bars + '</div></div>';
+      }).join('');
+    }
+  } else if (vizKind === 'term-framing-heatmap') {
+    var thEl = docVizHost(root, 'term-framing-heatmap');
+    var thData = data.termFramingHeatmap || {};
+    var fo = data.framOrder || [];
+    var terms = Object.keys(thData);
+    if (thEl) {
+      if (terms.length > 0 && fo.length > 0) {
+        var maxVal = 0;
+        terms.forEach(function(tx){ fo.forEach(function(f){ var v = (thData[tx] || {})[f] || 0; if (v > maxVal) maxVal = v; }); });
+        maxVal = maxVal || 1;
+        function cls(v){ if (!v) return 'cell-none'; var r = v/maxVal; if (r >= 0.7) return 'cell-high'; if (r >= 0.35) return 'cell-mid'; return 'cell-low'; }
+        var header = '<thead><tr><th class="term-col">Term</th>' + fo.map(function(f){ return '<th class="fram-col">' + f + '</th>'; }).join('') + '</tr></thead>';
+        var body = terms.map(function(tx){
+          var row = thData[tx] || {};
+          var cells = fo.map(function(f){ var v = row[f] || 0; return '<td class="' + cls(v) + '">' + (v || '') + '</td>'; }).join('');
+          return '<tr><td class="term-cell">' + (tx.length > 40 ? tx.substring(0,37) + '...' : tx) + '</td>' + cells + '</tr>';
+        }).join('');
+        thEl.innerHTML = header + '<tbody>' + body + '</tbody>';
+      } else {
+        thEl.innerHTML = '<tbody><tr><td colspan="10" style="padding: 2rem; text-align: center; color: #6b7280;">No term-framing data available. Ensure segments have framing labels and extractable words (min 3 chars, excluding stopwords).</td></tr></tbody>';
+      }
+    }
+  }
+}
+function initDocViz(root) {
+  if (!root || root.getAttribute('data-doc-viz-inited') === '1') return;
+  var suffix = root.getAttribute('data-doc-viz-root');
+  if (!suffix) return;
+  var jsonEl = document.getElementById('viz-data-' + suffix);
+  if (!jsonEl) return;
+  var data;
+  try { data = JSON.parse(jsonEl.textContent); } catch (e) { return; }
+  root.setAttribute('data-doc-viz-inited', '1');
+  var sel = document.getElementById('viz-select-' + suffix);
+  var panels = root.querySelectorAll('.doc-viz-panel');
+  var docCtx = { suffix: suffix, root: root };
+  function showPanel(kind) {
+    panels.forEach(function(p) {
+      p.classList.toggle('active', p.getAttribute('data-doc-viz') === kind);
+    });
+    renderDocVizPanel(root, kind, data);
+    if (typeof buildConfigPanel === 'function') buildConfigPanel('viz-' + kind, data, docCtx);
+  }
+  var cfgBody = document.getElementById('viz-config-body-' + suffix);
+  if (cfgBody && !cfgBody.getAttribute('data-doc-cfg-bound')) {
+    cfgBody.setAttribute('data-doc-cfg-bound', '1');
+    cfgBody.addEventListener('change', function(e) {
+      var tgt = e.target;
+      if (!tgt || !tgt.id) return;
+      var sufStr = '-' + suffix;
+      if (tgt.id.slice(-sufStr.length) !== sufStr) return;
+      var baseId = tgt.id.slice(0, -sufStr.length);
+      var c = getVizConfig();
+      c.config.word_cloud = c.config.word_cloud || {};
+      c.config.radar = c.config.radar || {};
+      c.config.segment_length = c.config.segment_length || {};
+      if (baseId === 'viz-max-words') c.config.word_cloud.max_words = parseInt(tgt.value, 10) || 80;
+      if (baseId === 'viz-weight-factor') c.config.word_cloud.weight_factor = parseFloat(tgt.value) || 15;
+      if (baseId === 'viz-language') c.config.word_cloud.language = tgt.value || 'both';
+      if (baseId === 'viz-stopwords-extra') c.config.word_cloud.stopwords_extra = tgt.value || '';
+      if (baseId === 'viz-radar-mode') c.config.radar.mode = tgt.value || 'single';
+      if (baseId === 'viz-radar-compare-count') c.config.radar.compare_count = parseInt(tgt.value, 10) || 3;
+      if (baseId === 'viz-segment-scale') c.config.segment_length.scale = parseInt(tgt.value, 10) || 100;
+      if (baseId === 'viz-segment-x-step') c.config.segment_length.x_tick_step = parseInt(tgt.value, 10);
+      if (baseId && (/^viz-(max-words|weight-factor|language|stopwords-extra)$/.test(baseId) || /^viz-radar-(mode|compare-count)$/.test(baseId) || /^viz-segment-(scale|x-step)$/.test(baseId))) {
+        saveVizConfig(c.selection, c.config);
+        var vk = sel ? sel.value : 'wordcloud';
+        renderDocVizPanel(root, vk, data);
+      }
+    });
+  }
+  if (sel) {
+    sel.addEventListener('change', function() { showPanel(sel.value); });
+    showPanel(sel.value || 'wordcloud');
+  }
+}
+function setupDocVizTriggers() {
+  document.querySelectorAll('details.doc-viz-details').forEach(function(det) {
+    det.addEventListener('toggle', function() {
+      if (!det.open) return;
+      var sec = det.querySelector('[data-doc-viz-root]');
+      if (sec && typeof initDocViz === 'function') initDocViz(sec);
+    });
+  });
+}
+
+function buildConfigPanel(panelId, data, docCtx) {
+  docCtx = docCtx || null;
+  var isDoc = !!(docCtx && docCtx.suffix);
+  var suf = isDoc ? ('-' + docCtx.suffix) : '';
+  var bodyId = isDoc ? ('viz-config-body-' + docCtx.suffix) : 'viz-config-body';
+  var body = document.getElementById(bodyId);
   if (!body) return;
   body.innerHTML = '';
+  function fid(base) { return base + suf; }
+  function persistDocViz() {
+    if (!isDoc || !docCtx.root) return;
+    var selEl = document.getElementById('viz-select-' + docCtx.suffix);
+    var vk = selEl ? selEl.value : 'wordcloud';
+    renderDocVizPanel(docCtx.root, vk, data);
+  }
   if (panelId === 'viz-wordcloud') {
     var cfg = getVizConfig();
     var wc = cfg.config.word_cloud || {};
@@ -3298,10 +4677,10 @@ function buildConfigPanel(panelId, data) {
     row1.className = 'viz-config-row';
     var maxLbl = document.createElement('label');
     maxLbl.textContent = (typeof t === 'function' ? t('viz_config_max_words') : 'Max words:');
-    maxLbl.htmlFor = 'viz-max-words';
+    maxLbl.htmlFor = fid('viz-max-words');
     var maxIn = document.createElement('input');
     maxIn.type = 'number';
-    maxIn.id = 'viz-max-words';
+    maxIn.id = fid('viz-max-words');
     maxIn.min = '10';
     maxIn.max = '200';
     maxIn.value = wc.max_words || 80;
@@ -3314,11 +4693,11 @@ function buildConfigPanel(panelId, data) {
     wfLbl.textContent = (typeof t === 'function' ? t('viz_config_weight_factor') : 'Size factor:');
     var wfIn = document.createElement('input');
     wfIn.type = 'number';
-    wfIn.id = 'viz-weight-factor';
+    wfIn.id = fid('viz-weight-factor');
     wfIn.min = '1';
-    wfIn.max = '20';
+    wfIn.max = '40';
     wfIn.step = '0.5';
-    wfIn.value = wc.weight_factor || 4;
+    wfIn.value = wc.weight_factor || 15;
     row2.appendChild(wfLbl);
     row2.appendChild(wfIn);
     body.appendChild(row2);
@@ -3327,7 +4706,7 @@ function buildConfigPanel(panelId, data) {
     var langLbl = document.createElement('label');
     langLbl.textContent = (typeof t === 'function' ? t('viz_config_language') : 'Language:');
     var langSel = document.createElement('select');
-    langSel.id = 'viz-language';
+    langSel.id = fid('viz-language');
     ['en', 'ru', 'both'].forEach(function(v) {
       var opt = document.createElement('option');
       opt.value = v;
@@ -3345,7 +4724,7 @@ function buildConfigPanel(panelId, data) {
     swLbl.style.display = 'block';
     swLbl.style.marginBottom = '0.25rem';
     var swTa = document.createElement('textarea');
-    swTa.id = 'viz-stopwords-extra';
+    swTa.id = fid('viz-stopwords-extra');
     swTa.rows = 3;
     swTa.placeholder = 'the, and, и, в, не...';
     swTa.value = wc.stopwords_extra || '';
@@ -3360,22 +4739,31 @@ function buildConfigPanel(panelId, data) {
     applyBtn.onclick = function() {
       var c = getVizConfig();
       c.config.word_cloud = c.config.word_cloud || {};
-      var ta = document.getElementById('viz-stopwords-extra');
+      var ta = document.getElementById(fid('viz-stopwords-extra'));
       if (ta) c.config.word_cloud.stopwords_extra = ta.value || '';
       saveVizConfig(c.selection, c.config);
-      renderVizPanel(panelId, data);
+      if (isDoc) persistDocViz();
+      else renderVizPanel(panelId, data);
     };
     row4.appendChild(applyBtn);
     body.appendChild(row4);
   } else if (panelId === 'viz-radar') {
-    var cfg = getVizConfig();
-    var rc = cfg.config.radar || {};
+    if (isDoc) {
+      var note = document.createElement('p');
+      note.className = 'viz-config-doc-note';
+      note.setAttribute('data-i18n', 'viz_config_doc_radar_note');
+      note.textContent = (typeof t === 'function' ? t('viz_config_doc_radar_note') : 'This document view shows a single profile. Multi-document radar modes are available in the Research Lab.');
+      body.appendChild(note);
+      return;
+    }
+    var cfgR = getVizConfig();
+    var rc = cfgR.config.radar || {};
     var modeRow = document.createElement('div');
     modeRow.className = 'viz-config-row viz-config-full';
     var modeLbl = document.createElement('label');
     modeLbl.textContent = (typeof t === 'function' ? t('viz_radar_mode') : 'Mode:');
     var modeSel = document.createElement('select');
-    modeSel.id = 'viz-radar-mode';
+    modeSel.id = fid('viz-radar-mode');
     modeSel.innerHTML = '<option value="single">' + (typeof t === 'function' ? t('viz_radar_single') : 'Single document') + '</option><option value="compare">' + (typeof t === 'function' ? t('viz_radar_compare') : 'Compare documents') + '</option><option value="all">' + (typeof t === 'function' ? t('viz_radar_all') : 'All documents (aggregated)') + '</option>';
     modeSel.value = rc.mode || 'single';
     modeRow.appendChild(modeLbl);
@@ -3387,7 +4775,7 @@ function buildConfigPanel(panelId, data) {
     countLbl.textContent = (typeof t === 'function' ? t('viz_radar_compare_count') : 'Documents to compare:');
     var countIn = document.createElement('input');
     countIn.type = 'number';
-    countIn.id = 'viz-radar-compare-count';
+    countIn.id = fid('viz-radar-compare-count');
     countIn.min = '2';
     countIn.max = '10';
     countIn.value = rc.compare_count || 3;
@@ -3395,14 +4783,14 @@ function buildConfigPanel(panelId, data) {
     countRow.appendChild(countIn);
     body.appendChild(countRow);
   } else if (panelId === 'viz-segment-length') {
-    var cfg = getVizConfig();
-    var sl = cfg.config.segment_length || {};
+    var cfgS = getVizConfig();
+    var sl = cfgS.config.segment_length || {};
     var scaleRow = document.createElement('div');
     scaleRow.className = 'viz-config-row viz-config-full';
     var scaleLbl = document.createElement('label');
     scaleLbl.textContent = (typeof t === 'function' ? t('viz_segment_scale') : 'Scale (zoom):');
     var scaleSel = document.createElement('select');
-    scaleSel.id = 'viz-segment-scale';
+    scaleSel.id = fid('viz-segment-scale');
     [{v:50,t:'50% (zoom out)'},{v:75,t:'75%'},{v:100,t:'100% (full)'},{v:150,t:'150%'},{v:200,t:'200% (zoom in)'},{v:300,t:'300%'},{v:500,t:'500%'}].forEach(function(o){ var opt=document.createElement('option'); opt.value=o.v; opt.textContent=o.t; scaleSel.appendChild(opt); });
     scaleSel.value = sl.scale || 100;
     scaleRow.appendChild(scaleLbl);
@@ -3413,12 +4801,16 @@ function buildConfigPanel(panelId, data) {
     var stepLbl = document.createElement('label');
     stepLbl.textContent = (typeof t === 'function' ? t('viz_segment_x_step') : 'X-axis tick interval (chars):');
     var stepSel = document.createElement('select');
-    stepSel.id = 'viz-segment-x-step';
+    stepSel.id = fid('viz-segment-x-step');
     [{v:0,t:'Auto (fine)'},{v:10,t:'10'},{v:25,t:'25'},{v:50,t:'50'},{v:100,t:'100'}].forEach(function(o){ var opt=document.createElement('option'); opt.value=o.v; opt.textContent=o.t; stepSel.appendChild(opt); });
     stepSel.value = String(sl.x_tick_step !== undefined ? sl.x_tick_step : 0);
     stepRow.appendChild(stepLbl);
     stepRow.appendChild(stepSel);
     body.appendChild(stepRow);
+  }
+  if (isDoc && docCtx && docCtx.suffix) {
+    var detP = document.getElementById('viz-config-panel-' + docCtx.suffix);
+    if (detP) detP.style.display = body.childNodes.length ? '' : 'none';
   }
 }
 function initViz() {
@@ -3433,13 +4825,13 @@ function initViz() {
     select.addEventListener('change', function() {
       var v = select.value;
       saveVizConfig(v, cfg.config);
-      document.querySelectorAll('.viz-panel').forEach(function(p) { p.classList.remove('active'); });
+      document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
       var panel = document.getElementById('viz-' + v);
       if (panel) { panel.classList.add('active'); renderVizPanel('viz-' + v, data); }
       buildConfigPanel('viz-' + v, data);
     });
   }
-  document.querySelectorAll('.viz-panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
   var panel = document.getElementById('viz-' + cfg.selection);
   if (panel) { panel.classList.add('active'); renderVizPanel('viz-' + cfg.selection, data); }
   buildConfigPanel('viz-' + cfg.selection, data);
@@ -3451,7 +4843,7 @@ function initViz() {
       c.config.radar = c.config.radar || {};
       c.config.segment_length = c.config.segment_length || {};
       if (e.target.id === 'viz-max-words') c.config.word_cloud.max_words = parseInt(e.target.value, 10) || 80;
-      if (e.target.id === 'viz-weight-factor') c.config.word_cloud.weight_factor = parseFloat(e.target.value) || 4;
+      if (e.target.id === 'viz-weight-factor') c.config.word_cloud.weight_factor = parseFloat(e.target.value) || 15;
       if (e.target.id === 'viz-language') c.config.word_cloud.language = e.target.value || 'both';
       if (e.target.id === 'viz-stopwords-extra') c.config.word_cloud.stopwords_extra = e.target.value || '';
       if (e.target.id === 'viz-radar-mode') c.config.radar.mode = e.target.value || 'single';
@@ -3508,6 +4900,60 @@ function applySavedReaderLayout() {
 }
 document.addEventListener('DOMContentLoaded', function() {
   setLanguage(UI_LANG);
+  syncLabelSuggestionsHiddenJson();
+  (function initLabelSuggestionModal() {
+    var modal = document.getElementById('label-suggestion-modal');
+    if (!modal) return;
+    var bd = modal.querySelector('.label-suggestion-modal-backdrop');
+    var btnCancel = document.getElementById('label-suggestion-cancel-btn');
+    var btnSave = document.getElementById('label-suggestion-save-btn');
+    var btnDl = document.getElementById('label-suggestion-download-btn');
+    if (bd) bd.addEventListener('click', function() { closeLabelSuggestionModal(); });
+    if (btnCancel) btnCancel.addEventListener('click', function() { closeLabelSuggestionModal(); });
+    if (btnSave) btnSave.addEventListener('click', function() { saveLabelSuggestionFromModal(); });
+    if (btnDl) btnDl.addEventListener('click', function() { downloadLabelSuggestionsJson(); });
+  })();
+  refreshAllCyrillicKeyboards();
+  document.addEventListener('focusin', function(e) {
+    var t = e.target;
+    if (!t) return;
+    if (t.id === 'glossary-search') {
+      if (typeof openCyrillicKeyboardPopup === 'function') openCyrillicKeyboardPopup('glossary');
+      return;
+    }
+    if (t.classList && t.classList.contains('document-search') && t.id && t.id.indexOf('doc-search-') === 0) {
+      var tid = t.id.slice('doc-search-'.length);
+      activeCyrillicInputByTab[tid] = t;
+      if (typeof openCyrillicKeyboardPopup === 'function') openCyrillicKeyboardPopup(tid);
+      return;
+    }
+    if (t.classList && t.classList.contains('comparison-table-search') && t.id && t.id.indexOf('table-search-') === 0) {
+      var tidT = t.id.slice('table-search-'.length);
+      activeCyrillicInputByTab[tidT] = t;
+      if (typeof openCyrillicKeyboardPopup === 'function') openCyrillicKeyboardPopup(tidT);
+      return;
+    }
+    if (t.closest && t.closest('.cyrillic-keyboard-popup-wrap')) return;
+    if (typeof closeAllCyrillicKeyboardPopups === 'function') closeAllCyrillicKeyboardPopups();
+  });
+  document.addEventListener('pointerdown', function(e) {
+    if (e.button !== undefined && e.button !== 0) return;
+    var el = e.target;
+    if (el.closest && el.closest('.cyrillic-keyboard-popup-wrap')) return;
+    if (el.id === 'glossary-search') return;
+    if (el.closest && el.closest('.document-search')) return;
+    if (el.closest && el.closest('.comparison-table-search')) return;
+    if (typeof closeAllCyrillicKeyboardPopups === 'function') closeAllCyrillicKeyboardPopups();
+  }, true);
+  document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    var lsModal = document.getElementById('label-suggestion-modal');
+    if (lsModal && lsModal.classList.contains('is-open')) {
+      closeLabelSuggestionModal();
+      return;
+    }
+    if (typeof closeAllCyrillicKeyboardPopups === 'function') closeAllCyrillicKeyboardPopups();
+  });
   document.body.addEventListener('click', function(e) {
     var btn = e.target && e.target.closest ? e.target.closest('.pdf-open-tab-btn') : null;
     if (!btn) return;
@@ -3519,6 +4965,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (det.open) ensurePdfIframeLoaded(det);
     });
   });
+  if (typeof setupDocVizTriggers === 'function') setupDocVizTriggers();
   if (typeof STANDALONE_VIZ !== 'undefined' && STANDALONE_VIZ) {
     initViz();
     function applyStandaloneVizHash() {
@@ -3597,6 +5044,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   applyHashNav();
   window.addEventListener('hashchange', applyHashNav);
+  (function defaultLandingTab() {
+    var h = window.location.hash || '';
+    if (/^#viz-/.test(h)) return;
+    if (/^#tab-/.test(h)) return;
+    showTab('tab-intro');
+  })();
   }
   var vizOpenBtn = document.getElementById('viz-open-new-tab');
   if (vizOpenBtn) {
@@ -3689,38 +5142,69 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (err) {}
       return;
     }
-    if (e.target.classList.contains('cyr-key-ins')) {
-      var ch = e.target.getAttribute('data-char');
-      var tid = e.target.getAttribute('data-tab');
-      if (!ch || !tid) return;
-      var inp = document.getElementById('doc-search-' + tid);
-      if (!inp) return;
-      var start = inp.selectionStart !== undefined ? inp.selectionStart : (inp.value || '').length;
-      var end = inp.selectionEnd !== undefined ? inp.selectionEnd : start;
-      var v = inp.value || '';
-      inp.value = v.slice(0, start) + ch + v.slice(end);
-      if (inp.selectionStart !== undefined) { inp.selectionStart = inp.selectionEnd = start + ch.length; }
-      inp.focus();
-      applyDocumentSearchAndFilter(tid);
+    if (e.target.closest && e.target.closest('.cyr-key-caps')) {
+      var capB = e.target.closest('.cyr-key-caps');
+      var tidCap = capB.getAttribute('data-tab');
+      var kbdCap = capB.closest('.cyrillic-keyboard');
+      if (tidCap && kbdCap) {
+        var onCap = kbdCap.getAttribute('data-caps-on') === '1';
+        kbdCap.setAttribute('data-caps-on', onCap ? '0' : '1');
+        refreshCyrillicKeyboardLabels(kbdCap);
+      }
       return;
     }
-    if (e.target.classList.contains('suggest-label-btn')) {
-      var doc = e.target.getAttribute('data-doc') || '';
-      var section = e.target.getAttribute('data-section') || '';
-      var entryEng = e.target.getAttribute('data-entry-eng') || '';
-      var entryRus = e.target.getAttribute('data-entry-rus') || '';
-      var llmCat = e.target.getAttribute('data-llm-cat') || '';
-      var humanCat = e.target.getAttribute('data-human-cat') || '';
-      var llmFram = e.target.getAttribute('data-llm-fram') || '';
-      var humanFram = e.target.getAttribute('data-human-fram') || '';
-      var msg = 'Label suggestion\\nDocument: ' + doc + '\\nSection: ' + section + '\\nEntry (EN): ' + entryEng + '\\nEntry (RU): ' + entryRus + '\\nCurrent LLM category: ' + llmCat + ', framing: ' + llmFram + '\\nCurrent human category: ' + humanCat + ', framing: ' + humanFram + '\\n\\nSuggested label: ';
-      showTab('tab-home');
-      var typeEl = document.getElementById('feedback-type');
-      var msgEl = document.getElementById('feedback-message');
-      if (typeEl) typeEl.value = 'label suggestion';
-      if (msgEl) { msgEl.value = msg; msgEl.focus(); }
-      var feedbackSection = document.querySelector('#tab-home .homepage-feedback-section');
-      if (feedbackSection) feedbackSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (e.target.closest && e.target.closest('.cyr-key-shift')) {
+      var shB = e.target.closest('.cyr-key-shift');
+      var tidSh = shB.getAttribute('data-tab');
+      var kbdSh = shB.closest('.cyrillic-keyboard');
+      if (tidSh && kbdSh) {
+        kbdSh.setAttribute('data-shift-next', '1');
+        refreshCyrillicKeyboardLabels(kbdSh);
+      }
+      return;
+    }
+    if (e.target.closest && e.target.closest('.cyr-key-backsp')) {
+      var bsB = e.target.closest('.cyr-key-backsp');
+      var tidBs = bsB.getAttribute('data-tab');
+      if (!tidBs) return;
+      var inpBs = getSearchInputForCyrillicTab(tidBs);
+      if (!inpBs) return;
+      var vBs = inpBs.value || '';
+      var s0 = inpBs.selectionStart !== undefined ? inpBs.selectionStart : vBs.length;
+      var s1 = inpBs.selectionEnd !== undefined ? inpBs.selectionEnd : s0;
+      if (s0 !== s1) {
+        inpBs.value = vBs.slice(0, s0) + vBs.slice(s1);
+        if (inpBs.selectionStart !== undefined) inpBs.selectionStart = inpBs.selectionEnd = s0;
+      } else if (s0 > 0) {
+        inpBs.value = vBs.slice(0, s0 - 1) + vBs.slice(s1);
+        if (inpBs.selectionStart !== undefined) inpBs.selectionStart = inpBs.selectionEnd = s0 - 1;
+      }
+      inpBs.focus();
+      if (typeof notifyCyrillicSearchChanged === 'function') notifyCyrillicSearchChanged(tidBs);
+      return;
+    }
+    var keyBtn = e.target.closest && e.target.closest('.cyr-key-ins');
+    if (keyBtn) {
+      var tidK = keyBtn.getAttribute('data-tab');
+      var kbdK = keyBtn.closest('.cyrillic-keyboard');
+      var base = keyBtn.getAttribute('data-base');
+      if (base === null || base === '') base = keyBtn.textContent || '';
+      if (!tidK || !kbdK) return;
+      var chIns = effectiveCyrillicChar(kbdK, base);
+      var inpK = getSearchInputForCyrillicTab(tidK);
+      if (!inpK) return;
+      var startK = inpK.selectionStart !== undefined ? inpK.selectionStart : (inpK.value || '').length;
+      var endK = inpK.selectionEnd !== undefined ? inpK.selectionEnd : startK;
+      var vK = inpK.value || '';
+      inpK.value = vK.slice(0, startK) + chIns + vK.slice(endK);
+      if (inpK.selectionStart !== undefined) { inpK.selectionStart = inpK.selectionEnd = startK + chIns.length; }
+      inpK.focus();
+      if (typeof notifyCyrillicSearchChanged === 'function') notifyCyrillicSearchChanged(tidK);
+      return;
+    }
+    var suggestBtn = e.target.closest && e.target.closest('.suggest-label-btn');
+    if (suggestBtn) {
+      openLabelSuggestionModal(suggestBtn);
       return;
     }
     if (e.target.classList.contains('section-click-to-view')) {

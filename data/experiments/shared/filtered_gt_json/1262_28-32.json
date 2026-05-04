@@ -1,0 +1,802 @@
+[
+  {
+    "section": 17,
+    "entry_eng": "Committee for State Security of the Republic",
+    "entry_rus": "Комитетом госбезопасности республики",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Committee for State Security of the Republic"
+  },
+  {
+    "section": 18,
+    "entry_eng": "Central Committee of the Communist Party of Ukraine",
+    "entry_rus": "ЦК Компартии Украины",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Central Committee of the Communist Party of Ukraine"
+  },
+  {
+    "section": 20,
+    "entry_eng": "On special measures against",
+    "entry_rus": "О специальных мероприятиях против",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "On special measures against"
+  },
+  {
+    "section": 21,
+    "entry_eng": "foreign centers of the OUN",
+    "entry_rus": "зарубежных центров ОУН",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "foreign centers of the OUN"
+  },
+  {
+    "section": 22,
+    "entry_eng": "intelligence services of the main adversary",
+    "entry_rus": "Спецслужбы главного противника",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "intelligence services of the main adversary"
+  },
+  {
+    "section": 23,
+    "entry_eng": "and foreign OUN",
+    "entry_rus": "и зарубежные ОУН",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "and foreign OUN"
+  },
+  {
+    "section": 24,
+    "entry_eng": "are attempting to intensify their",
+    "entry_rus": "предпринимают попытки активизации своей",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "are attempting to intensify their"
+  },
+  {
+    "section": 25,
+    "entry_eng": "hostile activities aimed at undermining trust in the policy of perestroika",
+    "entry_rus": "враждебной деятельности, направленной на подрыв доверия к политике перестройки",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "hostile activities aimed at undermining trust in the policy of perestroika"
+  },
+  {
+    "section": 26,
+    "entry_eng": "instigation of nationalist manifestations",
+    "entry_rus": "инспирацию националистических проявлений",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "instigation of nationalist manifestations"
+  },
+  {
+    "section": 29,
+    "entry_eng": "the Republic’s Committees of State Security, with authorization from the center",
+    "entry_rus": "Комитетом госбезопасности республики с санкции центра",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the Republic’s Committees of State Security, with authorization from the center"
+  },
+  {
+    "section": 30,
+    "entry_eng": "are implementing a set of special measures to counteract",
+    "entry_rus": "осуществляется комплекс специальных мероприятий по противодействию",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "are implementing a set of special measures to counteract"
+  },
+  {
+    "section": 31,
+    "entry_eng": "the use of foreign OUN by ruling circles and intelligence services of the adversary in intelligence and subversive activities against the USSR",
+    "entry_rus": "использованию правящими кругами и спецслужбами противника зарубежных ОУН в разведывательно-подрывной работе против СССР",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "the use of foreign OUN by ruling circles and intelligence services of the adversary in intelligence and subversive activities against the USSR"
+  },
+  {
+    "section": 32,
+    "entry_eng": "as well as to deepen the divisions among OUN factions and weaken their influence on the Ukrainian emigre community",
+    "entry_rus": "а также по углублению раскола между оуновскими формированиями и снижению их влияния на украинскую эмиграцию",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "as well as to deepen the divisions among OUN factions and weaken their influence on the Ukrainian emigre community"
+  },
+  {
+    "section": 34,
+    "entry_eng": "a new impetus has been given",
+    "entry_rus": "придан новый импульс",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "a new impetus has been given"
+  },
+  {
+    "section": 35,
+    "entry_eng": "to the long-term \"Retribution\" Operation",
+    "entry_rus": "долговременной акции \"Возмездие\"",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "to the long-term \"Retribution\" Operation"
+  },
+  {
+    "section": 36,
+    "entry_eng": "aimed at discrediting OUN members before Western governmental and public circles",
+    "entry_rus": "проводимой с целью компрометации перед правительственными и общественными кругами Запада оуновцев",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "aimed at discrediting OUN members before Western governmental and public circles"
+  },
+  {
+    "section": 38,
+    "entry_eng": "Dissemination of exposing materials through various channels has forced",
+    "entry_rus": "Продвинутые по различным каналам разоблачающие материалы вынудили",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "Dissemination of exposing materials through various channels has forced"
+  },
+  {
+    "section": 39,
+    "entry_eng": "justice authorities of the United States",
+    "entry_rus": "органы юстиции США",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "justice authorities of the United States"
+  },
+  {
+    "section": 41,
+    "entry_eng": "to launch an investigation",
+    "entry_rus": "возбудить следствие",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "to launch an investigation"
+  },
+  {
+    "section": 42,
+    "entry_eng": "against [...] residing in the country",
+    "entry_rus": "против проживающих в этой стране",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "against [...] residing in the country"
+  },
+  {
+    "section": 43,
+    "entry_eng": "12 Hitler's collaborators",
+    "entry_rus": "12 гитлеровских пособников",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "12 Hitler's collaborators"
+  },
+  {
+    "section": 44,
+    "entry_eng": "and to decide on the deportation of the executioner [Teodorovych] from the United States",
+    "entry_rus": "и принять решение о депортации из США карателя",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "and to decide on the deportation of the executioner [Teodorovych] from the United States"
+  },
+  {
+    "section": 48,
+    "entry_eng": "adopted an amendment to the legislation",
+    "entry_rus": "принял поправку к законодательству",
+    "content_category": "Legal Framework",
+    "framing": "Action-Focused Language",
+    "context": "adopted an amendment to the legislation"
+  },
+  {
+    "section": 49,
+    "entry_eng": "allowing for the prosecution of war criminals residing in the country",
+    "entry_rus": "позволяющую привлекать к ответственности военных преступников, укрывающихся в стране",
+    "content_category": "Legal Framework",
+    "framing": "Ideological Phrasing (Normalizing)",
+    "context": "allowing for the prosecution of war criminals residing in the country"
+  },
+  {
+    "section": 51,
+    "entry_eng": "anti-OUN campaign",
+    "entry_rus": "антиоуновская кампания",
+    "content_category": "Events",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "anti-OUN campaign"
+  },
+  {
+    "section": 52,
+    "entry_eng": "was also extended to the United Kingdom and Australia, where it gained",
+    "entry_rus": "была перенесена также в Великобританию и  Австралию, где получила",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "was also extended to the United Kingdom and Australia, where it gained"
+  },
+  {
+    "section": 55,
+    "entry_eng": "was produced by an English television company",
+    "entry_rus": "английской телекомпанией создан",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "was produced by an English television company"
+  },
+  {
+    "section": 56,
+    "entry_eng": "documentary film \"Britain – a Haven for Nazis\"",
+    "entry_rus": "документальный фильм \"Британия – убежище нацистов\"",
+    "content_category": "Documents",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "documentary film \"Britain – a Haven for Nazis\""
+  },
+  {
+    "section": 58,
+    "entry_eng": "was broadcast in",
+    "entry_rus": "был показан в",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "was broadcast in"
+  },
+  {
+    "section": 64,
+    "entry_eng": "a series of articles organized in the British press",
+    "entry_rus": "в английской прессе организована серия публикаций",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "a series of articles organized in the British press"
+  },
+  {
+    "section": 65,
+    "entry_eng": "exposing the British government",
+    "entry_rus": "разоблачающих правительство Великобритании",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "exposing the British government"
+  },
+  {
+    "section": 71,
+    "entry_eng": "whom U.S. authorities were forced to deport to Israel",
+    "entry_rus": "которого власти США были вынуждены депортировать в Израиль",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "whom U.S. authorities were forced to deport to Israel"
+  },
+  {
+    "section": 72,
+    "entry_eng": "following a series of publications organized by us in the American press about his crimes",
+    "entry_rus": "после организованной нами серии публикаций в американской прессе о его преступлениях",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "following a series of publications organized by us in the American press about his crimes"
+  },
+  {
+    "section": 73,
+    "entry_eng": "reported to the Central Committee of the Communist Party of Ukraine No. 47/sv",
+    "entry_rus": "докладывалось в ЦК КП Украины № 47/св от",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "reported to the Central Committee of the Communist Party of Ukraine No. 47/sv"
+  },
+  {
+    "section": 75,
+    "entry_eng": "established by OUNites",
+    "entry_rus": "Созданные оуновцами",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "established by OUNites"
+  },
+  {
+    "section": 77,
+    "entry_eng": "\"committees in defense of Demjanjuk\"",
+    "entry_rus": "\"комитеты в защиту Демьянюка\"",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "\"committees in defense of Demjanjuk\""
+  },
+  {
+    "section": 78,
+    "entry_eng": "the collections taken from rank-and-file OUN members to pay legal expenses",
+    "entry_rus": "поборы с рядовых членов ОУН на оплату судебных издержек",
+    "content_category": "Material Resources",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the collections taken from rank-and-file OUN members to pay legal expenses"
+  },
+  {
+    "section": 82,
+    "entry_eng": "The diversion of efforts by foreign OUN centers from anti-Soviet activity",
+    "entry_rus": "Отвлечению усилий зарубежных центров ОУН от антисоветской деятельности",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The diversion of efforts by foreign OUN centers from anti-Soviet activity"
+  },
+  {
+    "section": 83,
+    "entry_eng": "was also facilitated by the distribution to the ringleaders of the rival OUN factions of specially fabricated by us publications",
+    "entry_rus": "способствовало также направление главарям враждующих оуновских формирований специально изготовленных нами изданий",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "was also facilitated by the distribution to the ringleaders of the rival OUN factions of specially fabricated by us publications"
+  },
+  {
+    "section": 87,
+    "entry_eng": "the so-called \"moratorium\" on ceasing critical polemics between Melnykites and Banderites was disrupted",
+    "entry_rus": "инспирирован срыв так называемого \"моратория\" на прекращение критической полемики мельниковцев с бандеровцами",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "the so-called \"moratorium\" on ceasing critical polemics between Melnykites and Banderites was disrupted"
+  },
+  {
+    "section": 88,
+    "entry_eng": "escalating mutual attacks and accusations",
+    "entry_rus": "обострены их взаимные нападки и обвинения",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "escalating mutual attacks and accusations"
+  },
+  {
+    "section": 89,
+    "entry_eng": "which resulted in the termination of negotiations on the planned unification of foreign nationalist centers",
+    "entry_rus": "что повлекло за собой прекращение переговоров о намечавшемся объединении зарубежных националистических центров",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "which resulted in the termination of negotiations on the planned unification of foreign nationalist centers"
+  },
+  {
+    "section": 93,
+    "entry_eng": "of the Bandera faction",
+    "entry_rus": "бандеровского крыла",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "of the Bandera faction"
+  },
+  {
+    "section": 99,
+    "entry_eng": "was delivered by the development of",
+    "entry_rus": "был нанесен развитием",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "was delivered by the development of"
+  },
+  {
+    "section": 100,
+    "entry_eng": "Operation \"Verdict\"",
+    "entry_rus": "операции \"Приговор\"",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Operation \"Verdict\""
+  },
+  {
+    "section": 101,
+    "entry_eng": "aimed at publicly exposing the ringleader",
+    "entry_rus": "нацеленной на публичное разоблачение главаря",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "aimed at publicly exposing the ringleader"
+  },
+  {
+    "section": 102,
+    "entry_eng": "\"Foreign Representation of the Ukrainian Supreme Liberation Council\" (ZP UGVr)",
+    "entry_rus": "\"Закордонного представительства Украинского главного освободительного совета\" (ЗП УГВР)",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "\"Foreign Representation of the Ukrainian Supreme Liberation Council\" (ZP UGVr)"
+  },
+  {
+    "section": 105,
+    "entry_eng": "his participation in forming",
+    "entry_rus": "участие в формировании",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "his participation in forming"
+  },
+  {
+    "section": 106,
+    "entry_eng": "the \"Nachtigall\" Battalion",
+    "entry_rus": "батальона \"Нахтигаль\"",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "the \"Nachtigall\" Battalion"
+  },
+  {
+    "section": 107,
+    "entry_eng": "and the OUN \"Marching Groups\"",
+    "entry_rus": "и \"походных групп\" ОУН",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "and the OUN \"Marching Groups\""
+  },
+  {
+    "section": 112,
+    "entry_eng": "During Operation \"Conclave\"",
+    "entry_rus": "В ходе операции \"Конклав\"",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "During Operation \"Conclave\""
+  },
+  {
+    "section": 113,
+    "entry_eng": "aimed at undermining the authority",
+    "entry_rus": "преследующей цель подрыва авторитета",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "aimed at undermining the authority"
+  },
+  {
+    "section": 114,
+    "entry_eng": "Ukrainian Catholic Church (UCC)",
+    "entry_rus": "верхушки так называемой Украинской католической церкви (УКЦ)",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "Ukrainian Catholic Church (UCC)"
+  },
+  {
+    "section": 116,
+    "entry_eng": "certain documents, discovered in the archives [...] were used",
+    "entry_rus": "использованы обнаруженные в архиве отдельные документы",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "certain documents, discovered in the archives [...] were used"
+  },
+  {
+    "section": 118,
+    "entry_eng": "self-proclaimed \"patriarch\" of the UCC",
+    "entry_rus": "самозванного \"патриарха\" УКЦ",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "self-proclaimed \"patriarch\" of the UCC"
+  },
+  {
+    "section": 121,
+    "entry_eng": "exposing the power struggle initiated by the cardinal and his successors within the Bandera faction over the \"Ukrainian Patriarchate\"",
+    "entry_rus": "разоблачающие затеянную кардиналом и его преемниками склоку в бандеровском \"проводе\" вокруг \"украинского патриархата\"",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "exposing the power struggle initiated by the cardinal and his successors within the Bandera faction over the \"Ukrainian Patriarchate\""
+  },
+  {
+    "section": 123,
+    "entry_eng": "materials were disseminated through operational channels",
+    "entry_rus": "Указанные материалы по оперативным каналам были доведены до",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "materials were disseminated through operational channels"
+  },
+  {
+    "section": 124,
+    "entry_eng": "to foreign church and nationalist circles",
+    "entry_rus": "зарубежных церковных и националистических кругов",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "to foreign church and nationalist circles"
+  },
+  {
+    "section": 125,
+    "entry_eng": "contributed to further discrediting",
+    "entry_rus": "и способствовали дальнейшей компрометации",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "contributed to further discrediting"
+  },
+  {
+    "section": 126,
+    "entry_eng": "of Bandera and Uniate ringleaders in exile",
+    "entry_rus": "бандеровских и униатских главарей в эмиграции",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "of Bandera and Uniate ringleaders in exile"
+  },
+  {
+    "section": 134,
+    "entry_eng": "and to expose its organizers",
+    "entry_rus": "и разоблачения ее организаторов",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "and to expose its organizers"
+  },
+  {
+    "section": 135,
+    "entry_eng": "a set of special measures was carried out under Operation \"Pharisees.\"",
+    "entry_rus": "по операции \"Фарисеи\" проведен комплекс специальных мероприятий",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "a set of special measures was carried out under Operation \"Pharisees.\""
+  },
+  {
+    "section": 136,
+    "entry_eng": "Falsifications of historical facts and documents [...] were exposed",
+    "entry_rus": "Были разоблачены подтасовки исторических фактов и документов",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "Falsifications of historical facts and documents [...] were exposed"
+  },
+  {
+    "section": 138,
+    "entry_eng": "film-forgery \"Harvest of Despair\"",
+    "entry_rus": "кинофальшивке \"Урожай отчаяния\"",
+    "content_category": "Documents",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "film-forgery \"Harvest of Despair\""
+  },
+  {
+    "section": 139,
+    "entry_eng": "and in the book of the reactionary \"Sovietologist\" R. Conquest \"The Harvest of Sorrow\"",
+    "entry_rus": "и книге реакционного \"советолога\" Р. Конквеста \"Жатва скорби\"",
+    "content_category": "Documents",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "and in the book of the reactionary \"Sovietologist\" R. Conquest \"The Harvest of Sorrow\""
+  },
+  {
+    "section": 142,
+    "entry_eng": "this information was transmitted to U.S. media",
+    "entry_rus": "Эти факты [...] были переданы в средства массовой информации США",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "this information was transmitted to U.S. media"
+  },
+  {
+    "section": 143,
+    "entry_eng": "which published a series of critical commentaries and articles",
+    "entry_rus": "которые опубликовали ряд критических комментариев и статей",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "which published a series of critical commentaries and articles"
+  },
+  {
+    "section": 146,
+    "entry_eng": "was published by our foreign source",
+    "entry_rus": "нашим закордонным источником издана",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "was published by our foreign source"
+  },
+  {
+    "section": 147,
+    "entry_eng": "exposing the organizers of the campaign for their falsifications and political adventurism",
+    "entry_rus": "изобличающая организаторов кампании в фальсификациях и политическом авантюризме",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "exposing the organizers of the campaign for their falsifications and political adventurism"
+  },
+  {
+    "section": 148,
+    "entry_eng": "which significantly undermined Western public confidence",
+    "entry_rus": "что существенно подорвало доверие западной общественности",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "which significantly undermined Western public confidence"
+  },
+  {
+    "section": 153,
+    "entry_eng": "have been directed toward conducting activities aimed at shifting certain ethnic groups to positions favorable to us",
+    "entry_rus": "направлен на проведение мероприятий по переводу отдельных этнических групп на выгодные нам позиции",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "have been directed toward conducting activities aimed at shifting certain ethnic groups to positions favorable to us"
+  },
+  {
+    "section": 160,
+    "entry_eng": "which, in opposition to Bandera-led efforts to boycott the Ukrainian SSR",
+    "entry_rus": "которые в противовес бандеровским установкам на бойкот УССР",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "which, in opposition to Bandera-led efforts to boycott the Ukrainian SSR"
+  },
+  {
+    "section": 162,
+    "entry_eng": "and advocate for the development of contacts with the republic",
+    "entry_rus": "и выступают за развитие контактов с республикой",
+    "content_category": "Actions",
+    "framing": "Ideological Phrasing (Normalizing)",
+    "context": "and advocate for the development of contacts with the republic"
+  },
+  {
+    "section": 165,
+    "entry_eng": "a demonstration of Soviet feature and documentary films has been organized",
+    "entry_rus": "организована демонстрация советских художественных и документальных фильмов",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "a demonstration of Soviet feature and documentary films has been organized"
+  },
+  {
+    "section": 168,
+    "entry_eng": "specially prepared programs produced in the republic have been broadcast",
+    "entry_rus": "распространение подготовленных в республике программ",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "specially prepared programs produced in the republic have been broadcast"
+  },
+  {
+    "section": 175,
+    "entry_eng": "Radio Liberty employee B. Nahajlo",
+    "entry_rus": "сотрудника радиостанции \"Свобода\" Б. Нагайло",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "Radio Liberty employee B. Nahajlo"
+  },
+  {
+    "section": 184,
+    "entry_eng": "OUN organizations \"of the 1930s model\"",
+    "entry_rus": "оуновские организации \"образца тридцатых годов\"",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "OUN organizations \"of the 1930s model\""
+  },
+  {
+    "section": 188,
+    "entry_eng": "Foreign OUN centers",
+    "entry_rus": "Зарубежные оуновские центры",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "Foreign OUN centers"
+  },
+  {
+    "section": 189,
+    "entry_eng": "seeking to organize self-defense",
+    "entry_rus": "стремясь организовать самозащиту",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "seeking to organize self-defense"
+  },
+  {
+    "section": 190,
+    "entry_eng": "are being forced to make considerable efforts",
+    "entry_rus": "вынуждены прилагать значительные усилия",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "are being forced to make considerable efforts"
+  },
+  {
+    "section": 192,
+    "entry_eng": "and to spend large financial resources",
+    "entry_rus": "и тратить большие материальные средства",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "and to spend large financial resources"
+  },
+  {
+    "section": 197,
+    "entry_eng": "the defense of the executioner",
+    "entry_rus": "защита карателя",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "the defense of the executioner"
+  },
+  {
+    "section": 200,
+    "entry_eng": "and a new fundraising campaign has been announced for these purposes",
+    "entry_rus": "и объявлен новый сбор пожертвований на эти цели",
+    "content_category": "Events",
+    "framing": "Action-Focused Language",
+    "context": "and a new fundraising campaign has been announced for these purposes"
+  },
+  {
+    "section": 202,
+    "entry_eng": "the \"international tribunal on the artificial famine in Ukraine in 1932-1933\" they are planning",
+    "entry_rus": "на замышляемый ими “международный трибунал по искусственному голоду на Украине в 1932-1933 гг.”",
+    "content_category": "Material Resources",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "the \"international tribunal on the artificial famine in Ukraine in 1932-1933\" they are planning"
+  },
+  {
+    "section": 205,
+    "entry_eng": "In an attempt to convince Western intelligence services and reactionary circles",
+    "entry_rus": "В попытках убедить спецслужбы и реакционные круги Запада",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "In an attempt to convince Western intelligence services and reactionary circles"
+  },
+  {
+    "section": 208,
+    "entry_eng": "gatherings",
+    "entry_rus": "сборищах",
+    "content_category": "Events",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "gatherings"
+  },
+  {
+    "section": 209,
+    "entry_eng": "UP \"Great Assembly of Ukrainian Nationalists\"",
+    "entry_rus": "УП “Великий збор украинских националистов”",
+    "content_category": "Events",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "UP \"Great Assembly of Ukrainian Nationalists\""
+  },
+  {
+    "section": 210,
+    "entry_eng": "the conference of ZP UGV [the Foreign Representation of the Ukrainian Supreme Liberation Council]",
+    "entry_rus": "конференция ЗП УГВР",
+    "content_category": "Events",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "the conference of ZP UGV [the Foreign Representation of the Ukrainian Supreme Liberation Council]"
+  },
+  {
+    "section": 211,
+    "entry_eng": "and the OUN-Solidarists",
+    "entry_rus": "и ОУН-солидаристов",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "and the OUN-Solidarists"
+  },
+  {
+    "section": 214,
+    "entry_eng": "intensifying subversive activities,",
+    "entry_rus": "активизацию своей подрывной работы",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "intensifying subversive activities,"
+  },
+  {
+    "section": 215,
+    "entry_eng": "and adapting their operations to the ongoing [...] in our country",
+    "entry_rus": "и приспособление её к происходящим в нашей стране",
+    "content_category": "Actions",
+    "framing": "Ideological Phrasing (Normalizing)",
+    "context": "and adapting their operations to the ongoing [...] in our country"
+  },
+  {
+    "section": 219,
+    "entry_eng": "the Committee of State Security of the republic is taking measures",
+    "entry_rus": "Комитет госбезопасности республики принимает меры к",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "the Committee of State Security of the republic is taking measures"
+  },
+  {
+    "section": 220,
+    "entry_eng": "to continue implementing preemptive active operations against foreign OUN",
+    "entry_rus": "дальнейшему осуществлению упреждающих активных мероприятий против зарубежных ОУН",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to continue implementing preemptive active operations against foreign OUN"
+  },
+  {
+    "section": 221,
+    "entry_eng": "to expose and disrupt their hostile actions",
+    "entry_rus": "разоблачению и срыву их враждебных акций",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to expose and disrupt their hostile actions"
+  },
+  {
+    "section": 223,
+    "entry_eng": "the dissemination abroad of four books based on our materials",
+    "entry_rus": "распространение за рубежом четырех книг, подготовленных по нашим материалам",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "the dissemination abroad of four books based on our materials"
+  },
+  {
+    "section": 227,
+    "entry_eng": "to the judicial authorities",
+    "entry_rus": "органам юстиции",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "to the judicial authorities"
+  },
+  {
+    "section": 230,
+    "entry_eng": "will be handed over the materials",
+    "entry_rus": "будут переданы материалы",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "will be handed over the materials"
+  },
+  {
+    "section": 236,
+    "entry_eng": "Reported for informational purposes",
+    "entry_rus": "Сообщается в порядке информации",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Reported for informational purposes"
+  },
+  {
+    "section": 237,
+    "entry_eng": "Chairman of the Committee",
+    "entry_rus": "Председатель Комитета",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Chairman of the Committee"
+  },
+  {
+    "section": 238,
+    "entry_eng": "KGB of the Ukrainian SSR",
+    "entry_rus": "КГБ УССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "KGB of the Ukrainian SSR"
+  }
+]

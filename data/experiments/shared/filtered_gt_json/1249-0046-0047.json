@@ -1,0 +1,258 @@
+[
+  {
+    "section": 18,
+    "entry_eng": "Report Note",
+    "entry_rus": "Докладная записка",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Report Note"
+  },
+  {
+    "section": 19,
+    "entry_eng": "The Republican Committee for State Security",
+    "entry_rus": "Комитетом госбезопасности республики",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The Republican Committee for State Security"
+  },
+  {
+    "section": 20,
+    "entry_eng": "in coordination with the KGB of the USSR",
+    "entry_rus": "по согласованию с КГБ СССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "in coordination with the KGB of the USSR"
+  },
+  {
+    "section": 21,
+    "entry_eng": "is carrying out special measures",
+    "entry_rus": "осуществляются специальные мероприятия",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "is carrying out special measures"
+  },
+  {
+    "section": 22,
+    "entry_eng": "aimed at disrupting",
+    "entry_rus": "направленные на срыв",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "aimed at disrupting"
+  },
+  {
+    "section": 24,
+    "entry_eng": "under the direction of the CIA of the USA",
+    "entry_rus": "под руководством ЦРУ США",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "under the direction of the CIA of the USA"
+  },
+  {
+    "section": 27,
+    "entry_eng": "Operation “Pharisees”",
+    "entry_rus": "операция \"Фарисеи\"",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Operation “Pharisees”"
+  },
+  {
+    "section": 30,
+    "entry_eng": "well-argued materials have been puched out",
+    "entry_rus": "были продвинуты аргументированные материалы",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "well-argued materials have been puched out"
+  },
+  {
+    "section": 31,
+    "entry_eng": "that expose the falsifications about the “artificial nature of the famine”",
+    "entry_rus": "разоблачающие фальсификации об “искусственном характере голода”",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "that expose the falsifications about the “artificial nature of the famine”"
+  },
+  {
+    "section": 32,
+    "entry_eng": "discredit members of the U.S. Congressional Commission “on the investigation of the famine in Ukraine,” and reveal the false witnesses",
+    "entry_rus": "компрометирующие членов комиссии конгресса США “по изучению вопроса о голоде на Украине\" и лжесвидетелей",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "discredit members of the U.S. Congressional Commission “on the investigation of the famine in Ukraine,” and reveal the false witnesses"
+  },
+  {
+    "section": 35,
+    "entry_eng": "including the former German consul in Kyiv",
+    "entry_rus": "бывший германский консул в Киеве",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "including the former German consul in Kyiv"
+  },
+  {
+    "section": 36,
+    "entry_eng": "a British journalist connected to intelligence services",
+    "entry_rus": "связанный со спецслужбами английский журналист",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "a British journalist connected to intelligence services"
+  },
+  {
+    "section": 37,
+    "entry_eng": "defectors",
+    "entry_rus": "отщепенцы",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "defectors"
+  },
+  {
+    "section": 40,
+    "entry_eng": "These materials have elicited",
+    "entry_rus": "Указанные материалы вызвали",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "These materials have elicited"
+  },
+  {
+    "section": 43,
+    "entry_eng": "A review was published",
+    "entry_rus": "помещена рецензия",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "A review was published"
+  },
+  {
+    "section": 50,
+    "entry_eng": "imposed by Ukrainian nationalists",
+    "entry_rus": "навязанных украинскими националистами",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "imposed by Ukrainian nationalists"
+  },
+  {
+    "section": 52,
+    "entry_eng": "published articles",
+    "entry_rus": "опубликовала статьи",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "published articles"
+  },
+  {
+    "section": 57,
+    "entry_eng": "taken",
+    "entry_rus": "заснятые",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "taken"
+  },
+  {
+    "section": 64,
+    "entry_eng": "exposing these falsifications has significantly undermined public trust",
+    "entry_rus": "разоблачением указанных фальсификаций существенно подорвано доверие общественности",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "exposing these falsifications has significantly undermined public trust"
+  },
+  {
+    "section": 67,
+    "entry_eng": "in the top ranks of the OUN is the fact that",
+    "entry_rus": "в оуновской верхушке явилось то",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "in the top ranks of the OUN is the fact that"
+  },
+  {
+    "section": 68,
+    "entry_eng": "under the weight of the evidence, the creators of the fake film were forced to admit the fabrication",
+    "entry_rus": "под давлением улик создатели кинофальшивки вынуждены были признать подтасовку",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "under the weight of the evidence, the creators of the fake film were forced to admit the fabrication"
+  },
+  {
+    "section": 69,
+    "entry_eng": "are attempting to justify the forgery by claiming the absence of photographic materials from that period",
+    "entry_rus": "пытаются оправдать подлог отсутствием фотоматериалов того периода",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "are attempting to justify the forgery by claiming the absence of photographic materials from that period"
+  },
+  {
+    "section": 70,
+    "entry_eng": "To further develop Operation “Pharisees”",
+    "entry_rus": "В целях дальнейшего развития операции \"Фарисеи",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "To further develop Operation “Pharisees”"
+  },
+  {
+    "section": 71,
+    "entry_eng": "the Republican Committee for State Security",
+    "entry_rus": "Комитет госбезопасности республики",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "the Republican Committee for State Security"
+  },
+  {
+    "section": 72,
+    "entry_eng": "in coordination with the KGB of the USSR",
+    "entry_rus": "по согласованию с КГБ СССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "in coordination with the KGB of the USSR"
+  },
+  {
+    "section": 73,
+    "entry_eng": "is assisting in the publication abroad of a documentary book",
+    "entry_rus": "оказывает содействие в издании за рубежом документальной книги",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "is assisting in the publication abroad of a documentary book"
+  },
+  {
+    "section": 74,
+    "entry_eng": "exposing the political motives behind the OUN’s falsifications of the issue",
+    "entry_rus": "разоблачающей политические мотивы фальсификаций проблемы оуновцами",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "exposing the political motives behind the OUN’s falsifications of the issue"
+  },
+  {
+    "section": 75,
+    "entry_eng": "It is then planned to promote",
+    "entry_rus": "Затем планируется продвинуть",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "It is then planned to promote"
+  },
+  {
+    "section": 76,
+    "entry_eng": "[the book] among the members of the U.S. Congressional Commission “on the investigation of the artificial famine in the Ukraine in 1932–1933”",
+    "entry_rus": "ее членам комиссии \"по изучению искусственного голода на Украине в 1932-1933 гг.\" конгресса США",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "[the book] among the members of the U.S. Congressional Commission “on the investigation of the artificial famine in the Ukraine in 1932–1933”"
+  },
+  {
+    "section": 78,
+    "entry_eng": "by OUN ringleaders",
+    "entry_rus": "главарями ОУН",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "by OUN ringleaders"
+  },
+  {
+    "section": 79,
+    "entry_eng": "It is also planned to send warnings to senators and congressmen cautioning",
+    "entry_rus": "Предусматривается организация засылки сенаторам и конгрессменам предостережений",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "It is also planned to send warnings to senators and congressmen cautioning"
+  },
+  {
+    "section": 82,
+    "entry_eng": "Submitted for informational purposes",
+    "entry_rus": "Докладываем в порядке информации",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Submitted for informational purposes"
+  }
+]

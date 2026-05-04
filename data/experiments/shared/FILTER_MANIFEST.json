@@ -1,0 +1,135 @@
+{
+  "generated_at": "2026-05-04T20:02:56.041035+00:00",
+  "filter_config": "config\\experiment_redo_filter.json",
+  "pipeline_config_used": "config\\pipeline_config.experiment_redo.json",
+  "documents": {
+    "1127": {
+      "status": "ok",
+      "html_rows": 268,
+      "dropped_category_policy": 23,
+      "dropped_generic_neutral_framing": 149,
+      "kept_after_policy_filters": 96,
+      "final_rows_after_taxonomy_filter": 83
+    },
+    "1128": {
+      "status": "ok",
+      "html_rows": 378,
+      "dropped_category_policy": 68,
+      "dropped_generic_neutral_framing": 200,
+      "kept_after_policy_filters": 110,
+      "final_rows_after_taxonomy_filter": 97
+    },
+    "1206": {
+      "status": "ok",
+      "html_rows": 295,
+      "dropped_category_policy": 57,
+      "dropped_generic_neutral_framing": 182,
+      "kept_after_policy_filters": 56,
+      "final_rows_after_taxonomy_filter": 43
+    },
+    "1208": {
+      "status": "ok",
+      "html_rows": 230,
+      "dropped_category_policy": 41,
+      "dropped_generic_neutral_framing": 126,
+      "kept_after_policy_filters": 63,
+      "final_rows_after_taxonomy_filter": 50
+    },
+    "1209": {
+      "status": "ok",
+      "html_rows": 181,
+      "dropped_category_policy": 23,
+      "dropped_generic_neutral_framing": 123,
+      "kept_after_policy_filters": 35,
+      "final_rows_after_taxonomy_filter": 23
+    },
+    "1213": {
+      "status": "ok",
+      "html_rows": 140,
+      "dropped_category_policy": 15,
+      "dropped_generic_neutral_framing": 76,
+      "kept_after_policy_filters": 49,
+      "final_rows_after_taxonomy_filter": 37
+    },
+    "1215": {
+      "status": "ok",
+      "html_rows": 179,
+      "dropped_category_policy": 24,
+      "dropped_generic_neutral_framing": 114,
+      "kept_after_policy_filters": 41,
+      "final_rows_after_taxonomy_filter": 29
+    },
+    "1230": {
+      "status": "ok",
+      "html_rows": 118,
+      "dropped_category_policy": 19,
+      "dropped_generic_neutral_framing": 25,
+      "kept_after_policy_filters": 74,
+      "final_rows_after_taxonomy_filter": 61
+    },
+    "1245": {
+      "status": "ok",
+      "html_rows": 227,
+      "dropped_category_policy": 38,
+      "dropped_generic_neutral_framing": 59,
+      "kept_after_policy_filters": 130,
+      "final_rows_after_taxonomy_filter": 114
+    },
+    "1247": {
+      "status": "ok",
+      "html_rows": 202,
+      "dropped_category_policy": 31,
+      "dropped_generic_neutral_framing": 104,
+      "kept_after_policy_filters": 67,
+      "final_rows_after_taxonomy_filter": 54
+    },
+    "1249-0046-0047": {
+      "status": "ok",
+      "html_rows": 82,
+      "dropped_category_policy": 21,
+      "dropped_generic_neutral_framing": 16,
+      "kept_after_policy_filters": 45,
+      "final_rows_after_taxonomy_filter": 32
+    },
+    "1249-80-83": {
+      "status": "ok",
+      "html_rows": 237,
+      "dropped_category_policy": 35,
+      "dropped_generic_neutral_framing": 122,
+      "kept_after_policy_filters": 80,
+      "final_rows_after_taxonomy_filter": 66
+    },
+    "1256": {
+      "status": "ok",
+      "html_rows": 119,
+      "dropped_category_policy": 14,
+      "dropped_generic_neutral_framing": 47,
+      "kept_after_policy_filters": 58,
+      "final_rows_after_taxonomy_filter": 45
+    },
+    "1262_149-150": {
+      "status": "ok",
+      "html_rows": 69,
+      "dropped_category_policy": 5,
+      "dropped_generic_neutral_framing": 17,
+      "kept_after_policy_filters": 47,
+      "final_rows_after_taxonomy_filter": 32
+    },
+    "1262_198-200": {
+      "status": "ok",
+      "html_rows": 215,
+      "dropped_category_policy": 8,
+      "dropped_generic_neutral_framing": 91,
+      "kept_after_policy_filters": 116,
+      "final_rows_after_taxonomy_filter": 67
+    },
+    "1262_28-32": {
+      "status": "ok",
+      "html_rows": 235,
+      "dropped_category_policy": 77,
+      "dropped_generic_neutral_framing": 44,
+      "kept_after_policy_filters": 114,
+      "final_rows_after_taxonomy_filter": 100
+    }
+  }
+}

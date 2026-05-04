@@ -10,12 +10,54 @@ from report import run as report_run
 from report import _normalize_segment_for_search, _get_accepted_segments
 
 
+def test_report_folds_legacy_content_category_in_table_and_attrs():
+    """Legacy sheet labels (e.g. Information) show as current taxonomy (Documents) in UI."""
+    config = {"output": {"dir": "data/output", "report_html": "test_report_fold.html", "intermediate_json": "comparison_results.json"}}
+    taxonomy = {
+        "content_categories": [
+            {"id": "Documents", "label_en": "Documents", "colour": "#64748b"},
+        ],
+        "framing_strategies": [{"id": "Institutional / Bureaucratic Lingo", "label_en": "Institutional / Bureaucratic Lingo", "colour": "#2563eb"}],
+    }
+    documents = [{"document_id": "d1", "display_name": "doc1.txt"}]
+    comparison_by_doc = {
+        "d1": {
+            "aligned_rows": [
+                {
+                    "section": 1,
+                    "entry_eng": "X",
+                    "entry_rus": "",
+                    "llm_category": "Information",
+                    "llm_framing": "Institutional / Bureaucratic Lingo",
+                    "human_category": "Information",
+                    "human_framing": "Institutional / Bureaucratic Lingo",
+                    "context": "",
+                    "category_match": True,
+                    "framing_match": True,
+                    "both_match": True,
+                },
+            ],
+            "category_accuracy_pct": 100.0,
+            "framing_accuracy_pct": 100.0,
+            "both_match_pct": 100.0,
+        },
+    }
+    out_path = report_run(comparison_by_doc, documents, taxonomy, config)
+    html = out_path.read_text(encoding="utf-8")
+    assert 'data-llm-category="Documents"' in html
+    assert 'data-llm-framing="Institutional / Bureaucratic Lingo"' in html
+    try:
+        out_path.unlink()
+    except Exception:
+        pass
+
+
 def test_report_produces_html():
     """Report run writes HTML file containing tabs, table, document text view, glossary."""
     config = {"output": {"dir": "data/output", "report_html": "test_report_output.html", "intermediate_json": "comparison_results.json"}}
     taxonomy = {
         "content_categories": [{"id": "Actors", "label_en": "Actors", "colour": "#3b82f6"}],
-        "framing_strategies": [{"id": "Generic", "label_en": "Generic", "colour": "#666"}],
+        "framing_strategies": [{"id": "Institutional / Bureaucratic Lingo", "label_en": "Institutional / Bureaucratic Lingo", "colour": "#2563eb"}],
     }
     documents = [
         {"document_id": "d1", "display_name": "doc1.txt"},
@@ -24,7 +66,7 @@ def test_report_produces_html():
     comparison_by_doc = {
         "d1": {
             "aligned_rows": [
-                {"section": 1, "entry_eng": "Test", "entry_rus": "", "llm_category": "Actors", "llm_framing": "Generic", "human_category": "Actors", "human_framing": "Generic", "context": "Test", "category_match": True, "framing_match": True, "both_match": True},
+                {"section": 1, "entry_eng": "Test", "entry_rus": "", "llm_category": "Actors", "llm_framing": "Institutional / Bureaucratic Lingo", "human_category": "Actors", "human_framing": "Institutional / Bureaucratic Lingo", "context": "Test", "category_match": True, "framing_match": True, "both_match": True},
             ],
             "category_accuracy_pct": 100.0,
             "framing_accuracy_pct": 100.0,
@@ -49,13 +91,13 @@ def test_report_produces_html():
     assert "comparison-table" in html
     assert "document-text-view" in html or "document-text-content" in html
     assert "buildDocumentTextView" in html or "doc-text-" in html
-    assert "100.0%" in html
+    assert 'data-cat-pct="100' in html or "100.0%" in html
     assert "Actors" in html
     assert "Glossary" in html
     assert "collapsible-section" in html
     assert "document-text-controls-sticky" in html
     assert "Accuracy stats" in html and "Document text view" in html and "Comparison table" in html
-    assert "sidebar" in html and "tab-home" in html and "homepage-placeholder" in html
+    assert 'class="sidebar"' in html and 'id="tab-home"' in html and "homepage-content" in html
 
     # Clean up test output
     try:
@@ -85,8 +127,8 @@ def test_get_accepted_segments_whitespace_tolerant():
 def test_get_accepted_segments_shorter_wins():
     """Shorter overlapping segments win (substring overlap fix)."""
     aligned = [
-        {"entry_eng": "delegation arrived", "llm_category": "A", "llm_framing": "Generic"},
-        {"entry_eng": "arrived", "llm_category": "A", "llm_framing": "Action-Focused"},
+        {"entry_eng": "delegation arrived", "llm_category": "A", "llm_framing": "Generic / Neutral Language"},
+        {"entry_eng": "arrived", "llm_category": "A", "llm_framing": "Action-Focused Language"},
     ]
     full_text = "The delegation arrived at the hall."
     accepted = _get_accepted_segments(full_text, aligned, "entry_eng")

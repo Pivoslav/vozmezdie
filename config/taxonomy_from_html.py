@@ -8,6 +8,8 @@ import re
 from html.parser import HTMLParser
 from typing import Any, Dict, List, Optional
 
+from config.taxonomy_categories import filter_content_categories_for_taxonomy
+
 
 class _WaffleTableParser(HTMLParser):
     """Extract rows from the first table with class 'waffle'. Each row = list of cell texts."""
@@ -174,7 +176,7 @@ def load_taxonomy_from_html(
     parser.feed(text)
 
     framing_strategies = _parse_framing(parser.rows)
-    content_categories = _parse_content_categories(parser.rows)
+    content_categories = filter_content_categories_for_taxonomy(_parse_content_categories(parser.rows))
 
     _merge_from_json(content_categories, framing_strategies, merge_from_path)
 

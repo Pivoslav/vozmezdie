@@ -8,6 +8,8 @@
 
 ## 0. Latest Session (Feb 2025) — Start Here
 
+**Planning note (Apr 2026):** Before implementing **per-document visualization dropdowns** and taxonomy-light experiments, see **[PER_DOC_VIZ_BASELINE.md](PER_DOC_VIZ_BASELINE.md)** for where corpus viz lives (`viz-data`, `_homepage`), how taxonomy splits glossary vs pipeline, and what document tabs already contain.
+
 Work completed in the most recent session before handoff:
 
 

@@ -15,7 +15,12 @@ ROOT = Path(__file__).resolve().parent
 
 
 def load_config() -> dict:
-    config_path = Path(__file__).parent / "config" / "pipeline_config.example.json"
+    import os
+
+    rel = os.environ.get("PIPELINE_CONFIG", "config/pipeline_config.example.json")
+    config_path = Path(rel)
+    if not config_path.is_absolute():
+        config_path = ROOT / config_path
     if not config_path.exists():
         raise FileNotFoundError(f"Config not found: {config_path}")
     with open(config_path, "r", encoding="utf-8") as f:
@@ -51,7 +56,6 @@ def main(
             out_report = ROOT / out_report
         config.setdefault("output", {})["report_html"] = out_report.name
         config.setdefault("output", {})["dir"] = str(out_report.parent)
-        config.setdefault("output", {})["intermediate_json"] = "comparison_results_no_generic.json"
     taxonomy = load_taxonomy(config)
 
     # 1. Ingest (syncs Russian originals from dev into data/russian_originals when document_map_path set)
@@ -62,10 +66,16 @@ def main(
         return 1
     print(f"Ingest: {len(documents)} documents")
 
-    # 2. LLM extraction: agent assessments file, stub, or real LLM
-    if use_agent_assessments:
-        out_dir = Path(config.get("output", {}).get("dir", "data/output"))
-        agent_path = Path(agent_assessments_file) if agent_assessments_file else out_dir / "agent_assessments.json"
+    # 2. Comparison primary side: pipeline LLM / fixture, or agent assessments (CLI or config.output.comparison_source)
+    out_cfg = config.get("output") or {}
+    comparison_source = str(out_cfg.get("comparison_source") or "llm").strip().lower()
+    use_agent_from_config = comparison_source in ("agent_assessments", "experiment_a")
+    effective_use_agent = use_agent_assessments or use_agent_from_config
+
+    if effective_use_agent:
+        out_dir = Path(out_cfg.get("dir", "data/output"))
+        path_arg = agent_assessments_file or out_cfg.get("agent_assessments_file")
+        agent_path = Path(path_arg) if path_arg else out_dir / "agent_assessments.json"
         if not agent_path.is_absolute():
             agent_path = ROOT / agent_path
         if not agent_path.exists():
@@ -75,7 +85,10 @@ def main(
             agent_data = json.load(f)
         document_ids = [d.get("document_id") for d in documents]
         llm_by_doc = {doc_id: agent_data.get(doc_id, []) for doc_id in document_ids}
-        print(f"Agent assessments: {agent_path.name} — {len(llm_by_doc)} documents ({sum(len(v) for v in llm_by_doc)} rows)")
+        print(
+            f"Agent assessments ({comparison_source if use_agent_from_config else 'CLI'}): {agent_path.name} — "
+            f"{len(llm_by_doc)} documents ({sum(len(v) for v in llm_by_doc.values())} rows)"
+        )
     else:
         from llm import run as llm_run
         llm_by_doc = llm_run(documents, taxonomy, config)
@@ -96,7 +109,7 @@ def main(
     out_config = config.get("output", {})
     out_dir = Path(out_config.get("dir", "data/output"))
     out_dir.mkdir(parents=True, exist_ok=True)
-    json_name = "comparison_results_no_generic.json" if agent_assessments_file else out_config.get("intermediate_json", "comparison_results.json")
+    json_name = out_config.get("intermediate_json", "comparison_results.json")
     json_path = out_dir / json_name
     with open(json_path, "w", encoding="utf-8") as f:
         json.dump({"documents": documents, "comparison_by_doc": comparison_by_doc}, f, indent=2, ensure_ascii=False)

@@ -58,8 +58,8 @@ def test_report_only_from_json():
             "comparison_by_doc": {
                 "smoke": {
                     "aligned_rows": [
-                        {"section": 1, "entry_eng": "One", "entry_rus": "", "llm_category": "Actions", "llm_framing": "Generic", "human_category": "Actions", "human_framing": "Generic", "context": "One", "category_match": True, "framing_match": True, "both_match": True},
-                        {"section": 2, "entry_eng": "Two", "entry_rus": "", "llm_category": "Actors", "llm_framing": "Generic", "human_category": "Actors", "human_framing": "Generic", "context": "Two", "category_match": True, "framing_match": True, "both_match": True},
+                        {"section": 1, "entry_eng": "One", "entry_rus": "", "llm_category": "Actions", "llm_framing": "Institutional / Bureaucratic Lingo", "human_category": "Actions", "human_framing": "Institutional / Bureaucratic Lingo", "context": "One", "category_match": True, "framing_match": True, "both_match": True},
+                        {"section": 2, "entry_eng": "Two", "entry_rus": "", "llm_category": "Actors", "llm_framing": "Institutional / Bureaucratic Lingo", "human_category": "Actors", "human_framing": "Institutional / Bureaucratic Lingo", "context": "Two", "category_match": True, "framing_match": True, "both_match": True},
                     ],
                     "category_accuracy_pct": 100.0,
                     "framing_accuracy_pct": 100.0,

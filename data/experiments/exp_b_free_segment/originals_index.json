@@ -1,0 +1,100 @@
+{
+  "documents": [
+    {
+      "document_id": "1127",
+      "display_name": "1127.txt",
+      "russian_original_project_relative": "data/russian_originals/1127.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1127-59-64 RUS.txt"
+    },
+    {
+      "document_id": "1128",
+      "display_name": "1128.txt",
+      "russian_original_project_relative": "data/russian_originals/1128.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1128-67-73 RUS.txt"
+    },
+    {
+      "document_id": "1206",
+      "display_name": "1206.txt",
+      "russian_original_project_relative": "data/russian_originals/1206.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1206-0150-154 RUS.txt"
+    },
+    {
+      "document_id": "1208",
+      "display_name": "1208.txt",
+      "russian_original_project_relative": "data/russian_originals/1208.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1208-090-93 RUS.txt"
+    },
+    {
+      "document_id": "1209",
+      "display_name": "1209.txt",
+      "russian_original_project_relative": "data/russian_originals/1209.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1209-229-32 RUS.txt"
+    },
+    {
+      "document_id": "1213",
+      "display_name": "1213.txt",
+      "russian_original_project_relative": "data/russian_originals/1213.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1213-0154-56 RUS.txt"
+    },
+    {
+      "document_id": "1215",
+      "display_name": "1215.txt",
+      "russian_original_project_relative": "data/russian_originals/1215.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1215-051-54 RUS.txt"
+    },
+    {
+      "document_id": "1230",
+      "display_name": "1230.txt",
+      "russian_original_project_relative": "data/russian_originals/1230.txt",
+      "rus_filename_source_of_truth": "FineReader-016-0001-1230-Original_Rus.docx.txt"
+    },
+    {
+      "document_id": "1245",
+      "display_name": "1245.txt",
+      "russian_original_project_relative": "data/russian_originals/1245.txt",
+      "rus_filename_source_of_truth": "FineReader-016-0001-1245-Original_Rus.docx.txt"
+    },
+    {
+      "document_id": "1247",
+      "display_name": "1247.txt",
+      "russian_original_project_relative": "data/russian_originals/1247.txt",
+      "rus_filename_source_of_truth": "FineReader-016-0001-1247-Original-Rus.docx.txt"
+    },
+    {
+      "document_id": "1249-0046-0047",
+      "display_name": "1249-0046-0047.txt",
+      "russian_original_project_relative": "data/russian_originals/1249-0046-0047.txt",
+      "rus_filename_source_of_truth": "F.16-Op.01-Spr.1249-0046-0047 RUS chunk-aligned.txt"
+    },
+    {
+      "document_id": "1249-80-83",
+      "display_name": "1249-80-83.txt",
+      "russian_original_project_relative": "data/russian_originals/1249-80-83.txt",
+      "rus_filename_source_of_truth": "FineReader-F.16-Op.01-Spr.1249-Rus.txt"
+    },
+    {
+      "document_id": "1256",
+      "display_name": "1256.txt",
+      "russian_original_project_relative": "data/russian_originals/1256.txt",
+      "rus_filename_source_of_truth": "Fine Reader - 016-0001-1256-Original-Verified.txt"
+    },
+    {
+      "document_id": "1262_149-150",
+      "display_name": "1262 149-150.txt",
+      "russian_original_project_relative": "data/russian_originals/1262 149-150.txt",
+      "rus_filename_source_of_truth": "FineReader-016-0001-1262-149-50-Original_Rus.txt"
+    },
+    {
+      "document_id": "1262_198-200",
+      "display_name": "1262 198-200.txt",
+      "russian_original_project_relative": "data/russian_originals/1262 198-200.txt",
+      "rus_filename_source_of_truth": "FineReader-016-0001-1262-198-200-Original_Rus.txt"
+    },
+    {
+      "document_id": "1262_28-32",
+      "display_name": "1262 28-32.txt",
+      "russian_original_project_relative": "data/russian_originals/1262 28-32.txt",
+      "rus_filename_source_of_truth": "RUS - 016-0001-1262-0028-32_Rus.txt"
+    }
+  ]
+}
