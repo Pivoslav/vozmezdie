@@ -93,7 +93,7 @@ _UI_TRANSLATIONS = {
     "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.", "uk": "Використовуйте дослідницьку лабораторію для графіків по корпусу, карт і глосарія (внизу сторінки лабораторії) з визначеннями таксономії."},
     "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.", "uk": "Екранна кирилична клавіатура: відкрийте вкладку документа або поле пошуку глосарія на сторінці лабораторії й натисніть у поле пошуку — з’явиться спливаюча клавіатура."},
     "intro_video_heading": {"en": "How to use this site (video)", "uk": "Як користуватися сайтом (відео)"},
-    "intro_video_note": {"en": "A short walkthrough will be embedded here when ready. Below is a placeholder: the State Anthem of Ukraine.", "uk": "Коли буде готово, тут з’явиться короткий огляд. Нижче — тимчасове відео: Державний гімн України."},
+    "intro_video_note": {"en": "A short walkthrough will be embedded here when ready. Below is a compact placeholder player.", "uk": "Коли буде готово, тут з’явиться короткий огляд. Нижче — компактний тимчасовий плеєр."},
     "intro_cap_f": {"en": "Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.", "uk": "Альтернативні мітки з таблиці порівняння — кнопка «+»: модальне вікно; пропозиції зберігаються в браузері й експортуються як JSON."},
     "analysis_by_head": {"en": "Analysis by", "uk": "Аналіз за"},
     "viz_standalone_full_report": {"en": "Open full Research Lab", "uk": "Відкрити повну дослідницьку лабораторію"},
@@ -1254,7 +1254,8 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .homepage-section h3 { color: #4a5568; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 1px solid rgba(139,115,85,0.3); padding-bottom: 0.5rem; }
 .homepage-section h4 { color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem; }
 .intro-video-note { font-size: 0.95rem; color: #4a5568; margin-bottom: 0.75rem; line-height: 1.5; }
-.intro-video-wrap { position: relative; width: 100%; max-width: 42rem; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; border: 1px solid #8b7355; background: #1a1a1a; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+.intro-video-section { max-width: 28rem; margin-left: auto; margin-right: auto; }
+.intro-video-wrap { position: relative; width: 100%; max-width: 28rem; margin: 0 auto; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; border: 1px solid #8b7355; background: #1a1a1a; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
 .intro-video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
 .lab-glossary-root { margin-top: 2.5rem; padding-top: 2rem; border-top: 2px solid rgba(139,115,85,0.4); scroll-margin-top: 1rem; }
 .lab-glossary-root .header { margin-bottom: 1.25rem; }
@@ -2372,13 +2373,6 @@ def _intro_tab() -> str:
     <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.</p>
   </section>
   <section class="homepage-section">
-    <h3 data-i18n="intro_video_heading">How to use this site (video)</h3>
-    <p class="intro-video-note" data-i18n="intro_video_note">A short walkthrough will be embedded here when ready. Below is a placeholder: the State Anthem of Ukraine.</p>
-    <div class="intro-video-wrap" aria-label="Video placeholder: State Anthem of Ukraine">
-      <iframe src="https://www.youtube.com/embed/z61yBDzWzZc" title="State Anthem of Ukraine (placeholder)" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
-    </div>
-  </section>
-  <section class="homepage-section">
     <h3 data-i18n="intro_capabilities_heading">What you can do here</h3>
     <ul class="doc-controls-capabilities">
       <li data-i18n="intro_cap_a">Read aligned English and Russian segments side by side with search and filters.</li>
@@ -2388,6 +2382,13 @@ def _intro_tab() -> str:
       <li data-i18n="intro_cap_e">Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.</li>
       <li data-i18n="intro_cap_f">Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.</li>
     </ul>
+  </section>
+  <section class="homepage-section intro-video-section">
+    <h3 data-i18n="intro_video_heading">How to use this site (video)</h3>
+    <p class="intro-video-note" data-i18n="intro_video_note">A short walkthrough will be embedded here when ready. Below is a compact placeholder player.</p>
+    <div class="intro-video-wrap" aria-label="Placeholder instructional video">
+      <iframe src="https://www.youtube.com/embed/bHzHlSLhtmM" title="Placeholder instructional video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+    </div>
   </section>
 </div>
 </div>"""
