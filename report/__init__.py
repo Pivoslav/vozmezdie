@@ -93,11 +93,50 @@ _UI_TRANSLATIONS = {
     "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.", "uk": "Використовуйте дослідницьку лабораторію для графіків по корпусу, карт і глосарія (внизу сторінки лабораторії) з визначеннями таксономії."},
     "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.", "uk": "Екранна кирилична клавіатура: відкрийте вкладку документа або поле пошуку глосарія на сторінці лабораторії й натисніть у поле пошуку — з’явиться спливаюча клавіатура."},
     "intro_video_heading": {"en": "How to use this site (video)", "uk": "Як користуватися сайтом (відео)"},
-    "intro_video_note": {"en": "A short walkthrough will be embedded here when ready. Below is a compact placeholder player.", "uk": "Коли буде готово, тут з’явиться короткий огляд. Нижче — компактний тимчасовий плеєр."},
+    "intro_video_note": {"en": "Short overview of the Research Lab layout and main tools.", "uk": "Короткий огляд інтерфейсу дослідницької лабораторії та основних інструментів."},
     "intro_cap_f": {"en": "Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.", "uk": "Альтернативні мітки з таблиці порівняння — кнопка «+»: модальне вікно; пропозиції зберігаються в браузері й експортуються як JSON."},
+    "intro_lead_para": {"en": "This page orients you to the project. Use the shortcuts below to open corpus tools in this same page, or watch the walkthrough at the end.", "uk": "Ця сторінка допомагає орієнтуватися в проєкті. Скорочення нижче відкривають інструменти корпусу на цій же сторінці; наприкінці — відеоогляд."},
+    "intro_open_lab_heading": {"en": "Open the Research Lab", "uk": "Відкрити дослідницьку лабораторію"},
+    "intro_go_lab_btn": {"en": "Research Lab (charts & glossary)", "uk": "Лабораторія (діаграми й глосарій)"},
+    "intro_jump_glossary_btn": {"en": "Jump to glossary", "uk": "Перейти до глосарію"},
+    "intro_open_lab_note": {"en": "You are already in the app; these buttons switch the main panel. The glossary sits at the bottom of the Research Lab tab.", "uk": "Ви вже в застосунку; ці кнопки перемикають основну панель. Глосарій — внизу вкладки «Дослідницька лабораторія»."},
+    "intro_tools_heading": {"en": "Ways to interact with the data", "uk": "Як працювати з даними"},
+    "intro_tools_lead": {"en": "Each capability lives in this Research Lab unless noted. Combine close reading with corpus-level patterns.", "uk": "Можливості нижче доступні в цій лабораторії. Поєднуйте читання тексту з оглядом корпусу."},
+    "intro_tool_doc_tag": {"en": "Document tabs", "uk": "Вкладки документів"},
+    "intro_tool_doc_h": {"en": "Bilingual text view", "uk": "Двомовний текст"},
+    "intro_tool_doc_p": {"en": "Aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.", "uk": "Вирівняні англійські й російські сегменти з синхронним прокручуванням, пошуком і фільтрами за категорією та фреймінгом."},
+    "intro_tool_compare_tag": {"en": "Same tab", "uk": "Та сама вкладка"},
+    "intro_tool_compare_h": {"en": "Comparison table", "uk": "Таблиця порівняння"},
+    "intro_tool_compare_p": {"en": "Human vs model labels row by row; jump from a row into the text view. Export aligned comparison as JSON where enabled.", "uk": "Мітки людини проти моделі по рядках; перехід до тексту з рядка. Експорт JSON за підтримки."},
+    "intro_tool_viz_tag": {"en": "Research Lab", "uk": "Лабораторія"},
+    "intro_tool_viz_h": {"en": "Corpus visualizations", "uk": "Візуалізації корпусу"},
+    "intro_tool_viz_p": {"en": "Word clouds, category and framing distributions, agreement summaries, mismatch views, and charts tied to loaded documents.", "uk": "Хмари слів, розподіли категорій і фреймінгу, узгодженість, невідповідності та діаграми за документами."},
+    "intro_tool_map_tag": {"en": "Research Lab", "uk": "Лабораторія"},
+    "intro_tool_map_h": {"en": "Places map", "uk": "Карта місць"},
+    "intro_tool_map_p": {"en": "Geocoded locations when place data is present; explore mentions from the map.", "uk": "Геокодування за наявності даних; перегляд згадок з карти."},
+    "intro_tool_gloss_tag": {"en": "Bottom of Lab", "uk": "Низ лабораторії"},
+    "intro_tool_gloss_h": {"en": "Glossary and terms", "uk": "Глосарій і терміни"},
+    "intro_tool_gloss_p": {"en": "Taxonomy definitions plus corpus terms, search (including regex), document filter, and links to segment anchors.", "uk": "Визначення таксономії та терміни корпусу, пошук (regex), фільтр документів і посилання на сегменти."},
+    "intro_tool_tax_tag": {"en": "Intro & Lab", "uk": "Вступ і лабораторія"},
+    "intro_tool_tax_h": {"en": "Taxonomy reference", "uk": "Довідка таксономії"},
+    "intro_tool_tax_p": {"en": "Collapsible reference on how categories and framing are qualified, aligned with Categories Explained where configured.", "uk": "Згортний блок про кваліфікацію категорій і фреймінгу, узгоджено з Categories Explained за наявності."},
+    "intro_tool_suggest_tag": {"en": "Comparison rows", "uk": "Рядки порівняння"},
+    "intro_tool_suggest_h": {"en": "Label suggestions", "uk": "Пропозиції міток"},
+    "intro_tool_suggest_p": {"en": "In-page modal from the “+” control: propose alternate labels; persist in the browser and download JSON.", "uk": "Модальне вікно через «+»: альтернативні мітки; збереження в браузері та завантаження JSON."},
+    "intro_tool_ui_tag": {"en": "Throughout", "uk": "Усюди"},
+    "intro_tool_ui_h": {"en": "UI language & typing", "uk": "Мова інтерфейсу й введення"},
+    "intro_tool_ui_p": {"en": "English / Ukrainian toggle where available. Cyrillic popup keyboard on search fields without switching OS layouts.", "uk": "Перемикач EN/UK де доступно. Спливаюча кирилична клавіатура в полях пошуку."},
+    "intro_deep_li_a": {"en": "Deep links: URLs with #tab-… open the right document or scroll to Lab sections (for example #lab-glossary after opening the Lab).", "uk": "Посилання з #tab-… відкривають документ або прокручують до розділів лабораторії (наприклад #lab-glossary)."},
+    "intro_deep_li_b": {"en": "Standalone charts: open a single visualization in lab_visualization.html when your build provides it.", "uk": "Окремі діаграми: lab_visualization.html, якщо збірка його містить."},
+    "intro_framework_heading": {"en": "Analytical framework", "uk": "Аналітична рамка"},
+    "intro_framework_para": {"en": "Plain-language names map to the pipeline: Specific Details = content data (categories). Ideological Layers = language data (framing). JSON and taxonomy IDs are unchanged — see docs/agents/UI_LABEL_MAP.md.", "uk": "Назви для людей відповідають пайплайну: конкретні деталі = контентні категорії; ідеологічні шари = фреймінг. JSON і ID таксономії без змін — див. docs/agents/UI_LABEL_MAP.md."},
+    "intro_framework_visual_title": {"en": "Vozmezdie analytical framework", "uk": "Аналітична рамка Vozmezdie"},
+    "intro_fw_specific_label": {"en": "Specific Details", "uk": "Конкретні деталі"},
+    "intro_fw_specific_sub": {"en": "Content data · categories", "uk": "Контентні дані · категорії"},
+    "intro_fw_ideo_label": {"en": "Ideological Layers", "uk": "Ідеологічні шари"},
+    "intro_fw_ideo_sub": {"en": "Language data · framing", "uk": "Мовні дані · фреймінг"},
     "analysis_by_head": {"en": "Analysis by", "uk": "Аналіз за"},
     "viz_standalone_full_report": {"en": "Open full Research Lab", "uk": "Відкрити повну дослідницьку лабораторію"},
-    "site_guide": {"en": "Site guide", "uk": "Путівник по сайту"},
     "viz_standalone_subtitle": {"en": "Single-chart view. Language and chart choice sync with the main lab when possible.", "uk": "Окремий перегляд діаграми. Мова та вибір графіка синхронізуються з основною лабораторією за можливості."},
     "navigation": {"en": "Navigation", "uk": "Навігація"},
     "documents": {"en": "Documents", "uk": "Документи"},
@@ -777,10 +816,8 @@ def run(
     viz_out_path = out_dir / viz_html_name
 
     _docs_root = (_REPORT_ROOT / "docs").resolve()
-    pages_site_build = out_path.resolve().parent == _docs_root
+    # Full introduction lives on the Introduction tab; no separate header link.
     hdr_guide: Dict[str, str] = {}
-    if pages_site_build:
-        hdr_guide = {"guide_href": "introduction.html", "guide_i18n_key": "site_guide"}
 
     categories = filter_content_categories_for_taxonomy(list(taxonomy.get("content_categories", [])))
     framings = list(taxonomy.get("framing_strategies", []))
@@ -1255,10 +1292,33 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .homepage-section h4 { color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem; }
 .intro-video-note { font-size: 0.95rem; color: #4a5568; margin-bottom: 0.75rem; line-height: 1.5; }
 .intro-video-section { max-width: 28rem; margin-left: auto; margin-right: auto; }
-.intro-video-wrap { position: relative; width: 100%; max-width: 28rem; margin: 0 auto; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; border: 1px solid #8b7355; background: #1a1a1a; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
-.intro-video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+.intro-video-wrap { position: relative; width: 100%; max-width: 28rem; margin: 0 auto; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 6px; border: 1px solid #8b7355; background: #1a1a1a; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+.intro-video-wrap iframe { display: block; width: 100%; height: 100%; border: 0; }
+.intro-lead { font-size: 1.02rem; color: #5a5348; line-height: 1.6; margin: 0 0 1rem 0; }
+.intro-dual-cta { display: flex; flex-wrap: wrap; gap: 1rem; align-items: stretch; margin: 1rem 0 0.5rem; }
+.intro-cta-btn { display: inline-block; padding: 0.75rem 1.35rem; background: #8b0000; color: #f5f0e6; text-decoration: none; font-weight: 600; border-radius: 4px; border: 1px solid #6b0000; cursor: pointer; font-family: inherit; font-size: 1rem; text-align: center; flex: 1 1 12rem; max-width: 22rem; }
+.intro-cta-btn:hover { background: #6b0000; color: #f5f0e6; }
+.intro-cta-btn.secondary { background: transparent; color: #8b0000; }
+.intro-cta-btn.secondary:hover { background: rgba(139,0,0,0.08); }
+.intro-cta-note { font-size: 0.82rem; color: #6b7280; margin-top: 0.75rem; font-family: 'JetBrains Mono', monospace; line-height: 1.5; }
+.intro-tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem 1.15rem; margin-top: 1rem; }
+.intro-tool-card { background: #fff; border: 1px solid rgba(139,115,85,0.35); border-radius: 6px; padding: 1rem 1.1rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+.intro-tool-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: #8b7355; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.35rem; display: block; }
+.intro-tool-card h4 { font-size: 1rem; color: #8b0000; letter-spacing: 0.02em; margin-bottom: 0.4rem; font-weight: 600; }
+.intro-tool-card p { font-size: 0.9rem; color: #5a5348; line-height: 1.55; margin: 0; }
+.intro-cap-list { list-style: none; padding: 0; margin-top: 0.75rem; }
+.intro-cap-list li { position: relative; padding-left: 1.35rem; margin-bottom: 0.7rem; color: #5a5348; font-size: 0.95rem; line-height: 1.5; }
+.intro-cap-list li::before { content: ""; position: absolute; left: 0; top: 0.52rem; width: 0.42rem; height: 0.42rem; background: #8b0000; border-radius: 50%; opacity: 0.85; }
+.intro-framework-visual { border: 1px solid rgba(139,115,85,0.5); border-radius: 6px; padding: 1.1rem 1rem; background: #f8f6f2; margin-top: 0.75rem; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.06); }
+.intro-framework-visual h4 { font-size: 1rem; color: #8b0000; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 1rem; font-weight: 600; }
+.intro-fw-columns { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+.intro-fw-col { flex: 1 1 11rem; padding: 1rem; border-radius: 4px; border: 1px dashed rgba(139,115,85,0.5); background: #fffef9; }
+.intro-fw-col strong { display: block; font-size: 0.95rem; margin-bottom: 0.35rem; color: #2d3748; }
+.intro-fw-col span.tech { font-size: 0.8rem; color: #6b7280; font-family: 'JetBrains Mono', monospace; }
 .lab-glossary-root { margin-top: 2.5rem; padding-top: 2rem; border-top: 2px solid rgba(139,115,85,0.4); scroll-margin-top: 1rem; }
 .lab-glossary-root .header { margin-bottom: 1.25rem; }
+.lab-visualizations-inner .viz-controls { margin-top: 0; }
+.taxonomy-ref-body .taxonomy-ref-block:first-child { margin-top: 0; }
 .stat-summary { margin-bottom: 1rem; font-size: 1rem; }
 .stat-bars-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
 @media (max-width: 700px) { .stat-bars-grid { grid-template-columns: 1fr; } }
@@ -2370,7 +2430,66 @@ def _intro_tab() -> str:
 <div class="homepage-content">
   <section class="homepage-section">
     <h3 data-i18n="project_overview">Project Overview</h3>
+    <p class="intro-lead" data-i18n="intro_lead_para">This page orients you to the project. Use the shortcuts below to open corpus tools in this same page, or watch the walkthrough at the end.</p>
     <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.</p>
+  </section>
+  <section class="homepage-section">
+    <h3 data-i18n="intro_open_lab_heading">Open the Research Lab</h3>
+    <div class="intro-dual-cta">
+      <button type="button" class="intro-cta-btn" data-i18n="intro_go_lab_btn" onclick="showTab('tab-home');">Research Lab (charts & glossary)</button>
+      <button type="button" class="intro-cta-btn secondary" data-i18n="intro_jump_glossary_btn" onclick="showTab('tab-home');setTimeout(function(){var g=document.getElementById('lab-glossary');if(g&&g.tagName==='DETAILS')g.open=true;if(g)g.scrollIntoView({behavior:'smooth',block:'start'});},120);">Jump to glossary</button>
+    </div>
+    <p class="intro-cta-note" data-i18n="intro_open_lab_note">You are already in the app; these buttons switch the main panel. The glossary sits at the bottom of the Research Lab tab.</p>
+  </section>
+  <section class="homepage-section">
+    <h3 data-i18n="intro_tools_heading">Ways to interact with the data</h3>
+    <p style="color:#5a5348;margin-bottom:0.25rem;font-size:1rem;line-height:1.55;" data-i18n="intro_tools_lead">Each capability lives in this Research Lab unless noted. Combine close reading with corpus-level patterns.</p>
+    <div class="intro-tools-grid">
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_doc_tag">Document tabs</span>
+        <h4 data-i18n="intro_tool_doc_h">Bilingual text view</h4>
+        <p data-i18n="intro_tool_doc_p">Aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_compare_tag">Same tab</span>
+        <h4 data-i18n="intro_tool_compare_h">Comparison table</h4>
+        <p data-i18n="intro_tool_compare_p">Human vs model labels row by row; jump from a row into the text view. Export aligned comparison as JSON where enabled.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_viz_tag">Research Lab</span>
+        <h4 data-i18n="intro_tool_viz_h">Corpus visualizations</h4>
+        <p data-i18n="intro_tool_viz_p">Word clouds, category and framing distributions, agreement summaries, mismatch views, and charts tied to loaded documents.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_map_tag">Research Lab</span>
+        <h4 data-i18n="intro_tool_map_h">Places map</h4>
+        <p data-i18n="intro_tool_map_p">Geocoded locations when place data is present; explore mentions from the map.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_gloss_tag">Bottom of Lab</span>
+        <h4 data-i18n="intro_tool_gloss_h">Glossary and terms</h4>
+        <p data-i18n="intro_tool_gloss_p">Taxonomy definitions plus corpus terms, search (including regex), document filter, and links to segment anchors.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_tax_tag">Intro & Lab</span>
+        <h4 data-i18n="intro_tool_tax_h">Taxonomy reference</h4>
+        <p data-i18n="intro_tool_tax_p">Collapsible reference on how categories and framing are qualified, aligned with Categories Explained where configured.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_suggest_tag">Comparison rows</span>
+        <h4 data-i18n="intro_tool_suggest_h">Label suggestions</h4>
+        <p data-i18n="intro_tool_suggest_p">In-page modal from the “+” control: propose alternate labels; persist in the browser and download JSON.</p>
+      </article>
+      <article class="intro-tool-card">
+        <span class="intro-tool-tag" data-i18n="intro_tool_ui_tag">Throughout</span>
+        <h4 data-i18n="intro_tool_ui_h">UI language & typing</h4>
+        <p data-i18n="intro_tool_ui_p">English / Ukrainian toggle where available. Cyrillic popup keyboard on search fields without switching OS layouts.</p>
+      </article>
+    </div>
+    <ul class="intro-cap-list">
+      <li data-i18n="intro_deep_li_a">Deep links: URLs with #tab-… open the right document or scroll to Lab sections (for example #lab-glossary after opening the Lab).</li>
+      <li data-i18n="intro_deep_li_b">Standalone charts: open a single visualization in lab_visualization.html when your build provides it.</li>
+    </ul>
   </section>
   <section class="homepage-section">
     <h3 data-i18n="intro_capabilities_heading">What you can do here</h3>
@@ -2383,11 +2502,28 @@ def _intro_tab() -> str:
       <li data-i18n="intro_cap_f">Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.</li>
     </ul>
   </section>
+  <section class="homepage-section">
+    <h3 data-i18n="intro_framework_heading">Analytical framework</h3>
+    <p style="color:#5a5348;margin-bottom:0.75rem;line-height:1.55;font-size:0.98rem;" data-i18n="intro_framework_para">Plain-language names map to the pipeline: Specific Details = content data (categories). Ideological Layers = language data (framing). JSON and taxonomy IDs are unchanged — see docs/agents/UI_LABEL_MAP.md.</p>
+    <div class="intro-framework-visual">
+      <h4 data-i18n="intro_framework_visual_title">Vozmezdie analytical framework</h4>
+      <div class="intro-fw-columns">
+        <div class="intro-fw-col">
+          <strong data-i18n="intro_fw_specific_label">Specific Details</strong>
+          <span class="tech" data-i18n="intro_fw_specific_sub">Content data · categories</span>
+        </div>
+        <div class="intro-fw-col">
+          <strong data-i18n="intro_fw_ideo_label">Ideological Layers</strong>
+          <span class="tech" data-i18n="intro_fw_ideo_sub">Language data · framing</span>
+        </div>
+      </div>
+    </div>
+  </section>
   <section class="homepage-section intro-video-section">
     <h3 data-i18n="intro_video_heading">How to use this site (video)</h3>
-    <p class="intro-video-note" data-i18n="intro_video_note">A short walkthrough will be embedded here when ready. Below is a compact placeholder player.</p>
-    <div class="intro-video-wrap" aria-label="Placeholder instructional video">
-      <iframe src="https://www.youtube.com/embed/bHzHlSLhtmM" title="Placeholder instructional video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+    <p class="intro-video-note" data-i18n="intro_video_note">Short overview of the Research Lab layout and main tools.</p>
+    <div class="intro-video-wrap" aria-label="YouTube video player">
+      <iframe width="560" height="315" src="https://www.youtube.com/embed/bHzHlSLhtmM?si=ZMpLZY3hgkpKi4tK" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
     </div>
   </section>
 </div>
@@ -2553,14 +2689,20 @@ def _homepage(
 
     viz_section_markup = _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc)
     taxonomy_section = (
-        f'<section class="homepage-section"><details class="taxonomy-ref-details" open><summary style="cursor: pointer; font-weight: 600; font-size: 1.1rem; margin-bottom: 0.5rem;"><span data-i18n="taxonomy_reference">How Categories and Framing Are Qualified</span></summary><p data-i18n="taxonomy_reference_intro" style="margin: 0.75rem 0 1rem;">This report uses a reference taxonomy from Categories Explained. Segments are classified by content category (what is discussed) and framing strategy (how it is phrased). Below is how each is defined and qualified.</p>{taxonomy_ref_html}</details></section>'
+        f'<details class="collapsible-section taxonomy-ref-details" id="lab-feature-taxonomy" open>'
+        f'<summary><span data-i18n="taxonomy_reference">How Categories and Framing Are Qualified</span></summary>'
+        f'<div class="collapsible-body taxonomy-ref-body">'
+        f'<p data-i18n="taxonomy_reference_intro" style="margin: 0 0 1rem; color: #4a5568; line-height: 1.55;">This report uses a reference taxonomy from Categories Explained. Segments are classified by content category (what is discussed) and framing strategy (how it is phrased). Below is how each is defined and qualified.</p>'
+        f"{taxonomy_ref_html}</div></details>"
         if taxonomy_ref_html else ""
     )
-    feedback_section = f"""  <section class="homepage-section homepage-feedback-section">
-    <h3 data-i18n="feedback">Feedback</h3>
+    feedback_section = f"""  <details class="collapsible-section homepage-feedback-section" id="lab-feature-feedback">
+    <summary><span data-i18n="feedback">Feedback</span></summary>
+    <div class="collapsible-body">
     <p data-i18n="feedback_intro">Submit general requests or suggest labels for tagged sections.</p>
     {feedback_form}
-  </section>"""
+    </div>
+  </details>"""
 
     home_html = f"""
 <div class="tab-content" id="tab-home">
@@ -3119,12 +3261,11 @@ def _glossary_tab(
     )
     glossary_cyr = _cyrillic_keyboard_html("glossary")
     return (
-        """<section class="lab-glossary-root" id="lab-glossary" aria-labelledby="lab-glossary-heading">
-<div class="header lab-glossary-header">
-<h2 id="lab-glossary-heading" data-i18n="glossary_of_terms">Glossary of Terms</h2>
-<p data-i18n="glossary_intro">Definitions and examples for content categories and framing strategies used in document analysis.</p>
-</div>
-<div style="background: #fffef9; padding: 2rem; border-radius: 4px; border: 1px solid #8b7355; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 2rem;">
+        """<details class="collapsible-section lab-glossary-root" id="lab-glossary" open aria-labelledby="lab-glossary-heading">
+<summary><span id="lab-glossary-heading" data-i18n="glossary_of_terms">Glossary of Terms</span></summary>
+<div class="collapsible-body lab-glossary-collapsible-body">
+<p data-i18n="glossary_intro" style="margin: 0 0 1rem; color: #4a5568; line-height: 1.55;">Definitions and examples for content categories and framing strategies used in document analysis.</p>
+<div style="background: #fffef9; padding: 2rem; border-radius: 4px; border: 1px solid #8b7355; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 0;">
 <div class="glossary-controls">
 <div class="glossary-search-cyrillic-anchor">
 <input type="search" id="glossary-search" class="glossary-search" placeholder="Search glossary by name or definition..." data-i18n="glossary_search_placeholder" autocomplete="off"/>
@@ -3157,7 +3298,8 @@ def _glossary_tab(
         + chr(10).join(fram_sections)
         + """
 </div>
-</section>"""
+</div>
+</details>"""
     )
 
 
@@ -5073,6 +5215,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       setTimeout(function() {
         var anchor = document.getElementById('lab-visualizations');
+        if (anchor && anchor.tagName === 'DETAILS') anchor.open = true;
         if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
       return;
@@ -5102,6 +5245,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       setTimeout(function() {
         var anchor = document.getElementById('lab-visualizations');
+        if (anchor && anchor.tagName === 'DETAILS') anchor.open = true;
         if (anchor) anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
       return;
@@ -5119,6 +5263,7 @@ document.addEventListener('DOMContentLoaded', function() {
       showTab('tab-home');
       setTimeout(function() {
         var el = document.getElementById('lab-glossary');
+        if (el && el.tagName === 'DETAILS') el.open = true;
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 80);
       return;
