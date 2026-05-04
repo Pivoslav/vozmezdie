@@ -53,7 +53,7 @@ def test_report_folds_legacy_content_category_in_table_and_attrs():
 
 
 def test_report_produces_html():
-    """Report run writes HTML file containing tabs, table, document text view, glossary."""
+    """Report run writes HTML file containing tabs, table, document text view, glossary section on Lab page."""
     config = {"output": {"dir": "data/output", "report_html": "test_report_output.html", "intermediate_json": "comparison_results.json"}}
     taxonomy = {
         "content_categories": [{"id": "Actors", "label_en": "Actors", "colour": "#3b82f6"}],
@@ -87,7 +87,8 @@ def test_report_produces_html():
     assert "tab-contents" in html
     assert "tab-d1" in html
     assert "tab-d2" in html
-    assert "tab-glossary" in html
+    assert 'id="lab-glossary"' in html
+    assert "onclick=\"showTab('tab-glossary')\"" not in html
     assert "comparison-table" in html
     assert "document-text-view" in html or "document-text-content" in html
     assert "buildDocumentTextView" in html or "doc-text-" in html

@@ -90,8 +90,10 @@ _UI_TRANSLATIONS = {
     "intro_cap_a": {"en": "Read aligned English and Russian segments side by side with search and filters.", "uk": "Читати вирівняні англійські та російські сегменти поруч із пошуком і фільтрами."},
     "intro_cap_b": {"en": "Inspect specific details (what the segment is about) and ideological layers (how it is phrased).", "uk": "Переглядати конкретні деталі (про що сегмент) та ідеологічні шари (як це сформульовано)."},
     "intro_cap_c": {"en": "Open human vs AI comparison tables and optional scans (PDF) when configured.", "uk": "Відкривати таблиці порівняння людина проти ШІ та за потреби скани (PDF)."},
-    "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and glossary-backed definitions.", "uk": "Використовувати дослідницьку лабораторію для графіків по корпусу, карт та визначень у глосарії."},
-    "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.", "uk": "Екранна кирилична клавіатура: відкрийте вкладку документа або глосарій і натисніть у поле пошуку (англійською чи російською) — з’явиться спливаюча клавіатура."},
+    "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.", "uk": "Використовуйте дослідницьку лабораторію для графіків по корпусу, карт і глосарія (внизу сторінки лабораторії) з визначеннями таксономії."},
+    "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.", "uk": "Екранна кирилична клавіатура: відкрийте вкладку документа або поле пошуку глосарія на сторінці лабораторії й натисніть у поле пошуку — з’явиться спливаюча клавіатура."},
+    "intro_video_heading": {"en": "How to use this site (video)", "uk": "Як користуватися сайтом (відео)"},
+    "intro_video_note": {"en": "A short walkthrough will be embedded here when ready. Below is a placeholder: the State Anthem of Ukraine.", "uk": "Коли буде готово, тут з’явиться короткий огляд. Нижче — тимчасове відео: Державний гімн України."},
     "intro_cap_f": {"en": "Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.", "uk": "Альтернативні мітки з таблиці порівняння — кнопка «+»: модальне вікно; пропозиції зберігаються в браузері й експортуються як JSON."},
     "analysis_by_head": {"en": "Analysis by", "uk": "Аналіз за"},
     "viz_standalone_full_report": {"en": "Open full Research Lab", "uk": "Відкрити повну дослідницьку лабораторію"},
@@ -208,7 +210,7 @@ _UI_TRANSLATIONS = {
     "project_overview": {"en": "Project Overview", "uk": "Огляд проекту"},
     "taxonomy_reference": {"en": "How Specific Details and Ideological Layers Are Qualified", "uk": "Як кваліфікуються конкретні деталі та ідеологічні шари"},
     "taxonomy_reference_intro": {"en": "This report uses a reference taxonomy from Categories Explained. Segments carry labels for specific details (what is discussed; stored as content categories) and ideological layers (how it is phrased; stored as framing strategies). Below is how each is defined and qualified.", "uk": "Цей звіт використовує довідкову таксономію з Categories Explained. Сегменти мають мітки конкретних деталей (що обговорюється; зберігаються як категорії контенту) та ідеологічних шарів (як це сформульовано; зберігаються як стратегії фреймінгу). Нижче наведено визначення та критерії кваліфікації."},
-    "project_description": {"en": "Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, glossary, and visualizations.", "uk": "Vozmezdie — модульний конвеєр для експертної оцінки LLM щодо розсекречених архівних документів колишнього КДБ. Документи інгестуються, обробляються LLM для екстракції (конкретні деталі та ідеологічні шари) та порівнюються з експертно розміченими даними. Ця дослідницька лабораторія надає інтерактивний аналіз: перегляд тексту з двомовним виділенням, таблиці порівняння, глосарій та візуалізації."},
+    "project_description": {"en": "Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.", "uk": "Vozmezdie — модульний конвеєр для експертної оцінки LLM щодо розсекречених архівних документів колишнього КДБ. Документи інгестуються, обробляються LLM для екстракції (конкретні деталі та ідеологічні шари) та порівнюються з експертно розміченими даними. Ця дослідницька лабораторія надає інтерактивний аналіз: перегляд тексту з двомовним виділенням, таблиці порівняння, візуалізації та глосарій внизу сторінки лабораторії."},
     "dataset_statistics": {"en": "Dataset Statistics", "uk": "Статистика набору даних"},
     "document": {"en": "Document", "uk": "Документ"},
     "segments": {"en": "Segments", "uk": "Сегменти"},
@@ -822,6 +824,17 @@ def run(
         f'data-main-report="{html_module.escape(html_name, quote=True)}" '
         f'data-lab-viz="{html_module.escape(viz_html_name, quote=True)}"'
     )
+    from_ce = bool(glossary_cats or glossary_fram)
+    glossary_panel_html = _glossary_tab(
+        glossary_categories,
+        glossary_framings,
+        comparison_by_doc,
+        documents,
+        cat_colours,
+        fram_colours,
+        from_categories_explained=from_ce,
+        config=config,
+    )
     home_html, viz_json, heatmap_html, places_map_srcdoc = _homepage(
         comparison_by_doc,
         documents,
@@ -831,6 +844,7 @@ def run(
         glossary_categories,
         glossary_framings,
         taxonomy_framings=framings_ui,
+        glossary_panel_html=glossary_panel_html,
     )
     parts = [
         _head(body_attrs=body_attrs, build_meta=build_meta),
@@ -894,19 +908,6 @@ def run(
             )
         )
 
-    from_ce = bool(glossary_cats or glossary_fram)
-    parts.append(
-        _glossary_tab(
-            glossary_categories,
-            glossary_framings,
-            comparison_by_doc,
-            documents,
-            cat_colours,
-            fram_colours,
-            from_categories_explained=from_ce,
-            config=config,
-        )
-    )
     parts.append("</div></div>")
     parts.append(_label_suggestion_modal_html())
     term_synonyms = _load_term_synonyms()
@@ -1242,6 +1243,11 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .homepage-section:last-child { margin-bottom: 0; }
 .homepage-section h3 { color: #4a5568; margin-bottom: 1rem; font-size: 1.25rem; border-bottom: 1px solid rgba(139,115,85,0.3); padding-bottom: 0.5rem; }
 .homepage-section h4 { color: #4a5568; font-size: 1rem; margin-bottom: 0.75rem; }
+.intro-video-note { font-size: 0.95rem; color: #4a5568; margin-bottom: 0.75rem; line-height: 1.5; }
+.intro-video-wrap { position: relative; width: 100%; max-width: 42rem; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 6px; border: 1px solid #8b7355; background: #1a1a1a; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+.intro-video-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+.lab-glossary-root { margin-top: 2.5rem; padding-top: 2rem; border-top: 2px solid rgba(139,115,85,0.4); scroll-margin-top: 1rem; }
+.lab-glossary-root .header { margin-bottom: 1.25rem; }
 .stat-summary { margin-bottom: 1rem; font-size: 1rem; }
 .stat-bars-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
 @media (max-width: 700px) { .stat-bars-grid { grid-template-columns: 1fr; } }
@@ -2341,7 +2347,14 @@ def _intro_tab() -> str:
 <div class="homepage-content">
   <section class="homepage-section">
     <h3 data-i18n="project_overview">Project Overview</h3>
-    <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, glossary, and visualizations.</p>
+    <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified ex-KGB archival documents. Documents are ingested, processed by an LLM for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.</p>
+  </section>
+  <section class="homepage-section">
+    <h3 data-i18n="intro_video_heading">How to use this site (video)</h3>
+    <p class="intro-video-note" data-i18n="intro_video_note">A short walkthrough will be embedded here when ready. Below is a placeholder: the State Anthem of Ukraine.</p>
+    <div class="intro-video-wrap" aria-label="Video placeholder: State Anthem of Ukraine">
+      <iframe src="https://www.youtube.com/embed/z61yBDzWzZc" title="State Anthem of Ukraine (placeholder)" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen loading="lazy"></iframe>
+    </div>
   </section>
   <section class="homepage-section">
     <h3 data-i18n="intro_capabilities_heading">What you can do here</h3>
@@ -2349,8 +2362,8 @@ def _intro_tab() -> str:
       <li data-i18n="intro_cap_a">Read aligned English and Russian segments side by side with search and filters.</li>
       <li data-i18n="intro_cap_b">Inspect specific details (what the segment is about) and ideological layers (how it is phrased).</li>
       <li data-i18n="intro_cap_c">Open human vs AI comparison tables and optional scans (PDF) when configured.</li>
-      <li data-i18n="intro_cap_d">Use the Research Lab for corpus-level charts, maps, and glossary-backed definitions.</li>
-      <li data-i18n="intro_cap_e">Use the on-screen Cyrillic keyboard: open any document tab or the glossary, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.</li>
+      <li data-i18n="intro_cap_d">Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.</li>
+      <li data-i18n="intro_cap_e">Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.</li>
       <li data-i18n="intro_cap_f">Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.</li>
     </ul>
   </section>
@@ -2400,6 +2413,8 @@ def _homepage(
     glossary_categories: Optional[List[Dict[str, Any]]] = None,
     glossary_framings: Optional[List[Dict[str, Any]]] = None,
     taxonomy_framings: Optional[List[Dict[str, Any]]] = None,
+    *,
+    glossary_panel_html: str = "",
 ) -> Tuple[str, str, str, str]:
     """Research Lab tab HTML plus viz payload for standalone chart page."""
     stats = _compute_dataset_stats(comparison_by_doc, documents)
@@ -2533,6 +2548,8 @@ def _homepage(
   {taxonomy_section}
 
   {feedback_section}
+
+  {glossary_panel_html}
 </div>
 </div>"""
     return home_html, viz_json, heatmap_html, places_map_srcdoc
@@ -2540,12 +2557,11 @@ def _homepage(
 
 
 def _sidebar(documents: List[Dict[str, Any]], comparison_by_doc: Dict[str, Dict[str, Any]]) -> str:
-    """Sidebar navigation: Introduction, Research Lab, documents, Glossary."""
+    """Sidebar navigation: Introduction, Research Lab, documents (glossary lives at bottom of Lab)."""
     items = []
     items.append('<div class="sidebar-section-title" data-i18n="navigation">Navigation</div>')
     items.append('<button class="sidebar-nav-item active" onclick="showTab(\'tab-intro\')" data-i18n="intro_landing_link">Introduction</button>')
     items.append('<button class="sidebar-nav-item" onclick="showTab(\'tab-home\')" data-i18n="home">Research Lab</button>')
-    items.append('<button class="sidebar-nav-item" onclick="showTab(\'tab-glossary\')" data-i18n="glossary">Glossary</button>')
     items.append('<div class="sidebar-section-title" data-i18n="documents">Documents</div>')
     for doc in documents:
         doc_id = doc.get("document_id", "")
@@ -2561,7 +2577,6 @@ def _tabs(documents: List[Dict[str, Any]]) -> str:
         display_name = doc.get("display_name", doc_id)
         active = " active" if doc == documents[0] else ""
         buttons.append(f'<button class="tab-button{active}" onclick="showTab(\'tab-{doc_id}\')">{display_name}</button>')
-    buttons.append('<button class="tab-button" onclick="showTab(\'tab-glossary\')" data-i18n="glossary">Glossary</button>')
     return '<div class="tabs" id="tabs-container">' + "\n".join(buttons) + "</div>"
 
 
@@ -2970,6 +2985,7 @@ def _glossary_tab(
     from_categories_explained: bool = False,
     config: Optional[Dict[str, Any]] = None,
 ) -> str:
+    """Build glossary HTML embedded at the bottom of the Research Lab tab."""
     terms_by_cat, terms_by_fram, all_terms, term_docs, term_locations = _collect_terms_from_comparison(
         comparison_by_doc
     )
@@ -3080,9 +3096,9 @@ def _glossary_tab(
     )
     glossary_cyr = _cyrillic_keyboard_html("glossary")
     return (
-        """<div class="tab-content" id="tab-glossary">
-<div class="header">
-<h2 data-i18n="glossary_of_terms">Glossary of Terms</h2>
+        """<section class="lab-glossary-root" id="lab-glossary" aria-labelledby="lab-glossary-heading">
+<div class="header lab-glossary-header">
+<h2 id="lab-glossary-heading" data-i18n="glossary_of_terms">Glossary of Terms</h2>
 <p data-i18n="glossary_intro">Definitions and examples for content categories and framing strategies used in document analysis.</p>
 </div>
 <div style="background: #fffef9; padding: 2rem; border-radius: 4px; border: 1px solid #8b7355; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-top: 2rem;">
@@ -3118,7 +3134,7 @@ def _glossary_tab(
         + chr(10).join(fram_sections)
         + """
 </div>
-</div>"""
+</section>"""
     )
 
 
@@ -3362,7 +3378,7 @@ function setLanguage(lang) {
     } catch (e2) {}
   });
   var visibleTab = document.querySelector('.tab-content.active');
-  if (visibleTab && visibleTab.id && visibleTab.id.indexOf('tab-glossary') === -1 && visibleTab.id !== 'tab-home' && visibleTab.id !== 'tab-intro') {
+  if (visibleTab && visibleTab.id && visibleTab.id !== 'tab-home' && visibleTab.id !== 'tab-intro') {
     var tid = visibleTab.id.replace('tab-', '');
     if (tid && typeof onDocumentTabShown === 'function') onDocumentTabShown(tid);
   }
@@ -3378,11 +3394,10 @@ function showTab(tabId) {
   for (var i = 0; i < btns.length; i++) {
     if (btns[i].getAttribute('onclick') && btns[i].getAttribute('onclick').indexOf(tabId) !== -1) btns[i].classList.add('active');
   }
-  if (tabId && tabId !== 'tab-home' && tabId !== 'tab-intro' && tabId.indexOf('tab-glossary') === -1) {
+  if (tabId && tabId !== 'tab-home' && tabId !== 'tab-intro') {
     var tid = tabId.replace('tab-', '');
     if (tid && typeof onDocumentTabShown === 'function') onDocumentTabShown(tid);
   }
-  if (tabId === 'tab-glossary' && typeof applyGlossaryFilters === 'function') applyGlossaryFilters();
 }
 var scrollSyncInitialized = {};
 function initScrollSyncForDoc(tid) {
@@ -3916,7 +3931,7 @@ function applyGlossaryFilters() {
   var q = (searchEl && searchEl.value) ? (searchEl.value || '').trim() : '';
   var docId = (filterEl && filterEl.value) ? filterEl.value : '';
   var matchFn = glossarySearchMatcher(q);
-  var sections = document.querySelectorAll('#tab-glossary .glossary-searchable-section');
+  var sections = document.querySelectorAll('#lab-glossary .glossary-searchable-section');
   sections.forEach(function(s) {
     var sectionBlob = s.getAttribute('data-text') || '';
     var sectionMatchesSearch = !q || matchFn(sectionBlob);
@@ -5077,6 +5092,14 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     var tabId = h.slice(1);
+    if (tabId === 'tab-glossary' || tabId === 'lab-glossary') {
+      showTab('tab-home');
+      setTimeout(function() {
+        var el = document.getElementById('lab-glossary');
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 80);
+      return;
+    }
     if (document.getElementById(tabId)) showTab(tabId);
   }
   applyHashNav();
@@ -5109,7 +5132,7 @@ document.addEventListener('DOMContentLoaded', function() {
     btn.addEventListener('click', function() { setLanguage(btn.getAttribute('data-lang')); });
   });
   var active = document.querySelector('.tab-content.active');
-  if (active && active.id && active.id.indexOf('tab-glossary') === -1 && active.id !== 'tab-home' && active.id !== 'tab-intro') {
+  if (active && active.id && active.id !== 'tab-home' && active.id !== 'tab-intro') {
     var tid = active.id.replace('tab-', '');
     if (tid) onDocumentTabShown(tid);
   }

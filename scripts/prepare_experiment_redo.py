@@ -66,8 +66,15 @@ def _document_ids() -> List[str]:
 
 
 def _russian_original_relpath(doc_entry: Dict[str, Any]) -> str:
-    display = doc_entry.get("display_name") or f'{doc_entry.get("document_id", "")}.txt'
-    return f"data/russian_originals/{display}"
+    """Stable path under data/russian_originals after ingest sync.
+
+    Uses document_id + ".txt", never display_name (which is cosmetic and may
+    contain characters unsafe or meaningless as filenames).
+    """
+    doc_id = str(doc_entry.get("document_id", "") or "").strip()
+    if not doc_id:
+        raise ValueError("document_map entry missing document_id")
+    return f"data/russian_originals/{doc_id}.txt"
 
 
 def _merge_drop_raw(cfg: Dict[str, Any]) -> Set[str]:
