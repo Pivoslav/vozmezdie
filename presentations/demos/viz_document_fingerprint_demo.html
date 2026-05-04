@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Document Fingerprint — Compact Per-Document Signature</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Crimson Text', Georgia, serif; margin: 0; padding: 2rem; background: #f5f0e6; color: #4a5568; max-width: 900px; margin-left: auto; margin-right: auto; }
+    h1 { color: #8b0000; font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.95rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #8b0000; color: #f5f0e6; border-radius: 4px; font-family: 'JetBrains Mono', monospace; margin-left: 0.5rem; }
+    .viz-desc { background: #e8e4dc; padding: 1rem 1.25rem; border-radius: 4px; border-left: 4px solid #8b7355; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .fingerprint-list { display: flex; flex-direction: column; gap: 1rem; }
+    .fingerprint-item { background: #fff; border: 1px solid #8b7355; border-radius: 4px; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .fingerprint-doc { font-family: 'JetBrains Mono', monospace; font-weight: 500; min-width: 140px; color: #4a5568; }
+    .fingerprint-bar { flex: 1; display: flex; height: 24px; border-radius: 2px; overflow: hidden; }
+    .fingerprint-bar span { display: block; transition: flex 0.3s; }
+    .fingerprint-bar span:hover { opacity: 0.9; }
+    .fingerprint-legend { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin-top: 1.5rem; font-size: 0.8rem; }
+    .fingerprint-legend span { display: flex; align-items: center; gap: 0.35rem; }
+    .fingerprint-legend .swatch { width: 0.75rem; height: 0.75rem; border-radius: 2px; }
+    .back-link { display: inline-block; margin-top: 1.5rem; color: #8b7355; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { color: #8b0000; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Document Fingerprint <span class="badge">Demo</span></h1>
+  <p class="subtitle">Compact visual signature per document. Each bar = one doc; segments = framing mix. Compare at a glance.</p>
+
+  <div class="viz-desc">
+    <strong>Idea:</strong> Quickly see which documents lean toward Generic vs Institutional vs Ideological vs Action-Focused framing. No numbers needed — the shape tells the story.
+  </div>
+
+  <div class="fingerprint-list" id="fingerprints"></div>
+
+  <div class="fingerprint-legend" id="legend"></div>
+
+  <a href="index.html" class="back-link">Back to demos</a>
+
+  <script>
+    (function() {
+      var frams = ['Generic', 'Institutional', 'Ideol. (Discr.)', 'Ideol. (Norm.)', 'Action-Focused'];
+      var colours = ['#15803d', '#2563eb', '#ea580c', '#ca8a04', '#dc2626'];
+      var docs = [
+        { id: '1127', mix: [28, 22, 18, 12, 20] },
+        { id: '1128', mix: [32, 18, 14, 10, 26] },
+        { id: '1262_28-32', mix: [20, 15, 28, 18, 19] },
+        { id: '1249-80-83', mix: [25, 20, 22, 15, 18] },
+        { id: '1206', mix: [30, 19, 16, 11, 24] },
+        { id: '1245', mix: [22, 24, 20, 14, 20] }
+      ];
+      var container = document.getElementById('fingerprints');
+      docs.forEach(function(d) {
+        var total = d.mix.reduce(function(a,b){ return a+b; }, 0);
+        var div = document.createElement('div');
+        div.className = 'fingerprint-item';
+        var barHtml = '<div class="fingerprint-bar">';
+        d.mix.forEach(function(v, i) {
+          var pct = total ? (v / total * 100) : 0;
+          barHtml += '<span style="flex:' + pct + '; background:' + colours[i] + ';" title="' + frams[i] + ': ' + v + '"></span>';
+        });
+        barHtml += '</div>';
+        div.innerHTML = '<span class="fingerprint-doc">' + d.id + '</span>' + barHtml;
+        container.appendChild(div);
+      });
+      var leg = document.getElementById('legend');
+      frams.forEach(function(f, i) {
+        leg.innerHTML += '<span><span class="swatch" style="background:' + colours[i] + '"></span>' + f + '</span>';
+      });
+    })();
+  </script>
+</body>
+</html>

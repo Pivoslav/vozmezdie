@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Demo B: Rubber Stamp / Classified Document</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Crimson Text', Georgia, serif; background: #f5f0e6; color: #4a5568; padding: 2rem; }
+h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #4a5568; }
+p.sub { font-size: 0.9rem; color: #8b7355; margin-bottom: 2rem; }
+
+/* Sealed envelope / stamp aesthetic */
+.sealed-doc {
+  margin-bottom: 1.5rem;
+  max-width: 560px;
+  border: 1px solid #8b7355;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.sealed-doc summary {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(135deg, #e8e4dc 0%, #ddd9d0 100%);
+  cursor: pointer;
+  list-style: none;
+  position: relative;
+  border-bottom: 1px dashed rgba(139,115,85,0.4);
+}
+.sealed-doc summary::-webkit-details-marker { display: none; }
+.sealed-doc:not([open]) summary::after {
+  content: "CLASSIFIED";
+  position: absolute;
+  right: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  color: #8b0000;
+  opacity: 0.7;
+}
+.sealed-doc[open] summary::after {
+  content: "DECLASSIFIED";
+  color: #2d5a27;
+}
+.sealed-doc summary::before {
+  content: "";
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0.75rem;
+  background: radial-gradient(circle at 30% 30%, #8b0000, #6b0000);
+  border-radius: 50%;
+  border: 1px solid #4a0000;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+}
+.sealed-doc[open] summary::before {
+  background: radial-gradient(circle at 30% 30%, #2d5a27, #1a3518);
+  border-color: #1a3518;
+}
+.sealed-doc summary:hover {
+  background: linear-gradient(135deg, #ddd9d0 0%, #d0ccc4 100%);
+}
+
+.sealed-doc .doc-body {
+  padding: 1.25rem;
+  background: #fffef9;
+  animation: sealBreak 0.4s ease-out;
+}
+@keyframes sealBreak {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+</style>
+</head>
+<body>
+<h1>Demo B: Rubber Stamp / Classified Document</h1>
+<p class="sub">Each section is a sealed dossier. Closed = "CLASSIFIED" with red seal; open = "DECLASSIFIED" with green seal. Content reveals with a clip-path "unsealing" animation.</p>
+
+<details class="sealed-doc">
+  <summary>Accuracy stats</summary>
+  <div class="doc-body">
+    <p>Category Accuracy: 87% | Framing Accuracy: 82% | Both Match: 76%</p>
+  </div>
+</details>
+
+<details class="sealed-doc">
+  <summary>Document text view</summary>
+  <div class="doc-body">
+    <p>English and Russian text panels with aligned segments. Search and filter controls here.</p>
+  </div>
+</details>
+
+<details class="sealed-doc">
+  <summary>Comparison table</summary>
+  <div class="doc-body">
+    <p>Aligned rows: Section | Entry (ENG) | Entry (RUS) | Category | Framing | Context</p>
+  </div>
+</details>
+</body>
+</html>

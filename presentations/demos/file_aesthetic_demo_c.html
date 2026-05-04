@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Demo C: Index-Card Drawer / Library Catalog</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Crimson Text', Georgia, serif; background: #f5f0e6; color: #4a5568; padding: 2rem; }
+h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #4a5568; }
+p.sub { font-size: 0.9rem; color: #8b7355; margin-bottom: 2rem; }
+
+/* Card catalog drawer: stacked cards, pull to expand */
+.drawer-container {
+  max-width: 560px;
+  margin-bottom: 0.5rem;
+}
+.drawer-card {
+  background: #fffef9;
+  border: 1px solid #8b7355;
+  box-shadow: 
+    0 1px 2px rgba(0,0,0,0.06),
+    0 4px 0 -2px #e8e4dc,
+    0 6px 0 -3px rgba(139,115,85,0.15);
+  border-radius: 2px;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.drawer-card summary {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.25rem;
+  background: #fffef9;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+  border-left: 4px solid #8b7355;
+}
+.drawer-card summary::-webkit-details-marker { display: none; }
+.drawer-card summary::before {
+  content: ">";
+  font-family: 'JetBrains Mono', monospace;
+  margin-right: 0.5rem;
+  color: #8b7355;
+  transition: transform 0.25s ease;
+}
+.drawer-card[open] summary::before {
+  transform: rotate(90deg);
+}
+.drawer-card:hover {
+  box-shadow: 
+    0 2px 6px rgba(0,0,0,0.1),
+    0 6px 0 -2px #e8e4dc;
+}
+
+.drawer-card .card-content {
+  padding: 1.25rem;
+  background: #fffef9;
+  border-top: 1px solid rgba(139,115,85,0.2);
+  animation: cardSlideOut 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes cardSlideOut {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Staggered stack effect when closed */
+.drawer-container:nth-child(2) .drawer-card { margin-left: 4px; }
+.drawer-container:nth-child(3) .drawer-card { margin-left: 8px; }
+.drawer-container:nth-child(4) .drawer-card { margin-left: 12px; }
+</style>
+</head>
+<body>
+<h1>Demo C: Index-Card Drawer / Library Catalog</h1>
+<p class="sub">Sections stack like index cards in a catalog drawer. Each card has a subtle shadow/offset; opening slides content out smoothly. The ">" rotates to a "v" when expanded.</p>
+
+<div class="drawer-container">
+<details class="drawer-card">
+  <summary>Accuracy stats</summary>
+  <div class="card-content">
+    <p>Category Accuracy: 87% | Framing Accuracy: 82% | Both Match: 76%</p>
+  </div>
+</details>
+</div>
+
+<div class="drawer-container">
+<details class="drawer-card">
+  <summary>Document text view</summary>
+  <div class="card-content">
+    <p>English and Russian text panels with aligned segments. Search and filter controls here.</p>
+  </div>
+</details>
+</div>
+
+<div class="drawer-container">
+<details class="drawer-card">
+  <summary>Comparison table</summary>
+  <div class="card-content">
+    <p>Aligned rows: Section | Entry (ENG) | Entry (RUS) | Category | Framing | Context</p>
+  </div>
+</details>
+</div>
+</body>
+</html>

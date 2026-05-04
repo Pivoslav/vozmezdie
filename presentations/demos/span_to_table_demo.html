@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Click Span → Table Row Demo</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 1.5rem; background: #f8f9fa; }
+    h1 { color: #667eea; margin-bottom: 0.5rem; }
+    p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .doc-view { padding: 1rem; background: white; border-radius: 8px; border: 1px solid #dee2e6; margin-bottom: 1rem; line-height: 2; }
+    .doc-view .segment { cursor: pointer; padding: 0 2px; border-radius: 2px; margin-right: 0.2em; }
+    .doc-view .segment:hover { background: rgba(102,126,234,0.2); }
+    .doc-view .segment.highlight { background: rgba(255,193,7,0.5); }
+    table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    th { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+    tr.row-highlight { background: rgba(255,193,7,0.25); animation: fade 2s ease-out; }
+    @keyframes fade { from { background: rgba(255,193,7,0.5); } to { background: transparent; } }
+  </style>
+</head>
+<body>
+  <h1>Click Span → Table Row Demo</h1>
+  <p class="subtitle">Click a highlighted segment in the text. The corresponding table row scrolls into view and highlights briefly.</p>
+
+  <div class="doc-view" id="doc-view">
+    The <span class="segment" data-row="0">delegation arrived</span> at the conference. 
+    <span class="segment" data-row="1">Representatives</span> from several departments attended. 
+    The <span class="segment" data-row="2">chair opened</span> the session. 
+    <span class="segment" data-row="3">Discussions focused</span> on procedures.
+  </div>
+
+  <table>
+    <thead><tr><th>Section</th><th>Entry (ENG)</th><th>Content Category</th><th>Framing</th></tr></thead>
+    <tbody>
+      <tr id="row-0"><td>1</td><td>delegation arrived</td><td>Actions</td><td>Action-Focused</td></tr>
+      <tr id="row-1"><td>2</td><td>Representatives</td><td>Actors</td><td>Institutional</td></tr>
+      <tr id="row-2"><td>3</td><td>chair opened</td><td>Actions</td><td>Generic</td></tr>
+      <tr id="row-3"><td>4</td><td>Discussions focused</td><td>Context</td><td>Institutional</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    (function() {
+      document.querySelectorAll('.segment').forEach(function(span) {
+        span.addEventListener('click', function() {
+          var rowId = 'row-' + this.getAttribute('data-row');
+          var row = document.getElementById(rowId);
+          if (row) {
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            row.classList.add('row-highlight');
+            setTimeout(function() { row.classList.remove('row-highlight'); }, 2000);
+          }
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>Demo A: Manila Folder / Dossier</title>
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Crimson Text', Georgia, serif; background: #f5f0e6; color: #4a5568; padding: 2rem; }
+h1 { font-size: 1.5rem; margin-bottom: 1rem; color: #4a5568; }
+p.sub { font-size: 0.9rem; color: #8b7355; margin-bottom: 2rem; }
+
+/* Manila folder: tab at top, flap folds down when closed */
+.file-folder {
+  margin-bottom: 1.5rem;
+  position: relative;
+  max-width: 560px;
+}
+.file-folder summary {
+  display: block;
+  padding: 1rem 1.25rem;
+  background: linear-gradient(180deg, #e8dcc8 0%, #d4c8b0 100%);
+  border: 1px solid #8b7355;
+  border-radius: 4px 4px 0 0;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative;
+}
+.file-folder summary::-webkit-details-marker { display: none; }
+.file-folder summary::before {
+  content: "";
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  margin-right: 0.5rem;
+  border-right: 2px solid #8b7355;
+  border-bottom: 2px solid #8b7355;
+  transform: rotate(-45deg);
+  vertical-align: 0.15em;
+  transition: transform 0.3s ease;
+}
+.file-folder[open] summary::before {
+  transform: rotate(45deg);
+}
+.file-folder summary:hover {
+  background: linear-gradient(180deg, #ddd4c4 0%, #c8bca4 100%);
+}
+
+.file-folder .folder-body {
+  padding: 1.25rem;
+  background: #fffef9;
+  border: 1px solid #8b7355;
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  animation: folderOpen 0.35s ease-out;
+}
+@keyframes folderOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Tab label on left edge (optional visual) */
+.file-folder::before {
+  content: attr(data-tab);
+  position: absolute;
+  left: -0.5rem;
+  top: 0.5rem;
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #8b7355;
+  letter-spacing: 0.1em;
+}
+</style>
+</head>
+<body>
+<h1>Demo A: Manila Folder / Dossier</h1>
+<p class="sub">Each section is a manila folder. Click to open; the content slides down with a subtle unfold animation. The chevron rotates to indicate state.</p>
+
+<details class="file-folder" data-tab="1249-0046">
+  <summary>Accuracy stats</summary>
+  <div class="folder-body">
+    <p>Category Accuracy: 87% | Framing Accuracy: 82% | Both Match: 76%</p>
+  </div>
+</details>
+
+<details class="file-folder" data-tab="DOC-TEXT">
+  <summary>Document text view</summary>
+  <div class="folder-body">
+    <p>English and Russian text panels with aligned segments. Search and filter controls here.</p>
+  </div>
+</details>
+
+<details class="file-folder" data-tab="COMPARE">
+  <summary>Comparison table</summary>
+  <div class="folder-body">
+    <p>Aligned rows: Section | Entry (ENG) | Entry (RUS) | Category | Framing | Context</p>
+  </div>
+</details>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Terms by Framing — Vocabulary Per Language Strategy</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Crimson Text', Georgia, serif; margin: 0; padding: 2rem; background: #f5f0e6; color: #4a5568; max-width: 900px; margin-left: auto; margin-right: auto; }
+    h1 { color: #8b0000; font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.95rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #8b0000; color: #f5f0e6; border-radius: 4px; font-family: 'JetBrains Mono', monospace; margin-left: 0.5rem; }
+    .viz-desc { background: #e8e4dc; padding: 1rem 1.25rem; border-radius: 4px; border-left: 4px solid #8b7355; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .framing-section { margin-bottom: 2rem; }
+    .framing-section h3 { font-size: 1rem; color: #4a5568; margin-bottom: 0.5rem; padding-bottom: 0.25rem; border-bottom: 2px solid; }
+    .term-bars { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .term-bar { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; }
+    .term-bar .label { min-width: 100px; }
+    .term-bar .bar-wrap { width: 120px; height: 18px; background: #e8e4dc; border-radius: 2px; overflow: hidden; }
+    .term-bar .bar-fill { height: 100%; border-radius: 2px; }
+    .back-link { display: inline-block; margin-top: 1.5rem; color: #8b7355; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { color: #8b0000; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Terms by Framing <span class="badge">Demo</span></h1>
+  <p class="subtitle">Which words typify each framing strategy? Top terms per framing — vocabulary of discrediting vs neutral vs action-focused.</p>
+
+  <div class="viz-desc">
+    <strong>Idea:</strong> "Arrest", "measures", "informed" might cluster in Action-Focused; "committee", "state", "security" in Institutional; "anti", "nationalist", "ringleaders" in Ideological (Discrediting). Separate clouds reveal the lexicon of each strategy.
+  </div>
+
+  <div id="sections"></div>
+
+  <a href="index.html" class="back-link">Back to demos</a>
+
+  <script>
+    (function() {
+      var data = {
+        'Generic / Neutral Language': [['committee', 45], ['state', 38], ['year', 32], ['according', 28], ['information', 25]],
+        'Institutional / Bureaucratic Lingo': [['committee', 52], ['measures', 48], ['security', 44], ['state', 40], ['informed', 35]],
+        'Ideological Framing (Discrediting)': [['anti', 38], ['nationalist', 35], ['ringleaders', 28], ['against', 25], ['activities', 22]],
+        'Ideological Phrasing (Normalizing)': [['party', 30], ['communist', 28], ['republic', 25], ['central', 22], ['people', 20]],
+        'Action-Focused Language': [['arrest', 42], ['measures', 38], ['crossed', 35], ['informed', 30], ['actions', 28]]
+      };
+      var colours = ['#4a5568', '#8b7355', '#8b0000', '#991b1b', '#2d5a27'];
+      var short = ['Generic', 'Institutional', 'Ideol. (Discr.)', 'Ideol. (Norm.)', 'Action-Focused'];
+      var container = document.getElementById('sections');
+      var i = 0;
+      for (var fram in data) {
+        var terms = data[fram];
+        var maxVal = terms[0][1];
+        var div = document.createElement('div');
+        div.className = 'framing-section';
+        var bars = terms.map(function(t) {
+          var pct = (t[1] / maxVal * 100);
+          return '<div class="term-bar"><span class="label">' + t[0] + '</span><div class="bar-wrap"><div class="bar-fill" style="width:' + pct + '%; background:' + colours[i] + '"></div></div><span>' + t[1] + '</span></div>';
+        }).join('');
+        div.innerHTML = '<h3 style="border-color:' + colours[i] + '">' + short[i] + '</h3><div class="term-bars">' + bars + '</div>';
+        container.appendChild(div);
+        i++;
+      }
+    })();
+  </script>
+</body>
+</html>

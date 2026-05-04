@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Slice E demo — E2b Sidebar outline + single main pane</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #f5f0e6;
+      --panel: #fffef9;
+      --ink: #1e293b;
+      --muted: #5c5346;
+      --accent: #8b7355;
+      --stamp: #8b0000;
+      --border: rgba(139, 115, 85, 0.45);
+      --rail: #ebe4d8;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Source Serif 4", Georgia, serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.55;
+      min-height: 100vh;
+    }
+    .demo-banner {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      padding: 0.45rem 1rem;
+      background: #2d3748;
+      color: #e8e4dc;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .wrap { max-width: 58rem; margin: 0 auto; padding: 1.5rem 1rem 3rem; }
+    h1 { font-size: 1.45rem; font-weight: 600; margin: 0 0 0.35rem; color: var(--stamp); }
+    .sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 1rem; }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(11rem, 15rem) minmax(0, 1fr);
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      min-height: 320px;
+      background: var(--panel);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    @media (max-width: 720px) {
+      .split { grid-template-columns: 1fr; }
+      .rail { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+    .rail {
+      background: var(--rail);
+      border-right: 1px solid var(--border);
+      padding: 1rem 0.85rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.74rem;
+    }
+    .rail .rail-title {
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--muted);
+      margin-bottom: 0.65rem;
+      font-weight: 600;
+    }
+    .rail nav { display: flex; flex-direction: column; gap: 0.35rem; }
+    .rail button {
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+      padding: 0.45rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: #334155;
+    }
+    .rail button:hover { background: rgba(139,115,85,0.12); }
+    .rail button[aria-current="true"] {
+      background: var(--stamp);
+      color: #f5f0e6;
+      border-color: #6b0000;
+      font-weight: 600;
+    }
+    .main {
+      padding: 1rem 1.15rem 1.25rem;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+    .main h2 {
+      font-size: 1.05rem;
+      margin: 0 0 0.65rem;
+      color: #334155;
+      font-weight: 600;
+    }
+    .placeholder {
+      padding: 1rem;
+      background: #e8e4dc;
+      border-radius: 4px;
+      border: 1px dashed var(--accent);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+    }
+    .note {
+      margin-top: 2rem;
+      padding: 1rem;
+      font-size: 0.85rem;
+      border-left: 3px solid var(--stamp);
+      background: rgba(139,0,0,0.06);
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-banner">Demo E2b — Split · sidebar outline · IA / reader-style hierarchy</div>
+  <div class="wrap">
+    <h1>Sample document title</h1>
+    <p class="sub">Outline lists sections; main shows only the active block (like archive “contents” + viewer).</p>
+
+    <div class="split">
+      <aside class="rail">
+        <div class="rail-title">In this document</div>
+        <nav aria-label="Section outline">
+          <button type="button" id="nav-pdf" aria-current="true">PDF scan</button>
+          <button type="button" id="nav-text" aria-current="false">Bilingual text</button>
+          <button type="button" id="nav-compare" aria-current="false">Comparison table</button>
+        </nav>
+      </aside>
+      <section class="main" aria-live="polite">
+        <h2 id="main-heading">PDF scan</h2>
+        <div class="placeholder" id="main-body">
+          Main pane swaps content via JS — good for keeping one scroll context and fixed chrome (outline sticky on desktop).
+        </div>
+      </section>
+    </div>
+
+    <div class="note">
+      <strong>When to prefer this:</strong> scales if you later add “Analytics snapshot”, “Places”, etc. as outline rows without cramming more accordions.
+      Trade-off: two-column layout needs responsive collapse; keyboard outline patterns worth polishing for accessibility.
+    </div>
+  </div>
+  <script>
+    (function () {
+      var blocks = {
+        'nav-pdf': { title: 'PDF scan', html: 'Outline selection: PDF embed / scans (demo).' },
+        'nav-text': { title: 'Bilingual text', html: 'Outline selection: mirrored ENG/RUS + search + filters (demo).' },
+        'nav-compare': { title: 'Comparison table', html: 'Outline selection: LLM vs Human table + export (demo).' }
+      };
+      var heading = document.getElementById('main-heading');
+      var body = document.getElementById('main-body');
+      Object.keys(blocks).forEach(function (nid) {
+        document.getElementById(nid).addEventListener('click', function () {
+          Object.keys(blocks).forEach(function (k) {
+            document.getElementById(k).setAttribute('aria-current', k === nid ? 'true' : 'false');
+          });
+          var b = blocks[nid];
+          heading.textContent = b.title;
+          body.textContent = b.html;
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

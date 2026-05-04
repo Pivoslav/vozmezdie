@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Framing Over Document Position</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Crimson Text', Georgia, serif; margin: 0; padding: 2rem; background: #f5f0e6; color: #4a5568; max-width: 900px; margin-left: auto; margin-right: auto; }
+    h1 { color: #8b0000; font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.95rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #8b0000; color: #f5f0e6; border-radius: 4px; font-family: 'JetBrains Mono', monospace; margin-left: 0.5rem; }
+    .viz-desc { background: #e8e4dc; padding: 1rem 1.25rem; border-radius: 4px; border-left: 4px solid #8b7355; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .chart-wrap { background: #fff; border: 1px solid #8b7355; border-radius: 4px; padding: 1rem; margin-bottom: 1rem; }
+    .chart-wrap canvas { width: 100%; height: 280px; display: block; }
+    .doc-select { margin-bottom: 1rem; }
+    .doc-select label { margin-right: 0.5rem; }
+    .doc-select select { padding: 0.4rem 0.75rem; border: 1px solid #8b7355; border-radius: 4px; background: #fff; font-family: inherit; }
+    .legend { display: flex; flex-wrap: wrap; gap: 0.75rem 1.5rem; margin-top: 1rem; font-size: 0.8rem; }
+    .legend span { display: flex; align-items: center; gap: 0.35rem; }
+    .legend .swatch { width: 12px; height: 3px; border-radius: 1px; }
+    .back-link { display: inline-block; margin-top: 1.5rem; color: #8b7355; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { color: #8b0000; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Framing Over Document Position <span class="badge">Demo</span></h1>
+  <p class="subtitle">How framing intensity shifts as you move through a document. X = segment index (or section), Y = count per framing.</p>
+
+  <div class="viz-desc">
+    <strong>Idea:</strong> Does ideological language spike in certain sections? Is the opening more institutional, the middle more action-focused? This line chart reveals patterns along the document.
+  </div>
+
+  <div class="doc-select">
+    <label for="doc-select">Document:</label>
+    <select id="doc-select">
+      <option value="1127">1127</option>
+      <option value="1262_28-32">1262_28-32</option>
+    </select>
+  </div>
+
+  <div class="chart-wrap">
+    <canvas id="chart" width="800" height="280"></canvas>
+  </div>
+
+  <div class="legend" id="legend"></div>
+
+  <a href="index.html" class="back-link">Back to demos</a>
+
+  <script>
+    (function() {
+      var framings = ['Generic', 'Institutional', 'Ideol. (Discr.)', 'Ideol. (Norm.)', 'Action-Focused'];
+      var colours = ['#4a5568', '#8b7355', '#8b0000', '#991b1b', '#2d5a27'];
+      var dataByDoc = {
+        '1127': [
+          [12,8,5,3,10], [14,7,6,4,9], [10,10,8,5,7], [8,12,12,6,6], [6,9,15,8,6],
+          [5,8,18,10,5], [7,7,14,12,6], [9,6,10,14,9], [11,5,8,11,11], [13,4,6,9,14]
+        ],
+        '1262_28-32': [
+          [8,10,12,5,8], [6,9,16,7,5], [5,7,20,9,4], [4,6,22,10,3], [6,5,18,12,4],
+          [7,6,14,14,6], [9,7,10,15,8], [11,8,8,12,10], [13,9,6,10,11], [15,10,5,8,13]
+        ]
+      };
+      function draw() {
+        var docId = document.getElementById('doc-select').value;
+        var data = dataByDoc[docId] || dataByDoc['1127'];
+        var canvas = document.getElementById('chart');
+        var ctx = canvas.getContext('2d');
+        var w = canvas.width, h = canvas.height;
+        var pad = { top: 20, right: 20, bottom: 40, left: 50 };
+        var plotW = w - pad.left - pad.right, plotH = h - pad.top - pad.bottom;
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, w, h);
+        var bins = data.length;
+        var maxVal = 0;
+        data.forEach(function(row) {
+          row.forEach(function(v) { if (v > maxVal) maxVal = v; });
+        });
+        maxVal = Math.max(maxVal, 1);
+        ctx.font = '11px Crimson Text';
+        ctx.strokeStyle = '#e8e4dc';
+        for (var i = 0; i <= 5; i++) {
+          var y = pad.top + plotH - (i/5) * plotH;
+          ctx.beginPath();
+          ctx.moveTo(pad.left, y);
+          ctx.lineTo(w - pad.right, y);
+          ctx.stroke();
+          ctx.fillStyle = '#6b7280';
+          ctx.fillText(Math.round(maxVal * i/5), pad.left - 8, y + 4);
+        }
+        ctx.strokeStyle = '#8b7355';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, pad.top);
+        ctx.lineTo(pad.left, h - pad.bottom);
+        ctx.lineTo(w - pad.right, h - pad.bottom);
+        ctx.stroke();
+        ctx.fillText('Segment bin (position along document)', w/2 - 80, h - 8);
+        for (var f = 0; f < 5; f++) {
+          ctx.strokeStyle = colours[f];
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          for (var b = 0; b < bins; b++) {
+            var x = pad.left + (b / (bins-1)) * plotW;
+            var y = pad.top + plotH - (data[b][f] / maxVal) * plotH;
+            if (b === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        }
+      }
+      document.getElementById('doc-select').addEventListener('change', draw);
+      var leg = document.getElementById('legend');
+      framings.forEach(function(f, i) {
+        leg.innerHTML += '<span><span class="swatch" style="background:' + colours[i] + '"></span>' + f + '</span>';
+      });
+      draw();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mismatch Flow — Where LLM Labels Go When Wrong</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Crimson Text', Georgia, serif; margin: 0; padding: 2rem; background: #f5f0e6; color: #4a5568; max-width: 900px; margin-left: auto; margin-right: auto; }
+    h1 { color: #8b0000; font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.95rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #8b0000; color: #f5f0e6; border-radius: 4px; font-family: 'JetBrains Mono', monospace; margin-left: 0.5rem; }
+    .viz-desc { background: #e8e4dc; padding: 1rem 1.25rem; border-radius: 4px; border-left: 4px solid #8b7355; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .flow-matrix { width: 100%; border-collapse: collapse; background: #fff; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #8b7355; }
+    .flow-matrix th, .flow-matrix td { padding: 0.5rem 0.75rem; text-align: center; border: 1px solid #e8e4dc; font-size: 0.85rem; }
+    .flow-matrix th { background: #2d3748; color: #e8e4dc; font-weight: 600; }
+    .flow-matrix th.axis-corner { background: #1a202c; }
+    .flow-matrix th.axis-human { background: #4a5568; text-align: center; font-size: 0.8rem; }
+    .flow-matrix th.axis-llm { background: #4a5568; text-align: left; padding-left: 0.75rem; font-size: 0.8rem; }
+    .flow-matrix td { min-width: 2.5rem; }
+    .flow-matrix .row-label { text-align: left; font-weight: 500; color: #4a5568; }
+    .flow-matrix .cell-match { background: #2d5a27; color: #f0fdfa; }
+    .flow-matrix .cell-mismatch { background: rgba(139, 0, 0, 0.15); color: #1a0000; }
+    .flow-matrix .cell-empty { background: #fffef9; color: #9ca3af; }
+    .legend { display: flex; gap: 1.5rem; margin-top: 1rem; font-size: 0.85rem; }
+    .legend span { display: flex; align-items: center; gap: 0.35rem; }
+    .legend .swatch { width: 1rem; height: 1rem; border-radius: 2px; }
+    .legend .swatch-match { background: #2d5a27; }
+    .legend .swatch-mismatch { background: rgba(139, 0, 0, 0.4); }
+    .confusions-callout { background: #fff; border: 1px solid #8b7355; border-radius: 4px; padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .confusions-callout h4 { margin: 0 0 0.75rem; font-size: 1rem; color: #8b0000; }
+    .confusions-callout ul { margin: 0; padding-left: 1.25rem; }
+    .confusions-callout li { margin-bottom: 0.35rem; }
+    .confusions-callout .interpret { font-style: italic; color: #6b7280; margin-left: 0.25rem; }
+    .back-link { display: inline-block; margin-top: 1.5rem; color: #8b7355; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { color: #8b0000; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Mismatch Flow <span class="badge">Demo</span></h1>
+  <p class="subtitle">Where LLM labels go when they disagree with human. Rows = LLM framing, columns = Human framing. Diagonal = agreement; off-diagonal = confusion.</p>
+
+  <div class="confusions-callout" id="confusions-callout"></div>
+
+  <table class="flow-matrix" id="flow-matrix">
+    <thead>
+      <tr><th class="axis-corner"></th><th colspan="5" class="axis-human">Human said</th></tr>
+      <tr><th class="axis-llm">LLM said</th><th>Generic</th><th>Institutional</th><th>Ideol. (Discr.)</th><th>Ideol. (Norm.)</th><th>Action-Focused</th></tr>
+    </thead>
+    <tbody id="flow-body"></tbody>
+  </table>
+
+  <div class="legend">
+    <span><span class="swatch swatch-match"></span> Agreement (diagonal)</span>
+    <span><span class="swatch swatch-mismatch"></span> Mismatch (off-diagonal)</span>
+  </div>
+
+  <a href="index.html" class="back-link">Back to demos</a>
+
+  <script>
+    (function() {
+      var short = ['Generic', 'Institutional', 'Ideol. (Discr.)', 'Ideol. (Norm.)', 'Action-Focused'];
+      var data = [
+        [45, 12, 8, 3, 5],
+        [9, 38, 15, 4, 7],
+        [22, 11, 52, 9, 6],
+        [5, 6, 8, 28, 4],
+        [7, 8, 4, 2, 41]
+      ];
+      var mismatches = [];
+      for (var r = 0; r < 5; r++) {
+        for (var c = 0; c < 5; c++) {
+          if (r !== c && data[r][c] > 0) mismatches.push({ r: r, c: c, v: data[r][c], llm: short[r], human: short[c] });
+        }
+      }
+      mismatches.sort(function(a, b) { return b.v - a.v; });
+      var interpretations = {
+        'Generic': { 'Ideol. (Discr.)': 'LLM overgeneralizes (under-calls ideological content)', 'Ideol. (Norm.)': 'LLM overgeneralizes', 'Institutional': 'LLM overgeneralizes', 'Action-Focused': 'LLM overgeneralizes' },
+        'Institutional': { 'Generic': 'LLM over-specifies', 'Ideol. (Discr.)': 'LLM under-calls ideological', 'Ideol. (Norm.)': 'LLM under-calls ideological', 'Action-Focused': 'LLM misattributes' },
+        'Ideol. (Discr.)': { 'Generic': 'LLM over-specifies (sees ideology where human sees neutral)', 'Institutional': 'LLM over-specifies', 'Ideol. (Norm.)': 'LLM confuses discrediting vs normalizing', 'Action-Focused': 'LLM misattributes' },
+        'Ideol. (Norm.)': { 'Generic': 'LLM over-specifies', 'Institutional': 'LLM over-specifies', 'Ideol. (Discr.)': 'LLM confuses normalizing vs discrediting', 'Action-Focused': 'LLM misattributes' },
+        'Action-Focused': { 'Generic': 'LLM over-specifies', 'Institutional': 'LLM misattributes', 'Ideol. (Discr.)': 'LLM misattributes', 'Ideol. (Norm.)': 'LLM misattributes' }
+      };
+      var callout = document.getElementById('confusions-callout');
+      callout.innerHTML = '<h4>Top confusions (LLM said → Human said)</h4><ul>';
+      mismatches.slice(0, 5).forEach(function(m) {
+        var interp = (interpretations[m.llm] && interpretations[m.llm][m.human]) || 'Mismatch';
+        callout.innerHTML += '<li><strong>' + m.llm + ' → ' + m.human + ':</strong> ' + m.v + ' segments <span class="interpret">(' + interp + ')</span></li>';
+      });
+      callout.innerHTML += '</ul>';
+      var tbody = document.getElementById('flow-body');
+      for (var r = 0; r < 5; r++) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td class="row-label">' + short[r] + '</td>';
+        for (var c = 0; c < 5; c++) {
+          var v = data[r][c];
+          var cls = r === c ? 'cell-match' : (v > 0 ? 'cell-mismatch' : 'cell-empty');
+          tr.innerHTML += '<td class="' + cls + '">' + (v || '') + '</td>';
+        }
+        tbody.appendChild(tr);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+Original PDF scans — placement and hosting
+============================================
+
+PROJECT ROOT
+  See your repo root (parent of this folder).
+
+THIS FOLDER (PDF tree root)
+  original_pdfs/
+
+LOCAL LAYOUT (default — html uses paths relative to data/output/)
+  original_pdfs/<document_id>/<filename>.pdf
+  or
+  original_pdfs/<document_id>.pdf
+
+  Subfolders match document_id in config/document_map.json.
+
+AFTER ADDING OR CHANGING PDFS
+  python run_report_only.py
+
+REMOTE / GITHUB (optional)
+  In config/pipeline_config.example.json (or your real pipeline config), under "documents":
+
+  "pdf_public_base_url": ""
+
+  Leave empty for local relative links.
+
+  When hosting PDFs at a stable HTTPS base (same paths as in the repo), set it to that base with no trailing slash.
+  Example for GitHub raw (branch main — PDFs must be committed/pushed):
+
+    https://raw.githubusercontent.com/OWNER/REPO/main
+
+  The report then loads each PDF as:
+
+    <pdf_public_base_url>/original_pdfs/<document_id>/file.pdf
+
+  Notes:
+  - Raw URLs work for direct file access; some browsers restrict embedding PDFs in iframes from certain origins — test in your target browser.
+  - GitHub Pages or another static host with the same folder layout also works if you set pdf_public_base_url to that site origin + path prefix.
+
+CONFIG KEYS (documents section)
+  original_pdfs_dir      — relative to project root; default "original_pdfs"
+  pdf_public_base_url  — empty = local only; non-empty = absolute PDF URLs in the report

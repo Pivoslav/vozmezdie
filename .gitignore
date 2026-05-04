@@ -1,0 +1,34 @@
+# Data and outputs
+data/input/
+data/ground_truth/
+data/output/*.html
+data/output/*.json
+
+# Tooling
+.pytest_cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+
+# Windows accident: reserved name breaks git (e.g. mistaken shell redirect)
+/nul
+nul
+
+# R / stray outputs at repo root
+/Rplots.pdf
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*~
+
+# Keep dirs (allow empty output for fresh clone)
+!data/output/.gitkeep
+!data/input/.gitkeep
+!data/ground_truth/.gitkeep

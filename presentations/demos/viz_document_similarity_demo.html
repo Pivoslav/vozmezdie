@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Document Similarity Matrix</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Crimson Text', Georgia, serif; margin: 0; padding: 2rem; background: #f5f0e6; color: #4a5568; max-width: 900px; margin-left: auto; margin-right: auto; }
+    h1 { color: #8b0000; font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.95rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #8b0000; color: #f5f0e6; border-radius: 4px; font-family: 'JetBrains Mono', monospace; margin-left: 0.5rem; }
+    .viz-desc { background: #e8e4dc; padding: 1rem 1.25rem; border-radius: 4px; border-left: 4px solid #8b7355; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .matrix-wrap { overflow-x: auto; }
+    .sim-matrix { border-collapse: collapse; font-size: 0.8rem; background: #fff; border: 1px solid #8b7355; }
+    .sim-matrix th, .sim-matrix td { padding: 0.4rem 0.6rem; border: 1px solid #e8e4dc; text-align: center; min-width: 2.5rem; }
+    .sim-matrix th { background: #4a5568; color: #e8e4dc; font-weight: 600; font-family: 'JetBrains Mono', monospace; }
+    .sim-matrix .cell-diag { background: #e8e4dc; color: #6b7280; font-weight: 600; }
+    .sim-matrix .cell-high { background: #0f766e; color: #f0fdfa; }
+    .sim-matrix .cell-mid { background: #2dd4bf; color: #134e4a; }
+    .sim-matrix .cell-low { background: #99f6e4; color: #134e4a; }
+    .legend { display: flex; gap: 1rem; margin-top: 1rem; font-size: 0.8rem; }
+    .legend span { display: flex; align-items: center; gap: 0.35rem; }
+    .legend .swatch { width: 1rem; height: 1rem; border-radius: 2px; }
+    .back-link { display: inline-block; margin-top: 1.5rem; color: #8b7355; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { color: #8b0000; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Document Similarity Matrix <span class="badge">Demo</span></h1>
+  <p class="subtitle">Which documents have similar category/framing profiles? Cell = similarity (0–1). Darker = more alike.</p>
+
+  <div class="viz-desc">
+    <strong>Idea:</strong> Cluster documents by their content mix. Documents 1127 and 1128 might be similar (both institutional-heavy); 1262_28-32 might stand out (more ideological). Useful for corpus overview and outlier detection.
+  </div>
+
+  <div class="matrix-wrap">
+    <table class="sim-matrix" id="sim-matrix"></table>
+  </div>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:#0f766e"></span> High similarity</span>
+    <span><span class="swatch" style="background:#99f6e4"></span> Low similarity</span>
+  </div>
+
+  <a href="index.html" class="back-link">Back to demos</a>
+
+  <script>
+    (function() {
+      var docs = ['1127', '1128', '1206', '1245', '1249-80-83', '1262_28-32'];
+      var sim = [
+        [1, 0.92, 0.78, 0.81, 0.72, 0.65],
+        [0.92, 1, 0.75, 0.79, 0.70, 0.62],
+        [0.78, 0.75, 1, 0.88, 0.71, 0.58],
+        [0.81, 0.79, 0.88, 1, 0.74, 0.61],
+        [0.72, 0.70, 0.71, 0.74, 1, 0.69],
+        [0.65, 0.62, 0.58, 0.61, 0.69, 1]
+      ];
+      function cls(v, r, c) {
+        if (r === c) return 'cell-diag';
+        if (v >= 0.85) return 'cell-high';
+        if (v >= 0.7) return 'cell-mid';
+        return 'cell-low';
+      }
+      var table = document.getElementById('sim-matrix');
+      var header = '<thead><tr><th></th>' + docs.map(function(d) { return '<th>' + d + '</th>'; }).join('') + '</tr></thead><tbody>';
+      var body = docs.map(function(_, i) {
+        return '<tr><th>' + docs[i] + '</th>' + sim[i].map(function(v, j) {
+          return '<td class="' + cls(v, i, j) + '">' + (i === j ? '-' : v.toFixed(2)) + '</td>';
+        }).join('') + '</tr>';
+      }).join('');
+      table.innerHTML = header + body + '</tbody>';
+    })();
+  </script>
+</body>
+</html>

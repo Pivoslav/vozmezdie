@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard Demo — Aggregate Overview</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 1.5rem; background: #f8f9fa; }
+    h1 { color: #667eea; margin-bottom: 0.5rem; }
+    p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: white; padding: 1.5rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #667eea; }
+    .stat-number { font-size: 2rem; font-weight: bold; color: #667eea; }
+    .stat-label { font-size: 0.85rem; color: #64748b; margin-top: 0.25rem; }
+    .doc-list { background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+    .doc-list th, .doc-list td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #e2e8f0; }
+    .doc-list th { background: #f1f3f5; font-weight: 600; }
+    .doc-list tr:hover { background: #f8f9fa; cursor: pointer; }
+    .pct-high { color: #15803d; }
+    .pct-med { color: #ca8a04; }
+    .pct-low { color: #dc2626; }
+  </style>
+</head>
+<body>
+  <h1>Dashboard Demo</h1>
+  <p class="subtitle">Overview before diving into documents. Fake data.</p>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-number">17</div>
+      <div class="stat-label">Documents</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">82%</div>
+      <div class="stat-label">Avg. both-match</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">127</div>
+      <div class="stat-label">Mismatches total</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">2,847</div>
+      <div class="stat-label">Segments assessed</div>
+    </div>
+  </div>
+
+  <table class="doc-list" style="width:100%">
+    <thead><tr><th>Document</th><th>Both match %</th><th>Category %</th><th>Framing %</th><th>Segments</th></tr></thead>
+    <tbody>
+      <tr><td>1127</td><td class="pct-high">91%</td><td>93%</td><td>89%</td><td>268</td></tr>
+      <tr><td>1128</td><td class="pct-high">87%</td><td>90%</td><td>85%</td><td>362</td></tr>
+      <tr><td>1206</td><td class="pct-med">78%</td><td>82%</td><td>75%</td><td>282</td></tr>
+      <tr><td>1249-0046-0047</td><td class="pct-high">84%</td><td>88%</td><td>81%</td><td>82</td></tr>
+      <tr><td>1262_28-32</td><td class="pct-low">71%</td><td>76%</td><td>68%</td><td>235</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

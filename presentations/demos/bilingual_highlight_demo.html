@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bilingual Highlight Demo — Category & Framing Colours</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 1.5rem; background: #f8f9fa; }
+    h1 { color: #667eea; margin-bottom: 0.5rem; }
+    p.subtitle { color: #64748b; font-size: 0.9rem; margin-bottom: 1rem; }
+    .controls { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; }
+    .controls select, .controls input { padding: 0.5rem; border: 1px solid #dee2e6; border-radius: 4px; }
+    .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .panel { border: 1px solid #dee2e6; border-radius: 8px; background: white; overflow: hidden; }
+    .panel-label { padding: 0.5rem 1rem; background: #f1f3f5; font-weight: 600; font-size: 0.9rem; }
+    .panel-content { padding: 1rem; line-height: 2; }
+    .panel-content .seg { margin-right: 0.2em; padding: 0 2px; border-radius: 2px; }
+    .panel-content .seg.dimmed { opacity: 0.3; }
+    .legend { margin-top: 1rem; padding: 0.75rem; background: #f1f3f5; border-radius: 6px; font-size: 0.85rem; }
+    .legend span { display: inline-flex; align-items: center; gap: 0.25rem; margin-right: 1rem; }
+    .legend .swatch { width: 12px; height: 12px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <h1>Bilingual Highlight Demo</h1>
+  <p class="subtitle">Filter by category or framing. Coloured segments match; others dim.</p>
+  <p class="subtitle" style="font-size: 0.8rem; color: #94a3b8;"><strong>Note:</strong> This demo uses illustrative labels (Actions, Actors, Context; Action-Focused, Institutional, Generic). The production report uses the project taxonomy from <code>config/taxonomy.json</code>: content categories Actions, Actors, Places, Time, Documents, Context and Concepts, Legal Framework; framing strategies Generic / Neutral Language, Institutional / Bureaucratic Lingo, Ideological Framing (Discrediting), Ideological Phrasing (Normalizing), Action-Focused Language.</p>
+
+  <div class="controls">
+    <label>Category filter: <select id="cat-filter">
+      <option value="">— None —</option>
+      <option value="Actions">Actions</option>
+      <option value="Actors">Actors</option>
+      <option value="Context">Context</option>
+    </select></label>
+    <label>Framing filter: <select id="fram-filter">
+      <option value="">— None —</option>
+      <option value="Action-Focused">Action-Focused</option>
+      <option value="Institutional">Institutional</option>
+      <option value="Generic">Generic</option>
+    </select></label>
+    <button id="clear">Clear filters</button>
+  </div>
+
+  <div class="panels">
+    <div class="panel">
+      <div class="panel-label">English</div>
+      <div class="panel-content" id="eng">
+        <span class="seg" data-cat="Actions" data-fram="Action-Focused" style="background:rgba(220,38,38,0.25);color:#dc2626">The delegation arrived</span>
+        at the hall.
+        <span class="seg" data-cat="Actors" data-fram="Institutional" style="background:rgba(37,99,235,0.25);color:#2563eb">Representatives</span>
+        from several departments attended.
+        <span class="seg" data-cat="Actions" data-fram="Generic" style="background:rgba(21,128,61,0.25);color:#15803d">The chair opened</span>
+        the session.
+        <span class="seg" data-cat="Context" data-fram="Institutional" style="background:rgba(37,99,235,0.25);color:#2563eb">Discussions focused</span>
+        on procedures.
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-label">Russian</div>
+      <div class="panel-content" id="rus">
+        <span class="seg" data-cat="Actions" data-fram="Action-Focused" style="background:rgba(220,38,38,0.25);color:#dc2626">Делегация прибыла</span>
+        в зал.
+        <span class="seg" data-cat="Actors" data-fram="Institutional" style="background:rgba(37,99,235,0.25);color:#2563eb">Представители</span>
+        нескольких отделов присутствовали.
+        <span class="seg" data-cat="Actions" data-fram="Generic" style="background:rgba(21,128,61,0.25);color:#15803d">Председатель открыл</span>
+        сессию.
+        <span class="seg" data-cat="Context" data-fram="Institutional" style="background:rgba(37,99,235,0.25);color:#2563eb">Обсуждение сосредоточилось</span>
+        на процедурах.
+      </div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <strong>Legend:</strong>
+    <span><span class="swatch" style="background:#dc2626"></span> Action-Focused</span>
+    <span><span class="swatch" style="background:#2563eb"></span> Institutional</span>
+    <span><span class="swatch" style="background:#15803d"></span> Generic</span>
+  </div>
+
+  <script>
+    (function() {
+      var catEl = document.getElementById('cat-filter');
+      var framEl = document.getElementById('fram-filter');
+
+      function apply() {
+        var cat = catEl.value;
+        var fram = framEl.value;
+        document.querySelectorAll('.seg').forEach(function(s) {
+          var matchCat = !cat || s.getAttribute('data-cat') === cat;
+          var matchFram = !fram || s.getAttribute('data-fram') === fram;
+          s.classList.toggle('dimmed', !(matchCat && matchFram));
+        });
+      }
+
+      catEl.addEventListener('change', apply);
+      framEl.addEventListener('change', apply);
+      document.getElementById('clear').addEventListener('click', function() {
+        catEl.value = '';
+        framEl.value = '';
+        apply();
+      });
+    })();
+  </script>
+</body>
+</html>

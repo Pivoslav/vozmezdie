@@ -1,0 +1,11 @@
+# Vozmezdie framework - minimal deps for stub pipeline
+# Python 3.8+ (stdlib only for ingest, compare, report, stub LLM)
+#
+# Optional: for real Ollama calls, no extra package (uses urllib).
+# If you add another LLM provider (e.g. OpenAI), add requests or httpx here.
+#
+# For synonym generation (scripts/generate_term_synonyms.py):
+nltk>=3.8
+wiki-synonyms>=0.1
+# rusynonyms improves Russian coverage; install with:
+#   pip install git+https://github.com/ahmados/rusynonyms.git

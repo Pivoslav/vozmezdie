@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vozmezdie Feature Demos</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 0; padding: 2rem; background: #f8f9fa; max-width: 600px; margin-left: auto; margin-right: auto; }
+    h1 { color: #667eea; margin-bottom: 0.5rem; }
+    p.subtitle { color: #64748b; margin-bottom: 2rem; }
+    .demo-list { list-style: none; padding: 0; margin: 0; }
+    .demo-list li { margin-bottom: 0.75rem; }
+    .demo-list a { display: block; padding: 1rem 1.25rem; background: white; border-radius: 8px; text-decoration: none; color: #1e293b; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .demo-list a:hover { border-color: #667eea; box-shadow: 0 2px 8px rgba(102,126,234,0.2); }
+    .demo-list strong { color: #667eea; }
+    .demo-list span { font-size: 0.9rem; color: #64748b; }
+  </style>
+</head>
+<body>
+  <h1>Feature Demos</h1>
+  <p class="subtitle">Interactive demos with fake data. Click to try.</p>
+
+  <h2 style="font-size: 1.1rem; color: #4a5568; margin-top: 2rem; margin-bottom: 0.75rem;">Feature demos</h2>
+  <ul class="demo-list">
+    <li><a href="scroll_sync_demo.html"><strong>Scroll Sync</strong><br/><span>Eng/Rus panels; scroll one, the other follows</span></a></li>
+    <li><a href="span_to_table_demo.html"><strong>Click Span -> Table Row</strong><br/><span>Click a segment; table row scrolls into view and highlights</span></a></li>
+    <li><a href="bilingual_highlight_demo.html"><strong>Bilingual Highlight</strong><br/><span>Filter by category/framing; segments dim or highlight</span></a></li>
+    <li><a href="dashboard_demo.html"><strong>Dashboard</strong><br/><span>Aggregate stats, doc list with percentages</span></a></li>
+    <li><a href="glossary_search_demo.html"><strong>Glossary Search</strong><br/><span>Type to filter categories and framings</span></a></li>
+    <li><a href="file_aesthetic_demo_a.html"><strong>File Aesthetic A: Manila Folder</strong><br/><span>Dossier-style; folder flap, chevron, tab labels</span></a></li>
+    <li><a href="file_aesthetic_demo_b.html"><strong>File Aesthetic B: Rubber Stamp</strong><br/><span>CLASSIFIED/DECLASSIFIED seal; clip-path unseal animation</span></a></li>
+    <li><a href="file_aesthetic_demo_c.html"><strong>File Aesthetic C: Index-Card Drawer</strong><br/><span>Library catalog; stacked cards, slide-out content</span></a></li>
+  </ul>
+
+  <h2 style="font-size: 1.1rem; color: #4a5568; margin-top: 2rem; margin-bottom: 0.75rem;">Slice E — Document tab IA (accordion vs split)</h2>
+  <p style="font-size: 0.88rem; color: #64748b; margin: -0.5rem 0 0.75rem;">Copies also live under <code style="font-size: 0.8rem;">dev/slice_e_ia_demos/</code>. Listed here so they appear with other demos.</p>
+  <ul class="demo-list">
+    <li><a href="slice_e_e1a_accordion_classic.html"><strong>E1a — Accordion classic</strong><br/><span>Stacked sections; minimal chrome</span></a></li>
+    <li><a href="slice_e_e1b_accordion_enhanced.html"><strong>E1b — Accordion + sticky jump</strong><br/><span>Summary chips; jump opens sections</span></a></li>
+    <li><a href="slice_e_e2a_inner_tabs.html"><strong>E2a — Inner tabs</strong><br/><span>PDF | Text | Compare as horizontal tabs</span></a></li>
+    <li><a href="slice_e_e2b_sidebar_outline.html"><strong>E2b — Sidebar outline</strong><br/><span>IA-style outline + main pane</span></a></li>
+  </ul>
+
+  <h2 style="font-size: 1.1rem; color: #4a5568; margin-top: 2rem; margin-bottom: 0.75rem;">Visualization prototypes (approve/deny for main report)</h2>
+  <ul class="demo-list">
+    <li><a href="viz_mismatch_flow_demo.html"><strong>Mismatch Flow</strong><br/><span>LLM x Human framing matrix; where labels go when wrong</span></a></li>
+    <li><a href="viz_document_fingerprint_demo.html"><strong>Document Fingerprint</strong><br/><span>Compact per-doc stacked bar; framing mix at a glance</span></a></li>
+    <li><a href="viz_framing_over_position_demo.html"><strong>Framing Over Position</strong><br/><span>Line chart: framing intensity along document</span></a></li>
+    <li><a href="viz_terms_by_framing_demo.html"><strong>Terms by Framing</strong><br/><span>Top terms per framing strategy; vocabulary of each</span></a></li>
+    <li><a href="viz_term_category_heatmap_demo.html"><strong>Term x Framing Heatmap</strong><br/><span>Which terms appear in which framing strategies</span></a></li>
+    <li><a href="viz_document_similarity_demo.html"><strong>Document Similarity</strong><br/><span>Matrix: which docs have similar profiles</span></a></li>
+    <li><a href="viz_declassified_progress_demo.html"><strong>Declassified Progress</strong><br/><span>Gauge: corpus-wide agreement %</span></a></li>
+  </ul>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Term x Framing Heatmap</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Crimson Text', Georgia, serif; margin: 0; padding: 2rem; background: #f5f0e6; color: #4a5568; max-width: 950px; margin-left: auto; margin-right: auto; }
+    h1 { color: #8b0000; font-size: 1.5rem; margin-bottom: 0.25rem; }
+    .subtitle { font-size: 0.95rem; color: #6b7280; margin-bottom: 1.5rem; }
+    .badge { display: inline-block; padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #8b0000; color: #f5f0e6; border-radius: 4px; font-family: 'JetBrains Mono', monospace; margin-left: 0.5rem; }
+    .viz-desc { background: #e8e4dc; padding: 1rem 1.25rem; border-radius: 4px; border-left: 4px solid #8b7355; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    .heatmap-wrap { overflow-x: auto; }
+    .heatmap { border-collapse: collapse; font-size: 0.8rem; background: #fff; border: 1px solid #8b7355; }
+    .heatmap th, .heatmap td { padding: 0.35rem 0.5rem; border: 1px solid #e8e4dc; text-align: center; min-width: 2rem; }
+    .heatmap th { background: #4a5568; color: #e8e4dc; font-weight: 600; }
+    .heatmap th.term-col { text-align: left; background: #2d3748; }
+    .heatmap td.term-cell { text-align: left; font-weight: 500; }
+    .heatmap .cell-high { background: #0f766e; color: #f0fdfa; }
+    .heatmap .cell-mid { background: #2dd4bf; color: #134e4a; }
+    .heatmap .cell-low { background: #99f6e4; color: #134e4a; }
+    .heatmap .cell-none { background: #fffef9; color: #9ca3af; }
+    .legend { display: flex; gap: 1rem; margin-top: 1rem; font-size: 0.8rem; }
+    .legend span { display: flex; align-items: center; gap: 0.35rem; }
+    .legend .swatch { width: 1rem; height: 1rem; border-radius: 2px; }
+    .back-link { display: inline-block; margin-top: 1.5rem; color: #8b7355; text-decoration: none; font-size: 0.9rem; }
+    .back-link:hover { color: #8b0000; text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>Term x Framing Heatmap <span class="badge">Demo</span></h1>
+  <p class="subtitle">Which terms appear in which framing strategies? Rows = terms, columns = framing. Cell = count.</p>
+
+  <div class="viz-desc">
+    <strong>Idea:</strong> "Arrest" and "measures" cluster in Action-Focused; "committee" and "security" in Institutional; "anti" and "nationalist" in Ideological (Discrediting). This matrix reveals vocabulary-framing associations.
+  </div>
+
+  <div class="heatmap-wrap">
+    <table class="heatmap" id="heatmap"></table>
+  </div>
+
+  <div class="legend">
+    <span><span class="swatch" style="background:#0f766e"></span> High</span>
+    <span><span class="swatch" style="background:#2dd4bf"></span> Medium</span>
+    <span><span class="swatch" style="background:#99f6e4"></span> Low</span>
+  </div>
+
+  <a href="index.html" class="back-link">Back to demos</a>
+
+  <script>
+    (function() {
+      var terms = ['arrest', 'committee', 'measures', 'informed', 'security', 'anti', 'nationalist', 'party', 'embassy', 'year'];
+      var frams = ['Generic', 'Institutional', 'Ideol. (Discr.)', 'Ideol. (Norm.)', 'Action-Focused'];
+      var data = [
+        [5, 12, 8, 4, 28],
+        [8, 42, 6, 12, 8],
+        [6, 18, 10, 6, 32],
+        [10, 22, 8, 5, 18],
+        [4, 28, 6, 4, 12],
+        [6, 4, 35, 8, 6],
+        [4, 6, 32, 10, 5],
+        [8, 12, 4, 28, 6],
+        [5, 30, 4, 6, 10],
+        [22, 12, 4, 8, 8]
+      ];
+      var maxVal = 0;
+      data.forEach(function(row) { row.forEach(function(v) { if (v > maxVal) maxVal = v; }); });
+      function cls(v) {
+        if (!v) return 'cell-none';
+        var r = v / maxVal;
+        if (r >= 0.7) return 'cell-high';
+        if (r >= 0.35) return 'cell-mid';
+        return 'cell-low';
+      }
+      var table = document.getElementById('heatmap');
+      var header = '<thead><tr><th class="term-col">Term</th>' + frams.map(function(f) { return '<th>' + f + '</th>'; }).join('') + '</tr></thead><tbody>';
+      var body = terms.map(function(t, i) {
+        return '<tr><td class="term-cell">' + t + '</td>' + data[i].map(function(v) { return '<td class="' + cls(v) + '">' + (v || '') + '</td>'; }).join('') + '</tr>';
+      }).join('');
+      table.innerHTML = header + body + '</tbody>';
+    })();
+  </script>
+</body>
+</html>
