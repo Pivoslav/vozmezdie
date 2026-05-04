@@ -4,12 +4,14 @@ Output: list of { document_id, display_name, path, raw_text?, raw_text_en? }.
 
 When documents.document_map_path and documents.input_dir_ru are set, Russian is primary:
 sync copies from dev/russian_originals into data/russian_originals, then documents
-are loaded from that directory (raw_text = Russian). Optional raw_text_en from data/input.
+are loaded from that directory (raw_text = Russian). English full text is loaded from
+``en_filename`` when set, otherwise from ``input_dir`` by trying ``<document_id>.txt``,
+spaced-id filenames (e.g. ``1262 28-32.txt``), then ``display_name``.
 """
 import json
 import shutil
 from pathlib import Path
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Set
 
 # Short document_ids only use exact file/folder matches; longer substring keys avoid false positives.
 _MIN_PDF_PATH_SUBSTRING = 6
@@ -182,11 +184,53 @@ def sync_russian_originals(config: Dict[str, Any], root: Path) -> None:
         shutil.copy2(src, dst)
 
 
+def _english_fulltext_candidates(en_dir: Path, doc_id: str, display_name: str) -> List[Path]:
+    """Ordered paths to try for English full text under ``input_dir``.
+
+    Russian originals use ``<document_id>.txt`` in ``data/russian_originals``; English files in
+    ``data/input`` follow the same ids (e.g. ``1127.txt``) or spaced variants (e.g. ``1262 28-32.txt``
+    for ``document_id`` ``1262_28-32``). Legacy code only checked ``display_name``, which does not
+    match those filenames, leaving ``raw_text_en`` empty and breaking bilingual view / EN word clouds.
+    """
+    ordered: List[Path] = []
+    seen: Set[str] = set()
+
+    def add(p: Path) -> None:
+        key = str(p)
+        if key not in seen:
+            seen.add(key)
+            ordered.append(p)
+
+    add(en_dir / f"{doc_id}.txt")
+    spaced = doc_id.replace("_", " ")
+    if spaced != doc_id:
+        add(en_dir / f"{spaced}.txt")
+    dn = (display_name or "").strip()
+    if dn:
+        add(en_dir / dn)
+        if not dn.lower().endswith(".txt"):
+            add(en_dir / f"{dn}.txt")
+    return ordered
+
+
+def _read_first_existing_text(paths: List[Path], encoding: str) -> str:
+    for p in paths:
+        if not p.is_file():
+            continue
+        try:
+            return p.read_text(encoding=encoding)
+        except Exception:
+            continue
+    return ""
+
+
 def run(config: Dict[str, Any], root: Optional[Path] = None) -> List[Dict[str, Any]]:
     """
     Discover and load documents. If document_map_path and input_dir_ru are set,
     sync Russian originals from dev into data/russian_originals, then load from there
-    (raw_text = Russian). Optionally load raw_text_en from input_dir by display_name.
+    (raw_text = Russian). Optionally load raw_text_en from ``input_dir``:
+    ``en_filename`` + ``source_dir_en``, else first match among ``<document_id>.txt``,
+    spaced-id ``.txt``, and ``display_name`` (with optional ``.txt``).
     Otherwise discover from input_dir (legacy: raw_text = English).
     """
     if root is None:
@@ -240,14 +284,10 @@ def run(config: Dict[str, Any], root: Optional[Path] = None) -> List[Dict[str, A
                         else:
                             entry["raw_text_en"] = ""
                     else:
-                        en_path = en_dir / display_name
-                        if en_path.exists():
-                            try:
-                                entry["raw_text_en"] = en_path.read_text(encoding=encoding)
-                            except Exception:
-                                entry["raw_text_en"] = ""
-                        else:
-                            entry["raw_text_en"] = ""
+                        entry["raw_text_en"] = _read_first_existing_text(
+                            _english_fulltext_candidates(en_dir, doc_id, display_name),
+                            encoding,
+                        )
                     prp = item.get("pdf_relative_path")
                     if isinstance(prp, str) and prp.strip():
                         entry["pdf_relative_path"] = prp.strip()

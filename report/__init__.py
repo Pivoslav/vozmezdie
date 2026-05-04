@@ -127,8 +127,6 @@ _UI_TRANSLATIONS = {
     "intro_tool_ui_tag": {"en": "Throughout", "uk": "Усюди"},
     "intro_tool_ui_h": {"en": "UI language & typing", "uk": "Мова інтерфейсу й введення"},
     "intro_tool_ui_p": {"en": "English / Ukrainian toggle where available. Cyrillic popup keyboard on search fields without switching OS layouts.", "uk": "Перемикач EN/UK де доступно. Спливаюча кирилична клавіатура в полях пошуку."},
-    "intro_deep_li_a": {"en": "Deep links: URLs with #tab-… open the right document or scroll to Lab sections (for example #lab-glossary after opening the Lab).", "uk": "Посилання з #tab-… відкривають документ або прокручують до розділів лабораторії (наприклад #lab-glossary)."},
-    "intro_deep_li_b": {"en": "Standalone charts: open a single visualization in lab_visualization.html when your build provides it.", "uk": "Окремі діаграми: lab_visualization.html, якщо збірка його містить."},
     "intro_framework_heading": {"en": "Analytical framework", "uk": "Аналітична рамка"},
     "intro_framework_visual_title": {"en": "Vozmezdie analytical framework", "uk": "Аналітична рамка Vozmezdie"},
     "intro_fw_specific_label": {"en": "Specific Details", "uk": "Конкретні деталі"},
@@ -2561,10 +2559,6 @@ def _intro_tab() -> str:
         <p data-i18n="intro_tool_ui_p">English / Ukrainian toggle where available. Cyrillic popup keyboard on search fields without switching OS layouts.</p>
       </article>
     </div>
-    <ul class="intro-cap-list">
-      <li data-i18n="intro_deep_li_a">Deep links: URLs with #tab-… open the right document or scroll to Lab sections (for example #lab-glossary after opening the Lab).</li>
-      <li data-i18n="intro_deep_li_b">Standalone charts: open a single visualization in lab_visualization.html when your build provides it.</li>
-    </ul>
   </section>
   <section class="homepage-section">
     <h3 data-i18n="intro_capabilities_heading">What you can do here</h3>
