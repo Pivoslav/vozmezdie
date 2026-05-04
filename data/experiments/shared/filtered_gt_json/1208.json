@@ -1,0 +1,402 @@
+[
+  {
+    "section": 16,
+    "entry_eng": "No. 119/sv",
+    "entry_rus": "№ 119/св",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "No. 119/sv"
+  },
+  {
+    "section": 17,
+    "entry_eng": "report informed",
+    "entry_rus": "докладывалось",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "report informed"
+  },
+  {
+    "section": 19,
+    "entry_eng": "by foreign OUN centers",
+    "entry_rus": "зарубежными ОУН",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "by foreign OUN centers"
+  },
+  {
+    "section": 23,
+    "entry_eng": "OUN centers",
+    "entry_rus": "оуновские центры",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "OUN centers"
+  },
+  {
+    "section": 24,
+    "entry_eng": "are attempting to give",
+    "entry_rus": "пытаются придать",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "are attempting to give"
+  },
+  {
+    "section": 27,
+    "entry_eng": "The director of the “Ukrainian Research Institute” at Harvard University",
+    "entry_rus": "Директор \"украинского научного института\" при Гарвардском университете",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "The director of the “Ukrainian Research Institute” at Harvard University"
+  },
+  {
+    "section": 30,
+    "entry_eng": "has proposed the creation",
+    "entry_rus": "предложил создать",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "has proposed the creation"
+  },
+  {
+    "section": 31,
+    "entry_eng": "of a permanent center",
+    "entry_rus": "постоянно действующий центр",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "of a permanent center"
+  },
+  {
+    "section": 34,
+    "entry_eng": "It is planned to concentrate within it",
+    "entry_rus": "В нём предполагается сосредоточить",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "It is planned to concentrate within it"
+  },
+  {
+    "section": 35,
+    "entry_eng": "publications on the “famine,”",
+    "entry_rus": "публикации о \"голоде\"",
+    "content_category": "Documents",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "publications on the “famine,”"
+  },
+  {
+    "section": 38,
+    "entry_eng": "“photographic materials”",
+    "entry_rus": "\"фотоматериалы\"",
+    "content_category": "Material Resources",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "“photographic materials”"
+  },
+  {
+    "section": 39,
+    "entry_eng": "To collect and process such materials",
+    "entry_rus": "Для сбора и обработки подобных материалов",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "To collect and process such materials"
+  },
+  {
+    "section": 40,
+    "entry_eng": "to publish “scholarly works”",
+    "entry_rus": "издания \"научных трудов\"",
+    "content_category": "Documents",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "to publish “scholarly works”"
+  },
+  {
+    "section": 41,
+    "entry_eng": "propaganda pamphlets",
+    "entry_rus": "пропагандистских брошюр",
+    "content_category": "Documents",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "propaganda pamphlets"
+  },
+  {
+    "section": 42,
+    "entry_eng": "to organize “conferences”",
+    "entry_rus": "организации \"конференций\"",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "to organize “conferences”"
+  },
+  {
+    "section": 43,
+    "entry_eng": "to develop “educational” programs",
+    "entry_rus": "и разработки \"учебных\" программ",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "to develop “educational” programs"
+  },
+  {
+    "section": 45,
+    "entry_eng": "is to be established",
+    "entry_rus": "намечается учредить",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "is to be established"
+  },
+  {
+    "section": 46,
+    "entry_eng": "at the said “institute”",
+    "entry_rus": "в указанном \"институте\"",
+    "content_category": "Places",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "at the said “institute”"
+  },
+  {
+    "section": 47,
+    "entry_eng": "a special course",
+    "entry_rus": "специальный курс",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "a special course"
+  },
+  {
+    "section": 50,
+    "entry_eng": "the OUNites",
+    "entry_rus": "оуновцы",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "the OUNites"
+  },
+  {
+    "section": 51,
+    "entry_eng": "are attempting",
+    "entry_rus": "предпринимают попытки",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "are attempting"
+  },
+  {
+    "section": 53,
+    "entry_eng": "to organize the collection of data",
+    "entry_rus": "организовать сбор данных",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to organize the collection of data"
+  },
+  {
+    "section": 58,
+    "entry_eng": "hype",
+    "entry_rus": "Шумиха",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "hype"
+  },
+  {
+    "section": 59,
+    "entry_eng": "The nationalist press’s",
+    "entry_rus": "в националистической прессе",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "The nationalist press’s"
+  },
+  {
+    "section": 62,
+    "entry_eng": "is being used [...] to intensify",
+    "entry_rus": "используется [...] для активизации",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "is being used [...] to intensify"
+  },
+  {
+    "section": 63,
+    "entry_eng": "by the OUN",
+    "entry_rus": "ОУН",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "by the OUN"
+  },
+  {
+    "section": 66,
+    "entry_eng": "to involve [...] in it",
+    "entry_rus": "вовлечения в неё",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to involve [...] in it"
+  },
+  {
+    "section": 67,
+    "entry_eng": "reactionary political figures",
+    "entry_rus": "реакционных политических деятелей",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "reactionary political figures"
+  },
+  {
+    "section": 68,
+    "entry_eng": "to strengthen",
+    "entry_rus": "укрепления",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "to strengthen"
+  },
+  {
+    "section": 70,
+    "entry_eng": "The Committee for State Security of the republic",
+    "entry_rus": "Комитетом госбезопасности республики",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The Committee for State Security of the republic"
+  },
+  {
+    "section": 71,
+    "entry_eng": "continues to carry out measures",
+    "entry_rus": "продолжаются мероприятия",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "continues to carry out measures"
+  },
+  {
+    "section": 72,
+    "entry_eng": "to counter",
+    "entry_rus": "по противодействию",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "to counter"
+  },
+  {
+    "section": 73,
+    "entry_eng": "the hostile actions",
+    "entry_rus": "враждебным акциям",
+    "content_category": "Actions",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "the hostile actions"
+  },
+  {
+    "section": 74,
+    "entry_eng": "of foreign nationalist centers",
+    "entry_rus": "зарубежных наццентров",
+    "content_category": "Actors",
+    "framing": "Ideological Framing (Discrediting)",
+    "context": "of foreign nationalist centers"
+  },
+  {
+    "section": 75,
+    "entry_eng": "Measures are being taken",
+    "entry_rus": "Принимаются меры",
+    "content_category": "Actions",
+    "framing": "Action-Focused Language",
+    "context": "Measures are being taken"
+  },
+  {
+    "section": 76,
+    "entry_eng": "to prevent the leakage of information abroad",
+    "entry_rus": "по недопущению утечки за кордон информации",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "to prevent the leakage of information abroad"
+  },
+  {
+    "section": 80,
+    "entry_eng": "KGB of the USSR",
+    "entry_rus": "КГБ СССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "KGB of the USSR"
+  },
+  {
+    "section": 84,
+    "entry_eng": "there were [...] present",
+    "entry_rus": "находились",
+    "content_category": "Events",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "there were [...] present"
+  },
+  {
+    "section": 191,
+    "entry_eng": "Identification of Persons Who Committed the Theft of Electronic Equipment",
+    "entry_rus": "Установление лиц, совершивших хищение электронного оборудования",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Identification of Persons Who Committed the Theft of Electronic Equipment"
+  },
+  {
+    "section": 193,
+    "entry_eng": "Report No. 126/sv [...] informed",
+    "entry_rus": "№ 126/св докладывалось",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Report No. 126/sv [...] informed"
+  },
+  {
+    "section": 196,
+    "entry_eng": "[...]  located in Shop No. 4 of the Kryvyi Rih plant “Remgormash” of the Ministry of Ferrous Metallurgy of the Ukrainian SSR.",
+    "entry_rus": "из цеха № 4 Криворожского завода \"Ремгормаш\" Минчермета УССР",
+    "content_category": "Places",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "[...]  located in Shop No. 4 of the Kryvyi Rih plant “Remgormash” of the Ministry of Ferrous Metallurgy of the Ukrainian SSR."
+  },
+  {
+    "section": 214,
+    "entry_eng": "Having confessed to the crime",
+    "entry_rus": "сознавшись в содеянном",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Having confessed to the crime"
+  },
+  {
+    "section": 221,
+    "entry_eng": "Upon learning that an investigation was underway",
+    "entry_rus": "узнав что по факту ведётся следствие",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "Upon learning that an investigation was underway"
+  },
+  {
+    "section": 224,
+    "entry_eng": "[they were] recovered",
+    "entry_rus": "изъяты",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "[they were] recovered"
+  },
+  {
+    "section": 226,
+    "entry_eng": "The individuals named have been arrested",
+    "entry_rus": "названные лица арестованы",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The individuals named have been arrested"
+  },
+  {
+    "section": 227,
+    "entry_eng": "The investigation is being conducted by the Ministry of Internal Affairs",
+    "entry_rus": "расследование проводится органами внутренних дел",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The investigation is being conducted by the Ministry of Internal Affairs"
+  },
+  {
+    "section": 228,
+    "entry_eng": "The KGB Directorate is assisting",
+    "entry_rus": "УКГБ оказывает помощь",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The KGB Directorate is assisting"
+  },
+  {
+    "section": 229,
+    "entry_eng": "in establishing any possible additional motives behind the crime",
+    "entry_rus": "в установлении возможных иных мотивов совершённого ими преступления",
+    "content_category": "Actions",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "in establishing any possible additional motives behind the crime"
+  },
+  {
+    "section": 230,
+    "entry_eng": "The KGB of the USSR and the Regional Committee of the Communist Party of Ukraine have been informed",
+    "entry_rus": "КГБ СССР и обкому Компартии Украины доложено",
+    "content_category": "Documents",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "The KGB of the USSR and the Regional Committee of the Communist Party of Ukraine have been informed"
+  },
+  {
+    "section": 231,
+    "entry_eng": "CHAIRMAN OF THE COMMITTEE FOR STATE SECURITY OF THE UKRAINIAN SSR",
+    "entry_rus": "председатель Комитета госбезопасности Украинской ССР",
+    "content_category": "Actors",
+    "framing": "Institutional / Bureaucratic Lingo",
+    "context": "CHAIRMAN OF THE COMMITTEE FOR STATE SECURITY OF THE UKRAINIAN SSR"
+  }
+]

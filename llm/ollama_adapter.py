@@ -28,9 +28,12 @@ def extract_one_document(
     categories = [c["id"] for c in taxonomy.get("content_categories", [])]
     framings = [f["id"] for f in taxonomy.get("framing_strategies", [])]
     if not categories:
-        categories = ["Actions", "Actors", "Places", "Time"]
+        categories = [
+            "Actors", "Places", "Actions", "Events",
+            "Date & Time", "Legal Framework", "Documents", "Material Resources",
+        ]
     if not framings:
-        framings = ["Generic / Neutral", "Institutional / Bureaucratic Lingo"]
+        framings = ["Generic / Neutral Language", "Institutional / Bureaucratic Lingo"]
 
     prompt = _build_prompt(raw_text, categories, framings)
     body = {
