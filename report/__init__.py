@@ -289,9 +289,11 @@ def _pdf_href_for_report(
     *,
     config: Optional[Dict[str, Any]] = None,
 ) -> Optional[str]:
-    """Absolute PDF URL for iframe embedding when documents.pdf_public_base_url is set.
+    """Absolute PDF URL when documents.pdf_public_base_url is set.
 
-    Relative file paths are not emitted so hosted reports always use published URLs.
+    Use a host that allows iframe embedding and sends application/pdf (e.g. jsDelivr:
+    https://cdn.jsdelivr.net/gh/OWNER/REPO@branch). raw.githubusercontent.com sends
+    X-Frame-Options: deny and octet-stream, which breaks embedded viewers.
     """
     doc_cfg = (config or {}).get("documents", {}) if config else {}
     pdf_root = _sanitize_pdf_root_rel(doc_cfg.get("original_pdfs_dir"))

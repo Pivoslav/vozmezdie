@@ -27,14 +27,17 @@ python run_report_only.py
 
 Output: `data/output/manual_analysis_report.html` and `data/output/comparison_results.json`.
 
-### PDF scans in the report (local vs GitHub raw)
+### PDF scans in the report (local vs hosted HTTPS)
 
-- By default, PDF links are **relative** to the generated HTML; keep `original_pdfs/` next to the project layout described in **`original_pdfs/PLACE_PDFS_HERE.txt`**.
-- To point the report at copies hosted on GitHub, set **`documents.pdf_public_base_url`** in your pipeline config (see `config/pipeline_config.example.json`). Example base URL for files on branch **`main`**:
+- Keep `original_pdfs/` as described in **`original_pdfs/PLACE_PDFS_HERE.txt`**.
+- For **embedded PDF iframes** (Research Lab + GitHub Pages), **`raw.githubusercontent.com` is a poor choice**: it sends `X-Frame-Options: deny` and often `Content-Type: application/octet-stream`, so iframes stay blank and clicks may force download.
+- Prefer **jsDelivr** (same repo paths, branch pinned), base URL with **no trailing slash**:
 
-  `https://raw.githubusercontent.com/Pivoslav/vozmezdie/main`
+  `https://cdn.jsdelivr.net/gh/Pivoslav/vozmezdie@main`
 
-  The report then requests URLs such as `…/main/original_pdfs/<document_id>/<file>.pdf`.
+  Set **`documents.pdf_public_base_url`** to that value (see `config/pipeline_config.example.json`). URLs become `…/original_pdfs/<document_id>/<file>.pdf` under that base.
+
+- Alternatively host PDFs on **your GitHub Pages origin** and set **`pdf_public_base_url`** to that site root so files are same-origin with the HTML.
 
 **CLI:** `python run.py --agent-assessments` (use `agent_assessments.json` instead of LLM); `python run.py --use-ollama` (use Ollama); `python run.py --report-only` (regenerate HTML from saved JSON). **Tests:** `pytest tests/ -v`
 
