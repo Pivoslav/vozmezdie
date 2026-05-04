@@ -55,7 +55,7 @@ def _stub_rows(doc_id: str, raw_text: str, taxonomy: Dict[str, Any]) -> List[Dic
     if not categories:
         categories = ["Actions", "Actors"]
     if not framings:
-        framings = ["Generic / Neutral"]
+        framings = ["Generic / Neutral Language"]
 
     text = (raw_text or "").replace("\r\n", "\n")
     # Split on sentence end then on newline (works for both English and Russian/Cyrillic)

@@ -1,0 +1,9 @@
+{
+  "drop_archival_and_body_sheet_labels": true,
+  "drop_raw_content_categories_extra": [],
+  "drop_generic_neutral_framing_rows": true,
+  "assessor_allow_generic_neutral_framing": false,
+  "assessor_excluded_framing_strategies": [],
+  "assessor_excluded_content_categories": [],
+  "notes": "GT filtering: (1) Deprecated/raw categories + optional structural sheet labels. (2) When drop_generic_neutral_framing_rows is true, drop GT rows whose framing normalizes to Generic / Neutral Language. Assessor reference + prompts: when assessor_allow_generic_neutral_framing is false (default) and drop_generic_neutral_framing_rows is true, Generic / Neutral Language is omitted from TAXONOMY_REFERENCE_FOR_ASSESSORS.md and must not be used in experiment assessments. Add more ids to assessor_excluded_* to match taxonomy churn."
+}

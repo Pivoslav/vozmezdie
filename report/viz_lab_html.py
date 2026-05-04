@@ -1,6 +1,70 @@
 """HTML fragment for Research Lab visualizations (shared full report + standalone chart page)."""
 
 
+def per_document_viz_section(dom_suffix: str, viz_json: str, heatmap_html: str, places_map_srcdoc: str) -> str:
+    """Research Lab–style charts scoped to one document. IDs: doc-viz-root-, viz-data-, viz-select- + suffix."""
+    # Caller supplies ASCII-safe suffix only (_viz_dom_suffix); embed raw so JS getElementById matches.
+    sfx = dom_suffix
+    return f"""  <details class="collapsible-section doc-viz-details" id="doc-section-viz-{sfx}">
+    <summary><span data-i18n="document_visualizations">Visualizations for this document</span></summary>
+    <div class="collapsible-body">
+  <section class="homepage-section doc-visualizations-section" id="doc-viz-root-{sfx}" data-doc-viz-root="{sfx}">
+    <script type="application/json" id="viz-data-{sfx}">{viz_json}</script>
+    <div class="viz-controls doc-viz-controls">
+      <label for="viz-select-{sfx}" data-i18n="select_visualization">Select visualization:</label>
+      <select id="viz-select-{sfx}" class="viz-select doc-viz-select">
+        <option value="wordcloud" data-i18n="viz_wordcloud">Word Cloud</option>
+        <option value="heatmap" data-i18n="viz_heatmap">Category x Framing Heatmap</option>
+        <option value="per-doc-cat" data-i18n="viz_per_doc_cat">Per-Document Categories</option>
+        <option value="per-doc-fram" data-i18n="viz_per_doc_fram">Per-Document Framings</option>
+        <option value="pie-cat" data-i18n="viz_pie_cat">Category Distribution</option>
+        <option value="pie-fram" data-i18n="viz_pie_fram">Framing Distribution</option>
+        <option value="terms-cat" data-i18n="viz_terms_cat">Top Terms by Category</option>
+        <option value="terms-fram" data-i18n="viz_terms_fram">Top Terms by Framing</option>
+        <option value="vocab-diversity" data-i18n="viz_vocab_diversity">Vocabulary Diversity</option>
+        <option value="segment-length" data-i18n="viz_segment_length">Segment Length vs Accuracy</option>
+        <option value="places-map" data-i18n="viz_places_map">Places Map</option>
+        <option value="radar" data-i18n="viz_radar">Document Profile Radar</option>
+        <option value="mismatch-flow" data-i18n="viz_mismatch_flow">Mismatch Flow</option>
+        <option value="doc-fingerprint" data-i18n="viz_doc_fingerprint">Document Fingerprint</option>
+        <option value="terms-by-framing" data-i18n="viz_terms_by_framing">Terms by Framing</option>
+        <option value="term-framing-heatmap" data-i18n="viz_term_framing_heatmap">Term x Framing Heatmap</option>
+      </select>
+      <details class="viz-config-panel doc-viz-config-panel" id="viz-config-panel-{sfx}">
+        <summary data-i18n="viz_config">Configuration</summary>
+        <div class="viz-config-body" id="viz-config-body-{sfx}"></div>
+      </details>
+    </div>
+    <div class="viz-panels doc-viz-panels">
+      <div class="viz-panel doc-viz-panel" data-doc-viz="wordcloud">
+        <div class="wordcloud-dual doc-viz-wordcloud-dual">
+          <div class="wordcloud-single doc-viz-wc-eng-wrap"><div class="wordcloud-label" data-i18n="english">English</div><div class="wordcloud-canvas-wrap"><canvas class="doc-viz-chart" data-doc-chart="wordcloud-eng" width="800" height="300"></canvas></div></div>
+          <div class="wordcloud-single doc-viz-wc-rus-wrap"><div class="wordcloud-label" data-i18n="russian_original">Russian</div><div class="wordcloud-canvas-wrap"><canvas class="doc-viz-chart" data-doc-chart="wordcloud-rus" width="800" height="300"></canvas></div></div>
+        </div>
+        <details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_wordcloud_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_wordcloud_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_wordcloud_technical"></p></div></details>
+      </div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="heatmap">{heatmap_html}<details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_heatmap_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_heatmap_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_heatmap_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="per-doc-cat"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="per-doc-cat"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_per_doc_cat_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_per_doc_cat_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_per_doc_cat_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="per-doc-fram"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="per-doc-fram"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_per_doc_fram_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_per_doc_fram_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_per_doc_fram_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="pie-cat"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="pie-cat"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_pie_cat_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_pie_cat_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_pie_cat_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="pie-fram"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="pie-fram"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_pie_fram_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_pie_fram_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_pie_fram_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="terms-cat"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="terms-cat"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_terms_cat_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_terms_cat_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_terms_cat_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="terms-fram"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="terms-fram"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_terms_fram_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_terms_fram_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_terms_fram_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="vocab-diversity"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="vocab-diversity"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_vocab_diversity_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_vocab_diversity_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_vocab_diversity_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="segment-length"><div class="segment-length-stat doc-viz-segment-length-stat" style="margin-bottom:0.75rem; padding:0.75rem 1rem; background:#e8e4dc; border-radius:4px; font-size:0.9rem; line-height:1.6;"></div><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="segment-length"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_segment_length_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_segment_length_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_segment_length_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="places-map"><p class="viz-intro" style="margin-bottom:1rem;">Places mentioned in Places-tagged segments are displayed on an interactive map.</p><div class="doc-viz-places-embed-wrap" style="height:70vh; min-height:500px; border-radius:4px; overflow:hidden; border:1px solid #8b7355;">{places_map_srcdoc}</div></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="radar"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="radar"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_radar_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_radar_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_radar_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="mismatch-flow"><div class="doc-viz-html-host" data-doc-host="mismatch-flow"></div></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="doc-fingerprint"><div class="doc-viz-html-host" data-doc-host="doc-fingerprint"></div><div class="doc-viz-html-host fingerprint-legend doc-viz-fingerprint-legend" data-doc-host="doc-fingerprint-legend"></div></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="terms-by-framing"><div class="doc-viz-html-host" data-doc-host="terms-by-framing"></div></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="term-framing-heatmap"><div class="heatmap-wrap"><table class="heatmap-table doc-viz-html-host" data-doc-host="term-framing-heatmap"></table></div></div>
+    </div>
+  </section>
+    </div>
+  </details>
+"""
+
+
 def viz_lab_visualizations_section(viz_json: str, heatmap_html: str, places_map_srcdoc: str) -> str:
     return f"""  <section class="homepage-section" id="lab-visualizations">
     <h3 data-i18n="visualizations">Visualizations</h3>

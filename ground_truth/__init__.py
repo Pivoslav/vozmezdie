@@ -1,11 +1,24 @@
 """
 Ground truth module: load human-coded rows per document.
 Output: dict document_id -> list of extraction rows (same shape as LLM output).
-When loading from HTML, rows whose content_category is not in the taxonomy are dropped (metadata rows like "Title 2", "Document Type").
+When ground_truth.json_rows_dir is set and <doc_id>.json exists there, load that list first
+(experiment filtered corpus). Otherwise load from HTML or CSV as before.
 """
 from pathlib import Path
 from typing import Dict, List, Any, Set
 import csv
+
+from config.taxonomy_categories import GROUND_TRUTH_CONTENT_CATEGORY_REDIRECT
+
+
+def _redirect_gt_content_categories(rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Fold legacy content-category labels into the current taxonomy."""
+    out: List[Dict[str, Any]] = []
+    for r in rows:
+        cat = (r.get("content_category") or "").strip()
+        fixed = GROUND_TRUTH_CONTENT_CATEGORY_REDIRECT.get(cat, cat)
+        out.append({**r, "content_category": fixed})
+    return out
 
 
 def _load_taxonomy_for_filter(config: Dict[str, Any], root: Path) -> Set[str]:
@@ -34,36 +47,6 @@ def _load_taxonomy_for_filter(config: Dict[str, Any], root: Path) -> Set[str]:
     return {c.get("id", "").strip() for c in data.get("content_categories", []) if c.get("id")}
 
 
-# Map archival/fragment GT categories (used in some HTML sheets) to taxonomy categories.
-# Fragments of the same document may use different column schemas; this lets them pass the filter.
-_ARCHIVAL_CATEGORY_MAP = {
-    "Archival Record Data": "Information",
-    "Body of the Text": "Context and Concepts",
-}
-
-
-def _map_row_categories(rows: List[Dict[str, Any]], valid_categories: Set[str]) -> List[Dict[str, Any]]:
-    """
-    For rows whose content_category is not in valid_categories, try mapping from archival
-    schema (Archival Record Data, Body of the Text) to a taxonomy category. Preserves rows
-    that would otherwise be dropped when fragment GTs use a different schema.
-    """
-    if not rows or not valid_categories:
-        return rows
-    out = []
-    for r in rows:
-        cat = (r.get("content_category") or "").strip()
-        if not cat or cat in valid_categories:
-            out.append(r)
-            continue
-        mapped = _ARCHIVAL_CATEGORY_MAP.get(cat)
-        if mapped and mapped in valid_categories:
-            out.append({**r, "content_category": mapped})
-        else:
-            out.append(r)  # keep anyway for optional later filter
-    return out
-
-
 def run(config: Dict[str, Any], document_ids: List[str]) -> Dict[str, List[Dict[str, Any]]]:
     """
     Load ground truth for each document_id. Returns same row shape as LLM: section, entry_eng, entry_rus, content_category, framing, context.
@@ -79,7 +62,22 @@ def run(config: Dict[str, Any], document_ids: List[str]) -> Dict[str, List[Dict[
     result = {}
     for doc_id in document_ids:
         rows = None
-        if html_dir:
+        json_rows_root = gt_config.get("json_rows_dir")
+        if json_rows_root:
+            jdir = Path(json_rows_root)
+            if not jdir.is_absolute():
+                jdir = root / jdir
+            jpath = jdir / f"{doc_id}.json"
+            if jpath.exists():
+                import json as _json
+
+                try:
+                    loaded = _json.loads(jpath.read_text(encoding="utf-8"))
+                except Exception:
+                    loaded = None
+                if isinstance(loaded, list):
+                    rows = loaded
+        if rows is None and html_dir:
             html_path = Path(html_dir)
             for candidate in (html_path / f"{doc_id}.html", html_path / f"{doc_id.replace('_', ' ')}.html"):
                 if candidate.exists():
@@ -94,7 +92,7 @@ def run(config: Dict[str, Any], document_ids: List[str]) -> Dict[str, List[Dict[
         if rows is None:
             rows = _fixture_rows(doc_id)
         if rows and valid_categories:
-            rows = _map_row_categories(rows, valid_categories)
+            rows = _redirect_gt_content_categories(rows)
             rows = [r for r in rows if (r.get("content_category") or "").strip() in valid_categories]
         result[doc_id] = rows
     return result
@@ -120,6 +118,6 @@ def _load_csv(path: Path) -> List[Dict[str, Any]]:
 def _fixture_rows(doc_id: str) -> List[Dict[str, Any]]:
     """Fixture ground truth so compare has something to run on."""
     return [
-        {"section": 1, "entry_eng": "Sample phrase one", "entry_rus": "", "content_category": "Context and Concepts", "framing": "Generic / Neutral", "context": "Sample phrase one."},
+        {"section": 1, "entry_eng": "Sample phrase one", "entry_rus": "", "content_category": "Documents", "framing": "Generic / Neutral Language", "context": "Sample phrase one."},
         {"section": 2, "entry_eng": "Sample phrase two", "entry_rus": "", "content_category": "Actions", "framing": "Institutional / Bureaucratic Lingo", "context": "Sample phrase two."},
     ]

@@ -18,6 +18,8 @@ Essential documentation for AI agents and contributors. Start here.
 
 | When you need… | Read |
 |----------------|------|
+| **Experiment redo: paths, archive, commands** | [NEXT_AGENT_EXPERIMENT_SETUP.md](NEXT_AGENT_EXPERIMENT_SETUP.md) |
+| **Experiment redo: taxonomy & agent prompts (A vs B)** | [EXPERIMENT_AGENT_PROMPTS.md](EXPERIMENT_AGENT_PROMPTS.md) |
 | **Handoff for next session** | [AGENT_HANDOFF.md](AGENT_HANDOFF.md) |
 | **UX/UI roadmap & meeting scope** | [UI_SCOPE_AND_ROADMAP.md](UI_SCOPE_AND_ROADMAP.md) |
 | **UI display names vs stored taxonomy** | [UI_LABEL_MAP.md](UI_LABEL_MAP.md) |
@@ -32,6 +34,8 @@ Essential documentation for AI agents and contributors. Start here.
 | **Ground truth from HTML (loading, contract, checklist)** | [INSTRUCTIONS_GROUND_TRUTH_HTML.md](INSTRUCTIONS_GROUND_TRUTH_HTML.md) |
 | **Document text view behaviour, dropdown/span fixes** | [TEXT_VIEW_ASSESSMENT.md](TEXT_VIEW_ASSESSMENT.md) |
 | **Places map (extraction, geocoding, report integration)** | [PLACES_MAP_REFERENCE.md](PLACES_MAP_REFERENCE.md) |
+| **Taxonomy churn, report regen, viz/Cyrillic/word-cloud notes (Apr 2026)** | [REPORT_AND_TAXONOMY_UPDATES.md](REPORT_AND_TAXONOMY_UPDATES.md) |
+| **Baseline before per-document viz + dynamic taxonomy** | [PER_DOC_VIZ_BASELINE.md](PER_DOC_VIZ_BASELINE.md) |
 
 ---
 
