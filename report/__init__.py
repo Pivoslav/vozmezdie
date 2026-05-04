@@ -97,6 +97,7 @@ _UI_TRANSLATIONS = {
     "intro_cap_f": {"en": "Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.", "uk": "Альтернативні мітки з таблиці порівняння — кнопка «+»: модальне вікно; пропозиції зберігаються в браузері й експортуються як JSON."},
     "analysis_by_head": {"en": "Analysis by", "uk": "Аналіз за"},
     "viz_standalone_full_report": {"en": "Open full Research Lab", "uk": "Відкрити повну дослідницьку лабораторію"},
+    "site_guide": {"en": "Site guide", "uk": "Путівник по сайту"},
     "viz_standalone_subtitle": {"en": "Single-chart view. Language and chart choice sync with the main lab when possible.", "uk": "Окремий перегляд діаграми. Мова та вибір графіка синхронізуються з основною лабораторією за можливості."},
     "navigation": {"en": "Navigation", "uk": "Навігація"},
     "documents": {"en": "Documents", "uk": "Документи"},
@@ -775,6 +776,12 @@ def run(
     out_path = out_dir / html_name
     viz_out_path = out_dir / viz_html_name
 
+    _docs_root = (_REPORT_ROOT / "docs").resolve()
+    pages_site_build = out_path.resolve().parent == _docs_root
+    hdr_guide: Dict[str, str] = {}
+    if pages_site_build:
+        hdr_guide = {"guide_href": "introduction.html", "guide_i18n_key": "site_guide"}
+
     categories = filter_content_categories_for_taxonomy(list(taxonomy.get("content_categories", [])))
     framings = list(taxonomy.get("framing_strategies", []))
     allowed_cat_ids, allowed_fram_ids = _load_allowed_taxonomy_ids_from_json(config)
@@ -848,7 +855,7 @@ def run(
     )
     parts = [
         _head(body_attrs=body_attrs, build_meta=build_meta),
-        _master_header(),
+        _master_header(**hdr_guide),
         '<div class="app-container">',
         _sidebar(documents, comparison_by_doc),
         '<div class="main-content" id="tab-contents">',
@@ -916,7 +923,7 @@ def run(
 
     standalone_parts = [
         _head(body_attrs='class="standalone-viz-page"', build_meta=build_meta),
-        _master_header(link_href=html_name, link_i18n_key="viz_standalone_full_report"),
+        _master_header(link_href=html_name, link_i18n_key="viz_standalone_full_report", **hdr_guide),
         '<div class="standalone-viz-wrap">',
         '<p class="viz-standalone-subtitle" data-i18n="viz_standalone_subtitle">Single-chart view. Language and chart choice sync with the main lab when possible.</p>',
         _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc),
@@ -940,6 +947,7 @@ def _head(*, body_attrs: str = "", build_meta: str = "") -> str:
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta http-equiv="Cache-Control" content="max-age=0, must-revalidate"/>
 """
         + meta_extra
         + """<title>Vozmezdie — Research Lab</title>
@@ -952,6 +960,8 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .master-header { background: linear-gradient(180deg, #4a4038 0%, #3d352e 100%); color: #f5f0e6; padding: 1.5rem 2rem; border-bottom: 2px solid #8b7355; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
 .master-header-link { color: #e8e4dc; text-decoration: underline; text-underline-offset: 3px; font-size: 0.95rem; margin-left: 1rem; }
 .master-header-link:hover { color: #fff; }
+.master-header-links { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; margin-left: 1rem; }
+.master-header-links .master-header-link { margin-left: 0; }
 .master-header h1 { font-family: 'Crimson Text', Georgia, serif; font-weight: 700; letter-spacing: 0.02em; }
 .master-header-badge { font-family: 'Stardos Stencil', 'Impact', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.12em; padding: 0.4rem 0.75rem; border: 2px solid #8b0000; border-radius: 2px; color: #8b0000; background: rgba(245,240,230,0.15); }
 .master-header .lang-toggle { margin-left: auto; }
@@ -1399,14 +1409,26 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
     )
 
 
-def _master_header(*, link_href: Optional[str] = None, link_i18n_key: Optional[str] = None) -> str:
-    """Top bar: optional single link (e.g. full lab from standalone viz page). Main report omits link."""
-    extra = ""
+def _master_header(
+    *,
+    link_href: Optional[str] = None,
+    link_i18n_key: Optional[str] = None,
+    guide_href: Optional[str] = None,
+    guide_i18n_key: Optional[str] = None,
+) -> str:
+    """Top bar: optional links (site guide on Pages builds; full lab link from standalone viz)."""
+    links: List[str] = []
+    if guide_href and guide_i18n_key:
+        links.append(
+            f'<a class="master-header-link" href="{html_module.escape(guide_href, quote=True)}">'
+            f'<span data-i18n="{html_module.escape(guide_i18n_key)}"></span></a>'
+        )
     if link_href and link_i18n_key:
-        extra = (
+        links.append(
             f'<a class="master-header-link" href="{html_module.escape(link_href, quote=True)}">'
             f'<span data-i18n="{html_module.escape(link_i18n_key)}"></span></a>'
         )
+    extra = f'<span class="master-header-links">{"".join(links)}</span>' if links else ""
     return (
         '<div class="master-header">'
         '<h1>Vozmezdie</h1>'

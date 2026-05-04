@@ -47,6 +47,19 @@ def _sync_original_pdfs_into_docs() -> None:
     shutil.copytree(src, dst)
 
 
+def _sync_introduction_html_into_docs() -> None:
+    """Publish landing/index.html as docs/introduction.html with Pages-relative links."""
+    src = ROOT / "landing" / "index.html"
+    dst = DOCS_DIR / "introduction.html"
+    if not src.is_file():
+        print("Warning: landing/index.html missing — skipping docs/introduction.html.")
+        return
+    text = src.read_text(encoding="utf-8")
+    text = text.replace('href="../docs/index.html"', 'href="index.html"')
+    text = text.replace('href="../data/output/manual_analysis_report.html"', 'href="index.html"')
+    dst.write_text(text, encoding="utf-8")
+
+
 def load_config() -> dict:
     path = ROOT / "config" / "pipeline_config.example.json"
     if not path.exists():
@@ -120,10 +133,11 @@ def main() -> int:
     from report import run as report_run
 
     out_path = report_run(comparison_by_doc, documents, taxonomy, config)
+    _sync_introduction_html_into_docs()
     print(f"GitHub Pages docs written under: {DOCS_DIR}")
     print(f"  Site root: {out_path.name} | standalone viz: lab_visualization.html")
     print("  Mirrored original_pdfs -> docs/original_pdfs (same-origin PDF embedding).")
-    print("  Commit docs/index.html, docs/lab_visualization.html, and docs/original_pdfs/ for Pages.")
+    print("  Commit docs/index.html, docs/lab_visualization.html, docs/introduction.html, and docs/original_pdfs/ for Pages.")
     print("Enable Pages: repo Settings -> Pages -> Deploy from branch /docs (this branch).")
     return 0
 
