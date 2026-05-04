@@ -83,6 +83,7 @@ _UI_TRANSLATIONS = {
     "doc_text_cap_lab": {"en": "Pair this view with the Research Lab visualizations to compare human-led and AI-led analysis.", "uk": "Поєднуйте з візуалізаціями дослідницької лабораторії для порівняння аналізу людини та ШІ."},
     "cyrillic_keyboard_label": {"en": "Cyrillic keyboard (click to insert into search)", "uk": "Кирилична клавіатура (клік — уставити в пошук)"},
     "pdf_view_summary": {"en": "PDF view (scanned document)", "uk": "PDF (скан документа)"},
+    "pdf_open_new_tab": {"en": "Open PDF in new tab", "uk": "Відкрити PDF у новій вкладці"},
     "pdf_view_missing": {"en": "No PDF is available for this document.", "uk": "PDF для цього документа недоступний."},
     "glossary_purpose_label": {"en": "Purpose:", "uk": "Призначення:"},
     "glossary_function_label": {"en": "Function:", "uk": "Функція:"},
@@ -738,6 +739,8 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .colour-legend-details > summary { cursor: pointer; padding: 0.6rem 1rem; font-weight: 600; color: #4a5568; list-style: none; }
 .colour-legend-details > summary::-webkit-details-marker { display: none; }
 .colour-legend-details .colour-legend { margin-top: 0; border: none; background: transparent; }
+.pdf-external-wrap { margin: 0 0 0.5rem; font-size: 0.9rem; }
+.pdf-external-wrap .pdf-open-tab { color: #7c2d12; font-weight: 500; }
 .pdf-view-section .pdf-view-wrap { margin-top: 0.5rem; border: 1px solid #8b7355; border-radius: 4px; overflow: hidden; background: #fffef9; min-height: 120px; }
 .pdf-view-section iframe { width: 100%; height: 72vh; min-height: 440px; border: none; display: block; }
 .pdf-view-placeholder { padding: 1.25rem; color: #6b7280; font-size: 0.95rem; line-height: 1.5; }
@@ -1965,10 +1968,11 @@ def _doc_tab(
     )
     if pdf_href:
         esc_pdf = html_module.escape(pdf_href, quote=True)
-        pdf_section = f"""<details class="collapsible-section pdf-view-section" id="doc-section-pdf-{doc_id}" open>
+        pdf_section = f"""<details class="collapsible-section pdf-view-section" id="doc-section-pdf-{doc_id}">
   <summary data-i18n="pdf_view_summary">PDF view</summary>
   <div class="collapsible-body">
-    <div class="pdf-view-wrap"><iframe src="{esc_pdf}" title="Document PDF"></iframe></div>
+    <p class="pdf-external-wrap"><a class="pdf-open-tab" href="{esc_pdf}" target="_blank" rel="noopener noreferrer" data-i18n="pdf_open_new_tab">Open PDF in new tab</a></p>
+    <div class="pdf-view-wrap"><iframe class="pdf-deferred" data-pdf-src="{esc_pdf}" src="about:blank" title="Document PDF"></iframe></div>
   </div>
 </details>"""
     else:
@@ -3450,6 +3454,15 @@ function initViz() {
     });
   }
 }
+function ensurePdfIframeLoaded(detailsEl) {
+  if (!detailsEl) return;
+  var iframe = detailsEl.querySelector('iframe.pdf-deferred[data-pdf-src]');
+  if (!iframe) return;
+  var url = iframe.getAttribute('data-pdf-src');
+  if (!url) return;
+  var cur = iframe.getAttribute('src') || '';
+  if (cur === 'about:blank' || cur === '') iframe.setAttribute('src', url);
+}
 function openDocumentSection(docId, section) {
   var map = { pdf: 'doc-section-pdf-', text: 'doc-section-text-', compare: 'doc-section-compare-' };
   var pref = map[section];
@@ -3458,6 +3471,7 @@ function openDocumentSection(docId, section) {
   if (!det && section === 'text') det = document.getElementById('doc-text-view-details-' + docId);
   if (det) {
     det.open = true;
+    if (section === 'pdf') ensurePdfIframeLoaded(det);
     setTimeout(function() { det.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 60);
   }
 }
@@ -3481,6 +3495,11 @@ function applySavedReaderLayout() {
 }
 document.addEventListener('DOMContentLoaded', function() {
   setLanguage(UI_LANG);
+  document.querySelectorAll('details.pdf-view-section').forEach(function(det) {
+    det.addEventListener('toggle', function() {
+      if (det.open) ensurePdfIframeLoaded(det);
+    });
+  });
   if (typeof STANDALONE_VIZ !== 'undefined' && STANDALONE_VIZ) {
     initViz();
     function applyStandaloneVizHash() {
