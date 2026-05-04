@@ -1477,7 +1477,7 @@ def _master_header(
     guide_href: Optional[str] = None,
     guide_i18n_key: Optional[str] = None,
 ) -> str:
-    """Top bar: optional links (site guide on Pages builds; full lab link from standalone viz)."""
+    """Top bar: optional links (e.g. full lab link from standalone viz page). Site guide lives on the Introduction tab."""
     links: List[str] = []
     if guide_href and guide_i18n_key:
         links.append(
@@ -2689,7 +2689,7 @@ def _homepage(
 
     viz_section_markup = _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc)
     taxonomy_section = (
-        f'<details class="collapsible-section taxonomy-ref-details" id="lab-feature-taxonomy" open>'
+        f'<details class="collapsible-section taxonomy-ref-details" id="lab-feature-taxonomy">'
         f'<summary><span data-i18n="taxonomy_reference">How Categories and Framing Are Qualified</span></summary>'
         f'<div class="collapsible-body taxonomy-ref-body">'
         f'<p data-i18n="taxonomy_reference_intro" style="margin: 0 0 1rem; color: #4a5568; line-height: 1.55;">This report uses a reference taxonomy from Categories Explained. Segments are classified by content category (what is discussed) and framing strategy (how it is phrased). Below is how each is defined and qualified.</p>'
@@ -3261,7 +3261,7 @@ def _glossary_tab(
     )
     glossary_cyr = _cyrillic_keyboard_html("glossary")
     return (
-        """<details class="collapsible-section lab-glossary-root" id="lab-glossary" open aria-labelledby="lab-glossary-heading">
+        """<details class="collapsible-section lab-glossary-root" id="lab-glossary" aria-labelledby="lab-glossary-heading">
 <summary><span id="lab-glossary-heading" data-i18n="glossary_of_terms">Glossary of Terms</span></summary>
 <div class="collapsible-body lab-glossary-collapsible-body">
 <p data-i18n="glossary_intro" style="margin: 0 0 1rem; color: #4a5568; line-height: 1.55;">Definitions and examples for content categories and framing strategies used in document analysis.</p>
@@ -5036,22 +5036,44 @@ function initViz() {
   var data;
   try { data = JSON.parse(jsonEl.textContent); } catch(e) { return; }
   var cfg = getVizConfig();
+  var labDet = document.getElementById('lab-visualizations');
+  function labVizSectionOpen() {
+    return !labDet || labDet.tagName !== 'DETAILS' || labDet.open;
+  }
+  function syncPanelsAndRender(selection) {
+    document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
+    var panel = document.getElementById('viz-' + selection);
+    if (panel) {
+      panel.classList.add('active');
+      if (labVizSectionOpen()) renderVizPanel('viz-' + selection, data);
+    }
+    buildConfigPanel('viz-' + selection, data);
+  }
   var select = document.getElementById('viz-select');
   if (select) {
     select.value = cfg.selection;
     select.addEventListener('change', function() {
       var v = select.value;
-      saveVizConfig(v, cfg.config);
-      document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
-      var panel = document.getElementById('viz-' + v);
-      if (panel) { panel.classList.add('active'); renderVizPanel('viz-' + v, data); }
-      buildConfigPanel('viz-' + v, data);
+      var cur = getVizConfig();
+      saveVizConfig(v, cur.config);
+      syncPanelsAndRender(v);
     });
   }
-  document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
-  var panel = document.getElementById('viz-' + cfg.selection);
-  if (panel) { panel.classList.add('active'); renderVizPanel('viz-' + cfg.selection, data); }
-  buildConfigPanel('viz-' + cfg.selection, data);
+  syncPanelsAndRender(cfg.selection);
+  if (labDet && labDet.tagName === 'DETAILS') {
+    labDet.addEventListener('toggle', function() {
+      if (!labDet.open) return;
+      var cur = getVizConfig();
+      var sel = (select && select.value) ? select.value : cur.selection;
+      renderVizPanel('viz-' + sel, data);
+      requestAnimationFrame(function() {
+        Object.keys(vizChartInstances).forEach(function(k) {
+          var ch = vizChartInstances[k];
+          if (ch && typeof ch.resize === 'function') ch.resize();
+        });
+      });
+    });
+  }
   var configBody = document.getElementById('viz-config-body');
   if (configBody) {
     configBody.addEventListener('change', function(e) {

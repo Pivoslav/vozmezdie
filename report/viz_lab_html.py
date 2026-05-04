@@ -66,7 +66,7 @@ def per_document_viz_section(dom_suffix: str, viz_json: str, heatmap_html: str, 
 
 
 def viz_lab_visualizations_section(viz_json: str, heatmap_html: str, places_map_srcdoc: str) -> str:
-    return f"""  <details class="collapsible-section lab-visualizations-collapsible" id="lab-visualizations" open>
+    return f"""  <details class="collapsible-section lab-visualizations-collapsible" id="lab-visualizations">
     <summary><span data-i18n="visualizations">Visualizations</span></summary>
     <div class="collapsible-body lab-visualizations-inner">
     <script type="application/json" id="viz-data">{viz_json}</script>
