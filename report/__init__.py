@@ -1297,6 +1297,9 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
   z-index: 300;
 }
 .cyrillic-keyboard-popup-wrap.is-open { display: block; }
+/* Tab-local wrapper: never steal clicks when keyboard is closed (avoids fixed-popup stacking quirks on some hosts). */
+.doc-tab-cyrillic-keyboard { pointer-events: none; }
+.doc-tab-cyrillic-keyboard .cyrillic-keyboard-popup-wrap.is-open { pointer-events: auto; }
 .cyrillic-keyboard-popup-wrap .cyrillic-keyboard-label { margin-top: 0; margin-bottom: 0.35rem; }
 .cyrillic-keyboard-popup-wrap .cyrillic-keyboard { margin-top: 0; margin-bottom: 0; max-width: 100%; }
 .document-text-controls-filters, .comparison-table-controls-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.65rem 1rem; align-items: end; margin-bottom: 0.45rem; }
@@ -1456,6 +1459,8 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .glossary-controls .glossary-label-source { min-width: 220px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
 .glossary-terms-layer.glossary-layer-hidden { display: none !important; }
 .doc-comparison-run-select, .table-comparison-run-select { padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; background: #fff; max-width: 100%; }
+.document-text-controls-sticky .ctl-group:has(.doc-comparison-run-select),
+.comparison-table-controls .comparison-run-toolbar-group { position: relative; z-index: 30; }
 .document-comparison-run-locked { padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; max-width: 100%; opacity: 0.65; cursor: not-allowed; background: #f0ebe3; color: #4a5568; }
 .glossary-searchable-section.hidden { display: none; }
 .glossary-term-item.hidden { display: none; }
@@ -6319,6 +6324,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el.id === 'glossary-search') return;
     if (el.closest && el.closest('.document-search')) return;
     if (el.closest && el.closest('.comparison-table-search')) return;
+    if (el.closest && el.closest('.doc-comparison-run-select')) return;
+    if (el.closest && el.closest('.table-comparison-run-select')) return;
     if (typeof closeAllCyrillicKeyboardPopups === 'function') closeAllCyrillicKeyboardPopups();
   }, true);
   document.addEventListener('keydown', function(e) {
