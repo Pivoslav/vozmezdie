@@ -1,6 +1,7 @@
 Committed snapshots for reproducible GitHub Pages builds.
 
 - comparison_results.json — comparison_by_doc payload passed to the HTML generator.
+- comparison_results_experiment_b.json — secondary run (Experiment B) for dual-run UI; keep in sync with primary fixture doc IDs.
 - places_geocoded.json / places_extracted.json — Places map markup.
 
 Refresh after a new corpus run: copy from data/output/ into this folder, rebuild docs with
