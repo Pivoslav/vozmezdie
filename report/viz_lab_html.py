@@ -1,17 +1,43 @@
 """HTML fragment for Research Lab visualizations (shared full report + standalone chart page)."""
 
 
-def per_document_viz_section(dom_suffix: str, viz_json: str, heatmap_html: str, places_map_srcdoc: str) -> str:
+def per_document_viz_section(
+    dom_suffix: str,
+    viz_json: str,
+    heatmap_html: str,
+    places_map_srcdoc: str,
+    *,
+    report_doc_id: str = "",
+    viz_dual_experiment: bool = False,
+    experiment_label_a: str = "",
+    experiment_label_b: str = "",
+) -> str:
     """Research Lab–style charts scoped to one document. IDs: doc-viz-root-, viz-data-, viz-select- + suffix."""
     # Caller supplies ASCII-safe suffix only (_viz_dom_suffix); embed raw so JS getElementById matches.
     sfx = dom_suffix
+    html_esc = __import__("html").escape
+    esc_did = html_esc(report_doc_id or "", quote=True)
+    doc_exp_row = ""
+    if viz_dual_experiment:
+        la = experiment_label_a or "Experiment A"
+        lb = experiment_label_b or "Experiment B"
+        doc_exp_row = (
+            f'    <div class="doc-viz-experiment-row viz-experiment-switch">\n'
+            f'      <label for="doc-viz-experiment-select-{sfx}">Visualization experiment:</label>\n'
+            f'      <select id="doc-viz-experiment-select-{sfx}" class="doc-viz-experiment-select" '
+            f'data-report-doc-id="{esc_did}">\n'
+            f'        <option value="0">{html_esc(la)}</option>\n'
+            f'        <option value="1">{html_esc(lb)}</option>\n'
+            f'      </select>\n'
+            f'    </div>\n'
+        )
     return f"""  <details class="collapsible-section doc-viz-details" id="doc-section-viz-{sfx}">
     <summary><span data-i18n="document_visualizations">Visualizations for this document</span></summary>
     <div class="collapsible-body">
-  <section class="homepage-section doc-visualizations-section" id="doc-viz-root-{sfx}" data-doc-viz-root="{sfx}">
+  <section class="homepage-section doc-visualizations-section" id="doc-viz-root-{sfx}" data-doc-viz-root="{sfx}" data-report-doc-id="{esc_did}">
     <script type="application/json" id="viz-data-{sfx}">{viz_json}</script>
     <div class="viz-controls doc-viz-controls">
-      <label for="viz-select-{sfx}" data-i18n="select_visualization">Select visualization:</label>
+{doc_exp_row}      <label for="viz-select-{sfx}" data-i18n="select_visualization">Select visualization:</label>
       <select id="viz-select-{sfx}" class="viz-select doc-viz-select">
         <option value="wordcloud" data-i18n="viz_wordcloud">Word Cloud</option>
         <option value="heatmap" data-i18n="viz_heatmap">Category x Framing Heatmap</option>
@@ -43,7 +69,7 @@ def per_document_viz_section(dom_suffix: str, viz_json: str, heatmap_html: str, 
         </div>
         <details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_wordcloud_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_wordcloud_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_wordcloud_technical"></p></div></details>
       </div>
-      <div class="viz-panel doc-viz-panel" data-doc-viz="heatmap">{heatmap_html}<details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_heatmap_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_heatmap_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_heatmap_technical"></p></div></details></div>
+      <div class="viz-panel doc-viz-panel" data-doc-viz="heatmap"><div class="doc-viz-heatmap-mount" id="doc-viz-heatmap-mount-{sfx}">{heatmap_html}</div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_heatmap_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_heatmap_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_heatmap_technical"></p></div></details></div>
       <div class="viz-panel doc-viz-panel" data-doc-viz="per-doc-cat"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="per-doc-cat"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_per_doc_cat_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_per_doc_cat_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_per_doc_cat_technical"></p></div></details></div>
       <div class="viz-panel doc-viz-panel" data-doc-viz="per-doc-fram"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="per-doc-fram"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_per_doc_fram_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_per_doc_fram_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_per_doc_fram_technical"></p></div></details></div>
       <div class="viz-panel doc-viz-panel" data-doc-viz="pie-cat"><div class="chart-wrap"><canvas class="doc-viz-chart" data-doc-chart="pie-cat"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_pie_cat_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_pie_cat_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_pie_cat_technical"></p></div></details></div>
@@ -65,13 +91,35 @@ def per_document_viz_section(dom_suffix: str, viz_json: str, heatmap_html: str, 
 """
 
 
-def viz_lab_visualizations_section(viz_json: str, heatmap_html: str, places_map_srcdoc: str) -> str:
+def viz_lab_visualizations_section(
+    viz_json: str,
+    heatmap_html: str,
+    places_map_srcdoc: str,
+    *,
+    lab_viz_dual: bool = False,
+    experiment_label_a: str = "",
+    experiment_label_b: str = "",
+) -> str:
+    html_esc = __import__("html").escape
+    lab_exp_row = ""
+    if lab_viz_dual:
+        la = experiment_label_a or "Experiment A"
+        lb = experiment_label_b or "Experiment B"
+        lab_exp_row = (
+            f'      <div class="lab-viz-experiment-row viz-experiment-switch">\n'
+            f'        <label for="viz-experiment-select">Visualization experiment:</label>\n'
+            f'        <select id="viz-experiment-select" class="lab-viz-experiment-select">\n'
+            f'          <option value="0">{html_esc(la)}</option>\n'
+            f'          <option value="1">{html_esc(lb)}</option>\n'
+            f'        </select>\n'
+            f'      </div>\n'
+        )
     return f"""  <details class="collapsible-section lab-visualizations-collapsible" id="lab-visualizations">
     <summary><span data-i18n="visualizations">Visualizations</span></summary>
     <div class="collapsible-body lab-visualizations-inner">
     <script type="application/json" id="viz-data">{viz_json}</script>
     <div class="viz-controls">
-      <label for="viz-select" data-i18n="select_visualization">Select visualization:</label>
+{lab_exp_row}      <label for="viz-select" data-i18n="select_visualization">Select visualization:</label>
       <select id="viz-select" class="viz-select">
         <option value="wordcloud" data-i18n="viz_wordcloud">Word Cloud</option>
         <option value="heatmap" data-i18n="viz_heatmap">Category x Framing Heatmap</option>
@@ -110,7 +158,7 @@ def viz_lab_visualizations_section(viz_json: str, heatmap_html: str, places_map_
         </div>
         <details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_wordcloud_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_wordcloud_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_wordcloud_technical"></p></div></details>
       </div>
-      <div class="viz-panel" id="viz-heatmap" data-viz="heatmap">{heatmap_html}<details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_heatmap_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_heatmap_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_heatmap_technical"></p></div></details></div>
+      <div class="viz-panel" id="viz-heatmap" data-viz="heatmap"><div id="viz-heatmap-mount">{heatmap_html}</div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_heatmap_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_heatmap_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_heatmap_technical"></p></div></details></div>
       <div class="viz-panel" id="viz-per-doc-cat" data-viz="per-doc-cat"><div class="chart-wrap"><canvas id="chart-per-doc-cat"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_per_doc_cat_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_per_doc_cat_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_per_doc_cat_technical"></p></div></details></div>
       <div class="viz-panel" id="viz-per-doc-fram" data-viz="per-doc-fram"><div class="chart-wrap"><canvas id="chart-per-doc-fram"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_per_doc_fram_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_per_doc_fram_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_per_doc_fram_technical"></p></div></details></div>
       <div class="viz-panel" id="viz-pie-cat" data-viz="pie-cat"><div class="chart-wrap"><canvas id="chart-pie-cat"></canvas></div><details class="viz-how-calculated"><summary data-i18n="viz_how_calculated">How is this calculated?</summary><div class="viz-calculation-desc"><p class="viz-calc-simple" data-i18n="viz_calc_pie_cat_simple"></p><div class="viz-calc-equations" data-i18n-html="viz_calc_pie_cat_equations"></div><p class="viz-calc-technical" data-i18n="viz_calc_pie_cat_technical"></p></div></details></div>

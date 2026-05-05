@@ -1,0 +1,122 @@
+{
+  "documents": {
+    "original_pdfs_dir": "original_pdfs",
+    "pdf_public_base_url": "https://cdn.jsdelivr.net/gh/Pivoslav/vozmezdie@main",
+    "input_dir": "data/input",
+    "input_dir_ru": "data/russian_originals",
+    "document_map_path": "config/document_map.json",
+    "extensions": [".txt"],
+    "encoding": "utf-8"
+  },
+  "ground_truth": {
+    "path": "data/ground_truth",
+    "pattern": "*.csv",
+    "document_id_from_filename": true,
+    "html_dir": "data/ground_truth/html",
+    "json_rows_dir": "data/experiments/shared/filtered_gt_json"
+  },
+  "compare": {
+    "match_by": "content_rus",
+    "align_rows_by": "model"
+  },
+  "llm": {
+    "provider": "ollama",
+    "model_id": "llama3.1:8b",
+    "api_url": "http://localhost:11434/api/generate",
+    "temperature": 0.3,
+    "max_tokens": 5000,
+    "timeout": 600,
+    "use_context": false,
+    "context_document_ids": [],
+    "use_fixture": true
+  },
+  "output": {
+    "dir": "data/experiments/exp_b_free_segment/pipeline_output",
+    "report_html": "manual_analysis_report.html",
+    "intermediate_json": "comparison_results.json",
+    "comparison_source": "agent_assessments",
+    "agent_assessments_file": "data/experiments/exp_b_free_segment/agent_assessments.json",
+    "lab_visualization_html": "lab_visualization.html"
+  },
+  "taxonomy": {
+    "source_html": "config/Categories Explained.html",
+    "path": "config/taxonomy.json"
+  },
+  "feedback": {
+    "url": "",
+    "email": ""
+  },
+  "report": {
+    "visualizations": {
+      "word_cloud": {
+        "max_words": 80,
+        "weight_factor": 15,
+        "min_word_length": 3,
+        "language": "both",
+        "stopwords": [],
+        "stopwords_eng": [],
+        "stopwords_rus": []
+      }
+    },
+    "experiment_b_agent_assessments_json": "data/experiments/exp_b_free_segment/agent_assessments.json",
+    "document_ui_exclude_framings": ["Generic / Neutral Language"],
+    "ui_translation_overrides": {
+      "comparison_model_side_short": {
+        "en": "Experiment B",
+        "uk": "Експ. B"
+      },
+      "colour_by_llm": {
+        "en": "Colour by: Experiment B",
+        "uk": "Колір за: експ. B"
+      },
+      "colour_by_note": {
+        "en": "Colour by: Experiment B / Human / Both (agree). Boundaries are assessor-defined (free segmentation); pairing uses normalized Russian content. Specific-detail and ideological-layer colours apply only when that filter is not None.",
+        "uk": "Колір за: експ. B / Людина / Обидва (згода). Межі сегментів визначено оцінювачем; співставлення за російським текстом."
+      },
+      "comparison_table": {
+        "en": "Human ground truth vs Experiment B (free segmentation) — Comparison Table",
+        "uk": "Еталон експерта vs експеримент B (вільна сегментація) — таблиця порівняння"
+      },
+      "project_description": {
+        "en": "This Research Lab run is Experiment B: memoranda were read from full Russian originals with assessor-defined segment boundaries (blind to filtered expert sheets), then compared to retained expert labels via Russian-content alignment. Row counts and orphans differ from Experiment A because slices need not match expert tables. The report adds bilingual views, glossary-backed definitions, and corpus visualizations. Technical pipeline fields still use llm_* names internally.",
+        "uk": "Цей прогін лабораторії — експеримент B: повні російські тексти розбито на сегменти оцінювачем (сліпо до відфільтрованого GT), порівняно з еталоном експерта за вирівнюванням російського вмісту. Кількість рядків відрізняється від експ. A. У технічних полях даних досі використовуються імена llm_*."
+      },
+      "intro_cap_c": {
+        "en": "Open comparison tables of expert ground truth vs Experiment B and optional scans (PDF) when configured.",
+        "uk": "Відкривати таблиці порівняння еталону експерта з експериментом B та за потреби PDF."
+      },
+      "doc_text_cap_lab": {
+        "en": "Pair this view with the Research Lab charts to compare expert ground truth and Experiment B side by side.",
+        "uk": "Поєднуйте з графіками лабораторії для порівняння еталону та експерименту B."
+      },
+      "viz_sankey": {
+        "en": "Expert ground truth to Experiment B label flow",
+        "uk": "Потік міток: експерт → експ. B"
+      },
+      "viz_calc_segment_length_simple": {
+        "en": "Whether shorter or longer assessor-defined segments align more often with expert labels after content matching. Each point is a paired row: x = max(entry_eng, entry_rus), y = 1 if both category and framing matched the expert, else 0. We bin by 25 chars; exclude lengths < 50; qualified bins need ≥15 segments (≥5 at a single length). Experiment B uses free boundaries, so lengths reflect coder choices.",
+        "uk": "Залежність збігу з експертом від довжини сегмента (експ. B, вільні межі)."
+      },
+      "viz_calc_agreement_cat_simple": {
+        "en": "How often Experiment B agrees with the expert on each category (content-aligned pairs). matched(cat) = both chose cat; total(cat) = expert chose cat; agreement = 100 × matched / total.",
+        "uk": "Згода експ. B з експертом по категоріях: matched/total (total за експертом)."
+      },
+      "viz_calc_agreement_fram_simple": {
+        "en": "Same as agreement by category, but for framing: Experiment B vs expert.",
+        "uk": "Те саме для фреймінгу між експ. B та експертом."
+      },
+      "viz_calc_confusion_cat_simple": {
+        "en": "How Experiment B category labels map to the expert's on paired rows. Rows = expert, columns = Experiment B.",
+        "uk": "Матриця плутанини категорій: рядки = експерт, стовпці = експ. B."
+      },
+      "viz_calc_confusion_fram_simple": {
+        "en": "Same for framing: expert rows vs Experiment B columns.",
+        "uk": "Матриця фреймінгу: експерт vs експ. B."
+      },
+      "viz_calc_mismatch_simple": {
+        "en": "Error buckets vs expert on paired rows: both_match; cat_only; fram_only; both_mismatch.",
+        "uk": "Типи розбіжностей з еталоном експерта для експ. B."
+      }
+    }
+  }
+}

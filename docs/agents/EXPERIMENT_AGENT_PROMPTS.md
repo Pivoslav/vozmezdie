@@ -125,6 +125,8 @@ Before finishing, verify row counts match each `input_segments` file.
 
 ## Experiment B — Free segmentation
 
+**Where it lives:** `data/experiments/exp_b_free_segment/` (the folder name is `exp_b_free_segment`; there is no top-level `exp_b/` directory). This is the document-led counterpart to Experiment A’s fixed slices.
+
 ### Inputs
 
 1. `data/experiments/exp_b_free_segment/originals_index.json` — document ids and paths to Russian `.txt` files (project-relative).

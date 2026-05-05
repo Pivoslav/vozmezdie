@@ -80,20 +80,20 @@
     },
     {
       "document_id": "1262_149-150",
-      "display_name": "1262 149-150.txt",
-      "russian_original_project_relative": "data/russian_originals/1262 149-150.txt",
+      "display_name": "1262_149-150.txt",
+      "russian_original_project_relative": "data/russian_originals/1262_149-150.txt",
       "rus_filename_source_of_truth": "FineReader-016-0001-1262-149-50-Original_Rus.txt"
     },
     {
       "document_id": "1262_198-200",
-      "display_name": "1262 198-200.txt",
-      "russian_original_project_relative": "data/russian_originals/1262 198-200.txt",
+      "display_name": "1262_198-200.txt",
+      "russian_original_project_relative": "data/russian_originals/1262_198-200.txt",
       "rus_filename_source_of_truth": "FineReader-016-0001-1262-198-200-Original_Rus.txt"
     },
     {
       "document_id": "1262_28-32",
-      "display_name": "1262 28-32.txt",
-      "russian_original_project_relative": "data/russian_originals/1262 28-32.txt",
+      "display_name": "1262_28-32.txt",
+      "russian_original_project_relative": "data/russian_originals/1262_28-32.txt",
       "rus_filename_source_of_truth": "RUS - 016-0001-1262-0028-32_Rus.txt"
     }
   ]

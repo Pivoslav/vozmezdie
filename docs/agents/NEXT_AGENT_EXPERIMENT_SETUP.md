@@ -79,6 +79,8 @@ python run_report_only.py
 
 ## 4. Experiment B — free segmentation
 
+Folder on disk: **`data/experiments/exp_b_free_segment/`** (this *is* Experiment B; naming is historical).
+
 | Item | Path |
 |------|------|
 | **READ** document list + Russian paths | **`data/experiments/exp_b_free_segment/originals_index.json`** (field `russian_original_project_relative`) |
@@ -89,12 +91,16 @@ python run_report_only.py
 
 **After editing:**
 
+Use **`config/pipeline_config.experiment_b.json`** so the Research Lab UI reads ``Experiment B``, assessments default to this folder, and outputs land in **`data/experiments/exp_b_free_segment/pipeline_output/`** (without overwriting Experiment A under ``data/output``):
+
 ```bash
-export PIPELINE_CONFIG=config/pipeline_config.experiment_redo.json
+export PIPELINE_CONFIG=config/pipeline_config.experiment_b.json
 python run.py --agent-assessments --agent-assessments-file=data/experiments/exp_b_free_segment/agent_assessments.json
 ```
 
----
+The shared redo config (**`pipeline_config.experiment_redo.json`**) remains the default for **Experiment A** (human-aligned slices). For Experiment B only, avoid relying on that file unless you override paths and UI strings manually.
+
+See **`data/experiments/exp_b_free_segment/README.md`** for preliminary HTML vs full report and report-only commands.
 
 ## 5. Audit / counts
 

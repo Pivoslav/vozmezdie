@@ -108,6 +108,99 @@ def test_compare_length_mismatch():
     assert r["category_accuracy_pct"] == 100.0
 
 
+def test_compare_llm_primary_uses_assessor_segment_text():
+    """Experiment B: align_rows_by model emits one row per agent segment; EN/RUS columns follow agent."""
+    llm_rows = [
+        {
+            "section": 10,
+            "entry_eng": "assessor_segment_alpha",
+            "entry_rus": "",
+            "content_category": "Actors",
+            "framing": "Institutional / Bureaucratic Lingo",
+            "context": "",
+        },
+        {
+            "section": 11,
+            "entry_eng": "assessor_segment_beta",
+            "entry_rus": "",
+            "content_category": "Actions",
+            "framing": "Institutional / Bureaucratic Lingo",
+            "context": "",
+        },
+    ]
+    gt_rows = [
+        {
+            "section": 1,
+            "entry_eng": "unused_gt_slice",
+            "entry_rus": "",
+            "content_category": "Documents",
+            "framing": "Institutional / Bureaucratic Lingo",
+            "context": "",
+        },
+        {
+            "section": 2,
+            "entry_eng": "assessor_segment_alpha",
+            "entry_rus": "",
+            "content_category": "Actors",
+            "framing": "Institutional / Bureaucratic Lingo",
+            "context": "",
+        },
+        {
+            "section": 3,
+            "entry_eng": "assessor_segment_beta",
+            "entry_rus": "",
+            "content_category": "Places",
+            "framing": "Institutional / Bureaucratic Lingo",
+            "context": "",
+        },
+    ]
+    result = compare_run(
+        {"doc1": llm_rows},
+        {"doc1": gt_rows},
+        config={"compare": {"align_rows_by": "model"}},
+    )
+    rows = result["doc1"]["aligned_rows"]
+    assert len(rows) == 2
+    assert rows[0]["entry_eng"] == "assessor_segment_alpha"
+    assert rows[1]["entry_eng"] == "assessor_segment_beta"
+    assert rows[0]["paired_with_llm"] is True
+    assert rows[1]["paired_with_llm"] is True
+    assert rows[0]["category_match"] is True
+    assert rows[1]["category_match"] is False
+
+
+def test_compare_llm_primary_no_gt_segment_text_fallback():
+    """Assessor rows never inherit GT segment wording in EN/RUS columns when paired."""
+    llm_rows = [
+        {
+            "section": 1,
+            "entry_eng": "",
+            "entry_rus": "только русский",
+            "content_category": "Actors",
+            "framing": "Institutional / Bureaucratic Lingo",
+            "context": "",
+        }
+    ]
+    gt_rows = [
+        {
+            "section": 99,
+            "entry_eng": "Expert English that must not appear",
+            "entry_rus": "только русский",
+            "content_category": "Actors",
+            "framing": "Institutional / Bureaucratic Lingo",
+            "context": "",
+        }
+    ]
+    result = compare_run(
+        {"doc1": llm_rows},
+        {"doc1": gt_rows},
+        config={"compare": {"align_rows_by": "model"}},
+    )
+    row = result["doc1"]["aligned_rows"][0]
+    assert row["entry_eng"] == ""
+    assert row["entry_rus"] == "только русский"
+
+
 def test_compare_index_mode():
     """With match_by=index, alignment is by row index (legacy)."""
     llm_rows = [{"section": 1, "entry_eng": "A", "entry_rus": "", "content_category": "Actors", "framing": "G", "context": "A"}]

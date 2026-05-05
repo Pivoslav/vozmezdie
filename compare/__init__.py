@@ -4,8 +4,13 @@ Supports index-based alignment (legacy), content-based matching by entry_eng (co
 or by entry_rus (content_rus) for Russian-first pipeline.
 Output: per document { aligned_rows, n_human, n_llm, n_matched, category_accuracy_pct, framing_accuracy_pct, both_match_pct }.
 
-With match_by content / content_rus, aligned_rows lists every ground-truth segment in order; rows without an
-LLM pair have empty llm_category / llm_framing and paired_with_llm False. Accuracy percentages use only
+With match_by content / content_rus and default align_rows_by ground_truth, aligned_rows list every
+ground-truth segment in order; rows without an LLM pair have empty llm_category / llm_framing and
+paired_with_llm False.
+
+With align_rows_by model (Experiment B / free segmentation), aligned_rows list every model (agent/LLM)
+segment in order; entries come from the model row; expert labels are filled when Russian/English content
+pairs with a GT row; unmatched model segments keep empty human_* fields. Accuracy percentages use only
 paired_with_llm rows (same denominator as n_matched).
 """
 from typing import Dict, List, Any, Optional, Tuple, Callable
@@ -183,6 +188,63 @@ def _align_by_content(
     return normalized, n_human, n_llm, n_pair
 
 
+def _align_by_content_llm_primary(
+    llm_rows: List[Dict[str, Any]],
+    gt_rows: List[Dict[str, Any]],
+    match_rus: bool = False,
+) -> Tuple[List[Dict[str, Any]], int, int, int]:
+    """
+    One aligned row per model/agent segment (segment text from the model row).
+    Pair each model row to at most one GT row via the same content matching as GT-primary mode.
+    """
+    n_human = len(gt_rows)
+    n_llm = len(llm_rows)
+    pair_list = _content_match_pairs_rus(gt_rows, llm_rows) if match_rus else _content_match_pairs(gt_rows, llm_rows)
+    llm_to_gt = {llm_i: gt_i for gt_i, llm_i in pair_list}
+    n_pair = len(pair_list)
+
+    raw_rows: List[Dict[str, Any]] = []
+    for llm_i in range(len(llm_rows)):
+        llm = llm_rows[llm_i]
+        gt_i = llm_to_gt.get(llm_i)
+        if gt_i is not None:
+            gt = gt_rows[gt_i]
+            cat_match = (llm.get("content_category") or "").strip() == (gt.get("content_category") or "").strip()
+            fram_match = (llm.get("framing") or "").strip() == (gt.get("framing") or "").strip()
+            raw_rows.append({
+                "section": llm.get("section", gt.get("section", "")),
+                "entry_eng": llm.get("entry_eng") or "",
+                "entry_rus": llm.get("entry_rus") or "",
+                "llm_category": llm.get("content_category", ""),
+                "llm_framing": llm.get("framing", ""),
+                "human_category": gt.get("content_category", ""),
+                "human_framing": gt.get("framing", ""),
+                "context": llm.get("context", gt.get("context", "")),
+                "category_match": cat_match,
+                "framing_match": fram_match,
+                "both_match": cat_match and fram_match,
+                "paired_with_llm": True,
+            })
+        else:
+            raw_rows.append({
+                "section": llm.get("section", llm_i + 1),
+                "entry_eng": llm.get("entry_eng", ""),
+                "entry_rus": llm.get("entry_rus", ""),
+                "llm_category": llm.get("content_category", ""),
+                "llm_framing": llm.get("framing", ""),
+                "human_category": "",
+                "human_framing": "",
+                "context": llm.get("context", ""),
+                "category_match": False,
+                "framing_match": False,
+                "both_match": False,
+                "paired_with_llm": False,
+            })
+
+    normalized = [normalize_comparison_row_for_canonical_storage(r) for r in raw_rows]
+    return normalized, n_human, n_llm, n_pair
+
+
 def run(
     llm_by_doc: Dict[str, List[Dict[str, Any]]],
     gt_by_doc: Dict[str, List[Dict[str, Any]]],
@@ -192,10 +254,17 @@ def run(
     Align LLM and ground-truth rows per document; compute accuracy.
     When config.compare.match_by is "index", align by row index (legacy).
     When "content_rus", match by entry_rus (Russian); when "content", match by entry_eng.
+
+    config.compare.align_rows_by:
+      - "ground_truth" (default): one row per expert GT segment; entry columns favour GT text (Experiment A style).
+      - "model" (aliases "llm", "agent"): one row per model/agent segment; entry columns use assessor text
+        while expert labels attach via content pairing (Experiment B / free segmentation tables).
     """
     compare_cfg = (config or {}).get("compare", {})
     match_by = compare_cfg.get("match_by", "content")
     match_rus = match_by == "content_rus"
+    align_rows_by = str(compare_cfg.get("align_rows_by", "ground_truth") or "ground_truth").strip().lower()
+    model_primary = align_rows_by in ("model", "llm", "agent")
 
     doc_ids = sorted(set(llm_by_doc.keys()) | set(gt_by_doc.keys()))
     result = {}
@@ -225,7 +294,12 @@ def run(
                 "both_match_pct": round(both_pct, 1),
             }
             continue
-        aligned, n_human, n_llm, n_matched = _align_by_content(llm_rows, gt_rows, match_rus=match_rus)
+        if model_primary:
+            aligned, n_human, n_llm, n_matched = _align_by_content_llm_primary(
+                llm_rows, gt_rows, match_rus=match_rus,
+            )
+        else:
+            aligned, n_human, n_llm, n_matched = _align_by_content(llm_rows, gt_rows, match_rus=match_rus)
         paired_only = [r for r in aligned if r.get("paired_with_llm")]
         if not paired_only:
             cat_pct = fram_pct = both_pct = 0.0

@@ -57,6 +57,12 @@
         "stopwords_rus": []
       }
     },
+    "secondary_comparison_json": "data/experiments/exp_b_free_segment/pipeline_output/comparison_results.json",
+    "experiment_b_agent_assessments_json": "data/experiments/exp_b_free_segment/agent_assessments.json",
+    "viz_experiment_labels": [
+      "Experiment A (human-aligned slices)",
+      "Experiment B (free segmentation)"
+    ],
     "document_ui_exclude_framings": ["Generic / Neutral Language"],
     "ui_translation_overrides": {
       "comparison_model_side_short": {

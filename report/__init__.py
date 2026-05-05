@@ -76,6 +76,82 @@ def _report_framing_colour(fram: Optional[str], colours: Dict[str, str]) -> str:
     return colours.get(n, colours.get(raw, "#333"))
 
 
+def _hex_to_rgba_css(hex_col: str, alpha: float = 0.18) -> str:
+    """Tint pill backgrounds from a #RRGGBB colour (comparison table chips)."""
+    if not hex_col or not isinstance(hex_col, str):
+        return f"rgba(136,136,136,{alpha})"
+    h = hex_col.strip().lstrip("#")
+    if len(h) == 3:
+        h = "".join(c * 2 for c in h)
+    if len(h) != 6:
+        return f"rgba(136,136,136,{alpha})"
+    try:
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+    except ValueError:
+        return f"rgba(136,136,136,{alpha})"
+    return f"rgba({r},{g},{b},{alpha})"
+
+
+def _comparison_axis_cell_html(
+    *,
+    match: bool,
+    llm_disp: str,
+    human_disp: str,
+    llm_raw: str,
+    human_raw: str,
+    colour_map: Dict[str, str],
+    framing: bool,
+    expert_compare: bool = False,
+) -> str:
+    """Category or framing column.
+
+    When ``expert_compare`` (Experiment A vs expert GT): always show LLM and Expert labels side by side.
+    Otherwise (e.g. Experiment B): model as primary pill; expert/annotator human line only on mismatch.
+    """
+    llm_disp_esc = html_module.escape(llm_disp)
+    human_disp_esc = html_module.escape(human_disp) if (human_disp or "").strip() else "\u2014"
+    if framing:
+        llm_hex = _report_framing_colour(llm_raw, colour_map)
+        human_hex = _report_framing_colour(human_raw, colour_map)
+        pill_cls = "comparison-pill comparison-pill-fram"
+    else:
+        llm_hex = _report_category_colour(llm_raw, colour_map)
+        human_hex = _report_category_colour(human_raw, colour_map)
+        pill_cls = "comparison-pill comparison-pill-cat"
+    if expert_compare:
+        llm_bg = _hex_to_rgba_css(llm_hex, 0.17)
+        hum_bg = _hex_to_rgba_css(human_hex, 0.17)
+        llm_pill = (
+            f'<span class="{pill_cls}" style="border-color:{llm_hex};color:{llm_hex};background:{llm_bg}">'
+            f"{llm_disp_esc}</span>"
+        )
+        human_pill = (
+            f'<span class="{pill_cls}" style="border-color:{human_hex};color:{human_hex};background:{hum_bg}">'
+            f"{human_disp_esc}</span>"
+        )
+        return (
+            '<div class="comparison-axis-cell comparison-axis-expert-pair">'
+            '<div class="comparison-side-line"><strong><span data-i18n="comparison_model_side_short">LLM</span>:</strong> '
+            f"{llm_pill}</div>"
+            '<div class="comparison-side-line"><strong><span data-i18n="comparison_expert_side_short">Expert</span>:</strong> '
+            f"{human_pill}</div></div>"
+        )
+    bg = _hex_to_rgba_css(llm_hex, 0.17)
+    pill = (
+        f'<span class="{pill_cls}" style="border-color:{llm_hex};color:{llm_hex};background:{bg}">'
+        f"{llm_disp_esc}</span>"
+    )
+    if match:
+        return f'<div class="comparison-axis-cell">{pill}</div>'
+    note = (
+        f'<div class="comparison-annotator-ref"><span class="comparison-annotator-tag" '
+        f'data-i18n="comparison_human_side_short">Human</span>'
+        f'<span class="comparison-annotator-sep">·</span>'
+        f'<span class="comparison-human-value" style="color:{human_hex}">{human_disp_esc}</span></div>'
+    )
+    return f'<div class="comparison-axis-cell">{pill}{note}</div>'
+
+
 # Fallback palette for categories/framings that have no colour assigned (#333 or missing)
 _DEFAULT_PALETTE = [
     "#6366f1", "#ec4899", "#84cc16", "#0ea5e9", "#a855f7", "#22c55e",
@@ -153,8 +229,28 @@ _UI_TRANSLATIONS = {
     "reader_layout_stacked": {"en": "Stacked", "uk": "Стовпчиком"},
     "viz_open_new_tab": {"en": "Open this chart in new tab", "uk": "Відкрити цю діаграму в новій вкладці"},
     "comparison_table": {"en": "Human-led vs AI-led Analysis — Comparison Table", "uk": "Людині проти ШІ — таблиця порівняння"},
+    "comparison_b_header_detail": {"en": "Model · specific detail", "uk": "Модель · конкретна деталь"},
+    "comparison_b_header_framing": {"en": "Model · ideological layer", "uk": "Модель · ідеологічний шар"},
+    "comparison_b_col_row_num": {"en": "#", "uk": "№"},
+    "comparison_table_run_b_blurb": {
+        "en": "This is a separate experiment table (different segments and alignment than Experiment A). Cells emphasize the model; expert labels appear when they disagree.",
+        "uk": "Окрема експериментальна таблиця (інші сегменти й вирівнювання, ніж у експерименті A). Клітинки підкреслюють модель; мітки експерта показано лише за розбіжності.",
+    },
+    "exp_b_prelim_summary": {
+        "en": "Experiment B — assessor segments (no comparison)",
+        "uk": "Експеримент B — сегменти оцінювача (без порівняння)",
+    },
+    "exp_b_prelim_intro": {
+        "en": "Rows come from the Experiment B agent assessments file (same source as preliminary_results.html): assessor-defined segments with category, framing, Russian and English text, and context. There are no expert or model comparison columns.",
+        "uk": "Рядки з файлу оцінок експерименту B (джерело як у preliminary_results.html): межі та мітки оцінювача; без стовпців порівняння з експертом чи моделлю.",
+    },
+    "exp_b_prelim_empty_doc": {
+        "en": "No assessor segments are recorded for this document in the configured Experiment B agent assessments file.",
+        "uk": "У налаштованому файлі оцінок експерименту B для цього документа немає сегментів.",
+    },
     "comparison_model_side_short": {"en": "LLM", "uk": "LLM"},
     "comparison_human_side_short": {"en": "Human", "uk": "Людина"},
+    "comparison_expert_side_short": {"en": "Expert", "uk": "Експерт"},
     "section": {"en": "Section", "uk": "Розділ"},
     "entry_eng": {"en": "Entry (ENG)", "uk": "Запис (АНГЛ)"},
     "entry_rus": {"en": "Entry (RUS)", "uk": "Запис (РУС)"},
@@ -904,6 +1000,15 @@ def run(
         f'data-main-report="{html_module.escape(html_name, quote=True)}" '
         f'data-lab-viz="{html_module.escape(viz_html_name, quote=True)}"'
     )
+    sec_cbd_docs = _load_secondary_comparison_by_doc(config)
+    exp_b_agent_by_doc = _load_experiment_b_agent_assessments(config)
+    report_cfg_docs = config.get("report") or {}
+    labels_raw = report_cfg_docs.get("viz_experiment_labels")
+    if isinstance(labels_raw, list) and len(labels_raw) >= 2:
+        viz_lab_a, viz_lab_b = str(labels_raw[0]), str(labels_raw[1])
+    else:
+        viz_lab_a, viz_lab_b = "Experiment A (human-aligned slices)", "Experiment B (free segmentation)"
+
     from_ce = bool(glossary_cats or glossary_fram)
     glossary_panel_html = _glossary_tab(
         glossary_categories,
@@ -914,6 +1019,8 @@ def run(
         fram_colours,
         from_categories_explained=from_ce,
         config=config,
+        comparison_secondary_by_doc=sec_cbd_docs,
+        viz_experiment_labels=(viz_lab_a, viz_lab_b),
     )
     home_html, viz_json, heatmap_html, places_map_srcdoc = _homepage(
         comparison_by_doc,
@@ -930,7 +1037,7 @@ def run(
         _head(body_attrs=body_attrs, build_meta=build_meta),
         _master_header(**hdr_guide),
         '<div class="app-container">',
-        _sidebar(documents, comparison_by_doc),
+        _sidebar(documents),
         '<div class="main-content" id="tab-contents">',
         _intro_tab(),
         home_html,
@@ -951,6 +1058,12 @@ def run(
         full_rus = doc.get("raw_text") or ""
         pdf_href = _pdf_href_for_report(doc, out_path.parent, config=config)
         comparison_script = _json_for_html_script(aligned)
+        comp_b = (sec_cbd_docs.get(doc_id) if sec_cbd_docs else None) or {}
+        aligned_b = comp_b.get("aligned_rows", []) if sec_cbd_docs else None
+        exp_b_agent_rows_arg = None
+        if exp_b_agent_by_doc is not None:
+            raw_agent = exp_b_agent_by_doc.get(doc_id)
+            exp_b_agent_rows_arg = list(raw_agent) if isinstance(raw_agent, list) else []
         doc_viz_section_html = _build_per_document_viz_section(
             doc_id,
             comparison_by_doc,
@@ -961,6 +1074,8 @@ def run(
             glossary_categories,
             glossary_framings,
             framings_ui,
+            comparison_secondary_by_doc=sec_cbd_docs,
+            viz_experiment_labels=(viz_lab_a, viz_lab_b) if sec_cbd_docs else None,
         )
         viz_dom_suffix = _viz_dom_suffix(doc_id) if doc_viz_section_html else ""
         parts.append(
@@ -985,6 +1100,15 @@ def run(
                 comparison_json_script=comparison_script,
                 doc_viz_section_html=doc_viz_section_html,
                 viz_dom_suffix=viz_dom_suffix,
+                comparison_secondary_aligned=aligned_b,
+                secondary_cat_pct=comp_b.get("category_accuracy_pct", 0) if sec_cbd_docs else None,
+                secondary_fram_pct=comp_b.get("framing_accuracy_pct", 0) if sec_cbd_docs else None,
+                secondary_both_pct=comp_b.get("both_match_pct", 0) if sec_cbd_docs else None,
+                secondary_n_human=comp_b.get("n_human", 0) if sec_cbd_docs else None,
+                secondary_n_llm=comp_b.get("n_llm", 0) if sec_cbd_docs else None,
+                secondary_n_matched=comp_b.get("n_matched", len(aligned_b or [])) if sec_cbd_docs else None,
+                viz_experiment_labels=(viz_lab_a, viz_lab_b) if sec_cbd_docs else None,
+                experiment_b_agent_rows=exp_b_agent_rows_arg,
             )
         )
 
@@ -999,7 +1123,14 @@ def run(
         _master_header(link_href=html_name, link_i18n_key="viz_standalone_full_report", **hdr_guide),
         '<div class="standalone-viz-wrap">',
         '<p class="viz-standalone-subtitle" data-i18n="viz_standalone_subtitle">Single-chart view. Language and chart choice sync with the main lab when possible.</p>',
-        _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc),
+        _viz_lab_visualizations_section(
+            viz_json,
+            heatmap_html,
+            places_map_srcdoc,
+            lab_viz_dual=bool(sec_cbd_docs),
+            experiment_label_a=viz_lab_a,
+            experiment_label_b=viz_lab_b,
+        ),
         "</div>",
         _script(categories, framings_ui, term_synonyms, standalone_viz=True, ui_translations=ui_tr),
         "</body></html>",
@@ -1067,6 +1198,23 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .comparison-table th { background: #4a5568; color: #f5f0e6; padding: 1rem; text-align: left; font-weight: 600; border-bottom: 1px solid #8b7355; }
 .comparison-table td { padding: 1rem; border-bottom: 1px solid #e8e4dc; vertical-align: top; }
 .comparison-table tr:hover { background: #f5f0e6; }
+.comparison-run-stack { margin-top: 1rem; }
+.exp-b-prelim-intro { font-size: 0.88rem; color: #4a5568; margin: 0 0 1rem; max-width: 52rem; line-height: 1.5; }
+.exp-b-prelim-empty { color: #6b7280; font-size: 0.92rem; margin: 0; }
+.exp-b-prelim-pill { display: inline-block; padding: 0.12rem 0.45rem; border-radius: 3px; font-size: 0.78rem; line-height: 1.35; border: 1px solid; background: rgba(255,255,255,0.85); max-width: 100%; word-break: break-word; }
+.table-exp-b-prelim { margin-top: 0; }
+.table-exp-b-prelim.comparison-table { margin-top: 0; }
+.comparison-run-table-panel .comparison-table { margin-top: 0; border-radius: 0 0 4px 4px; }
+.comparison-run-table-banner { font-size: 0.95rem; font-weight: 700; padding: 0.5rem 0.75rem; border: 1px solid #8b7355; border-bottom: none; border-radius: 4px 4px 0 0; font-family: inherit; }
+.comparison-run-table-banner-a { background: #4a5568; color: #f5f0e6; }
+.comparison-run-table-banner-b { background: #5c4d3d; color: #f5f0e6; border-color: #6b5344; }
+.comparison-run-table-blurb { font-size: 0.82rem; line-height: 1.45; color: #4a453c; margin: 0; padding: 0.45rem 0.65rem; background: #ebe4d8; border: 1px solid #c4b8a8; border-top: none; }
+.comparison-table-experiment-b { border-color: #7a6555; box-shadow: 0 2px 6px rgba(60, 48, 36, 0.12); }
+.comparison-table-experiment-b th { background: #6b5344; color: #faf6ef; border-bottom-color: #5c4d3d; }
+.comparison-table-experiment-b td { font-size: 0.92rem; }
+.comparison-cell-segment-rus { font-family: Consolas, "Courier New", monospace; font-size: 0.82rem; white-space: pre-wrap; word-break: break-word; }
+.comparison-cell-segment-eng { max-width: 28rem; }
+.comparison-row-index-num { text-align: center; width: 2.25rem; color: #64748b; font-variant-numeric: tabular-nums; font-weight: 600; }
 .comparison-table-controls { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.65rem 0.85rem; align-items: end; margin-bottom: 1rem; }
 .comparison-table-controls input, .comparison-table-controls select { padding: 0.5rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; background: #fff; width: 100%; max-width: 100%; box-sizing: border-box; }
 .comparison-table-controls .comparison-table-search { grid-column: 1 / -1; min-width: 0; max-width: min(100%, 40rem); width: 100%; }
@@ -1101,8 +1249,16 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .label-suggestions-json-store { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 .doc-entry-highlight-brief { animation: highlightBrief 2s ease-out forwards; }
 @keyframes highlightBrief { 0% { background-color: rgba(255, 235, 59, 0.7); } 70% { background-color: rgba(255, 235, 59, 0.4); } 100% { background-color: transparent; } }
-.category-match, .framing-match { background: rgba(45,90,39,0.15); color: #2d5a27; }
-.category-mismatch, .framing-mismatch { background: rgba(139,0,0,0.12); color: #8b0000; }
+.category-match, .framing-match { background: transparent; box-shadow: inset 3px 0 0 rgba(45, 90, 39, 0.42); }
+.category-mismatch, .framing-mismatch { background: transparent; box-shadow: inset 3px 0 0 rgba(180, 55, 55, 0.42); }
+.comparison-axis-cell { vertical-align: top; }
+.comparison-pill { display: inline-block; padding: 0.12rem 0.48rem; border-radius: 3px; font-size: 0.74rem; line-height: 1.35; font-weight: 600; white-space: nowrap; border: 1px solid; max-width: 100%; box-sizing: border-box; vertical-align: middle; }
+.comparison-annotator-ref { margin-top: 0.32rem; font-size: 0.68rem; line-height: 1.35; color: #64748b; max-width: 22rem; }
+.comparison-annotator-tag { font-weight: 600; color: #94a3b8; }
+.comparison-annotator-sep { margin: 0 0.28rem; color: #cbd5e1; font-weight: 400; }
+.comparison-human-value { font-weight: 500; opacity: 0.88; }
+.comparison-axis-expert-pair .comparison-side-line { margin-top: 0.28rem; line-height: 1.45; }
+.comparison-axis-expert-pair .comparison-side-line:first-child { margin-top: 0; }
 .context-cell { max-width: 300px; font-size: 0.85rem; color: #4a5568; }
 .document-text-view { margin-bottom: 2rem; }
 .document-text-controls { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: flex-end; margin-bottom: 0.75rem; }
@@ -1295,6 +1451,12 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .glossary-controls .glossary-filter-wrap { display: flex; align-items: center; gap: 0.5rem; }
 .glossary-controls .glossary-filter-wrap label { font-size: 0.9rem; color: #4a5568; white-space: nowrap; }
 .glossary-controls .glossary-doc-filter { min-width: 200px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
+.glossary-controls .glossary-label-source-wrap { display: flex; align-items: center; gap: 0.5rem; flex: 1 1 100%; }
+.glossary-controls .glossary-label-source-wrap label { font-size: 0.9rem; color: #4a5568; white-space: nowrap; }
+.glossary-controls .glossary-label-source { min-width: 220px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
+.glossary-terms-layer.glossary-layer-hidden { display: none !important; }
+.doc-comparison-run-select, .table-comparison-run-select { padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; background: #fff; max-width: 100%; }
+.document-comparison-run-locked { padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; max-width: 100%; opacity: 0.65; cursor: not-allowed; background: #f0ebe3; color: #4a5568; }
 .glossary-searchable-section.hidden { display: none; }
 .glossary-term-item.hidden { display: none; }
 .glossary-view-link { color: #8b0000; text-decoration: none; font-weight: 600; }
@@ -1405,7 +1567,11 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .viz-select { padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; min-width: 260px; }
 .viz-config-panel { margin-top: 1rem; border: 1px solid rgba(139,115,85,0.4); border-radius: 4px; background: #e8e4dc; }
 .viz-config-panel summary { padding: 0.5rem 1rem; cursor: pointer; font-weight: 500; }
-.doc-viz-controls { flex-direction: column; align-items: stretch; gap: 0.65rem 1rem; }
+.lab-visualizations-inner .viz-controls .lab-viz-experiment-row { grid-column: 1 / -1; width: 100%; margin-bottom: 0.35rem; }
+.lab-viz-experiment-row, .doc-viz-experiment-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; }
+.lab-viz-experiment-row label, .doc-viz-experiment-row label { font-size: 0.9rem; color: #4a5568; }
+.lab-viz-experiment-select, .doc-viz-experiment-select { min-width: 12rem; max-width: 100%; padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; background: #fff; font-family: inherit; box-sizing: border-box; }
+.doc-viz-controls .doc-viz-experiment-row { width: 100%; }
 .doc-viz-controls > label { margin-bottom: 0; }
 .doc-viz-controls .doc-viz-select { width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
 .doc-viz-controls .doc-viz-config-panel { margin-top: 0; width: 100%; min-width: 0; align-self: stretch; box-sizing: border-box; }
@@ -1607,6 +1773,85 @@ def _places_map_data_dir(config: Dict[str, Any]) -> Path:
     return primary
 
 
+def _load_secondary_comparison_by_doc(config: Dict[str, Any]) -> Optional[Dict[str, Dict[str, Any]]]:
+    """Optional second comparison payload (e.g. Experiment B) for dual Research Lab viz."""
+    report_cfg = config.get("report") or {}
+    rel = (report_cfg.get("secondary_comparison_json") or "").strip()
+    if not rel:
+        return None
+    path = Path(rel)
+    if not path.is_absolute():
+        path = _REPORT_ROOT / path
+    if not path.is_file():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    cbd = raw.get("comparison_by_doc") or {}
+    if not isinstance(cbd, dict) or not cbd:
+        return None
+    return normalize_comparison_by_doc(cbd)
+
+
+def _load_experiment_b_agent_assessments(config: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    """Optional Experiment B assessor segments file (same source as preliminary_results.html).
+
+    Keys are document IDs; values are lists of segment dicts with content_category, framing,
+    entry_eng, entry_rus, context, section. Controlled by ``report.experiment_b_agent_assessments_json``.
+    """
+    report_cfg = config.get("report") or {}
+    rel = (report_cfg.get("experiment_b_agent_assessments_json") or "").strip()
+    if not rel:
+        return None
+    path = Path(rel)
+    if not path.is_absolute():
+        path = _REPORT_ROOT / path
+    if not path.is_file():
+        return None
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    if not isinstance(raw, dict):
+        return None
+    return raw
+
+
+def _experiment_b_agent_only_table_rows_html(
+    rows: List[Dict[str, Any]],
+    cat_colours: Dict[str, str],
+    fram_colours: Dict[str, str],
+) -> str:
+    """Single-axis assessor table: # · category · framing · RU · EN · context (no GT/model comparison)."""
+    sorted_rows = sorted(rows, key=lambda r: r.get("section", 0))
+    out: List[str] = []
+    for i, r in enumerate(sorted_rows, start=1):
+        cc_raw = (r.get("content_category") or "").strip()
+        fr_raw = (r.get("framing") or "").strip()
+        cc_hex = html_module.escape(_report_category_colour(cc_raw, cat_colours))
+        fr_hex = html_module.escape(_report_framing_colour(fr_raw, fram_colours))
+        rus_plain = str(r.get("entry_rus") or "")
+        eng_plain = str(r.get("entry_eng") or "")
+        ctx_plain = str(r.get("context") or "")
+        rus_cell = html_module.escape(rus_plain).replace("\n", "<br />\n")
+        eng_cell = html_module.escape(eng_plain).replace("\n", "<br />\n")
+        ctx_cell = html_module.escape(ctx_plain).replace("\n", "<br />\n")
+        cc_esc = html_module.escape(cc_raw)
+        fr_esc = html_module.escape(fr_raw)
+        out.append(
+            "<tr>"
+            f'<td class="comparison-row-index-num">{i}</td>'
+            f'<td><span class="exp-b-prelim-pill exp-b-prelim-pill-cat" style="border-color:{cc_hex};color:{cc_hex};">{cc_esc}</span></td>'
+            f'<td><span class="exp-b-prelim-pill exp-b-prelim-pill-fram" style="border-color:{fr_hex};color:{fr_hex};">{fr_esc}</span></td>'
+            f'<td class="comparison-cell-segment-rus">{rus_cell}</td>'
+            f'<td class="comparison-cell-segment-eng">{eng_cell}</td>'
+            f'<td class="context-cell">{ctx_cell}</td>'
+            "</tr>"
+        )
+    return "\n".join(out)
+
+
 def _load_places_map_data(config: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Load geocoded places from places_geocoded.json under output dir or data/output."""
     base = _places_map_data_dir(config)
@@ -1803,6 +2048,9 @@ def _build_per_document_viz_section(
     glossary_categories: Optional[List[Dict[str, Any]]],
     glossary_framings: Optional[List[Dict[str, Any]]],
     taxonomy_framings: Optional[List[Dict[str, Any]]],
+    *,
+    comparison_secondary_by_doc: Optional[Dict[str, Dict[str, Any]]] = None,
+    viz_experiment_labels: Optional[Tuple[str, str]] = None,
 ) -> str:
     """Collapsible HTML block: Research Lab charts filtered to one document."""
     if not doc_id:
@@ -1876,18 +2124,102 @@ def _build_per_document_viz_section(
             "segment_length": {"scale": 100, "x_tick_step": 0},
         },
     }
-    viz_json = json.dumps(viz_data, ensure_ascii=False)
     heatmap_html = _heatmap_html(stats, cat_ids=cat_ids, config=config)
 
     places_html = _build_places_map_html(config, embedded=True, doc_id_filter=doc_id)
+    places_fallback = '<p style="padding:2rem;color:#6b7280;">No places data for this document.</p>'
+    lab_a, lab_b = viz_experiment_labels if viz_experiment_labels else ("Experiment A", "Experiment B")
+
+    if comparison_secondary_by_doc:
+        places_key_primary = f"{suffix}_v0"
+        comp_one_b: Dict[str, Dict[str, Any]] = {doc_id: comparison_secondary_by_doc.get(doc_id, {})}
+        stats_b = _compute_dataset_stats(comp_one_b, docs_one)
+        cat_order_b, fram_order_b, cat_ids_b = _taxonomy_orders_for_viz(
+            stats_b, glossary_categories, glossary_framings, taxonomy_framings, config,
+        )
+        agreement_stats_b = _compute_agreement_stats(comp_one_b, docs_one, config)
+        terms_by_cat_b, terms_by_fram_b = _compute_terms_counts_for_viz(comp_one_b)
+        vocab_diversity_b = _compute_vocab_diversity(docs_one)
+        segment_length_vs_accuracy_b = _compute_segment_length_vs_accuracy(comp_one_b, docs_one)
+        mismatch_flow_b = _compute_mismatch_flow(comp_one_b, fram_order_b)
+        doc_fingerprint_b = _compute_document_fingerprint(stats_b, fram_order_b)
+        terms_by_framing_detailed_b = _compute_terms_by_framing_detailed(comp_one_b, fram_order_b)
+        term_framing_heatmap_b = _compute_term_framing_heatmap(comp_one_b, fram_order_b)
+        fram_colours_for_viz_b = _fram_colours_for_viz_order(fram_order_b, fram_colours)
+        viz_data_b: Dict[str, Any] = {
+            "wordCloudEng": [[w, c] for w, c in word_data_eng],
+            "wordCloudRus": [[w, c] for w, c in word_data_rus],
+            "perDoc": [
+                {
+                    "doc_id": pd["doc_id"],
+                    "display_name": pd["display_name"],
+                    "categories": pd["categories"],
+                    "framings": _filter_framing_counts_dict_for_report_ui(pd.get("framings", {}), cat_ids_b, config),
+                }
+                for pd in stats_b["per_doc"]
+            ],
+            "catColours": cat_colours,
+            "framColours": fram_colours_for_viz_b,
+            "categories": stats_b["categories"],
+            "framings": _filter_framing_counts_dict_for_report_ui(dict(stats_b["framings"]), cat_ids_b, config),
+            "catOrder": cat_order_b,
+            "framOrder": fram_order_b,
+            "termsByCat": terms_by_cat_b,
+            "termsByFram": _filter_framing_counts_dict_for_report_ui(dict(terms_by_fram_b), cat_ids_b, config),
+            "vocabDiversity": vocab_diversity_b,
+            "segmentLengthVsAccuracy": segment_length_vs_accuracy_b,
+            "agreementStats": agreement_stats_b,
+            "placesMap": [],
+            "mismatchFlow": mismatch_flow_b,
+            "docFingerprint": doc_fingerprint_b,
+            "termsByFramingDetailed": terms_by_framing_detailed_b,
+            "termFramingHeatmap": term_framing_heatmap_b,
+            "configDefaults": {
+                "word_cloud": {
+                    "max_words": wc_cfg.get("max_words", 80),
+                    "weight_factor": wc_cfg.get("weight_factor", 15),
+                    "min_word_length": wc_cfg.get("min_word_length", 3),
+                    "language": wc_cfg.get("language", "both"),
+                    "stopwords_extra": "",
+                },
+                "segment_length": {"scale": 100, "x_tick_step": 0},
+            },
+        }
+        heatmap_html_b = _heatmap_html(stats_b, cat_ids=cat_ids_b, config=config)
+        if places_html:
+            places_map_srcdoc = _places_map_doc_embed_markup(places_key_primary, places_html)
+            places_map_srcdoc_b = _places_map_doc_embed_markup(f"{suffix}_v1", places_html)
+        else:
+            places_map_srcdoc = places_fallback
+            places_map_srcdoc_b = places_fallback
+        viz_bundle = {
+            "vizMultiMode": True,
+            "vizExperiments": [
+                {"label": lab_a, "heatmapHtml": heatmap_html, "payload": viz_data, "placesEmbedHtml": places_map_srcdoc},
+                {"label": lab_b, "heatmapHtml": heatmap_html_b, "payload": viz_data_b, "placesEmbedHtml": places_map_srcdoc_b},
+            ],
+        }
+        viz_json = json.dumps(viz_bundle, ensure_ascii=False)
+        return _per_document_viz_section(
+            suffix,
+            viz_json,
+            heatmap_html,
+            places_map_srcdoc,
+            report_doc_id=doc_id,
+            viz_dual_experiment=True,
+            experiment_label_a=lab_a,
+            experiment_label_b=lab_b,
+        )
+
+    viz_json = json.dumps(viz_data, ensure_ascii=False)
     if places_html:
         places_map_srcdoc = _places_map_doc_embed_markup(suffix, places_html)
     else:
-        places_map_srcdoc = (
-            '<p style="padding:2rem;color:#6b7280;">No places data for this document.</p>'
-        )
+        places_map_srcdoc = places_fallback
 
-    return _per_document_viz_section(suffix, viz_json, heatmap_html, places_map_srcdoc)
+    return _per_document_viz_section(
+        suffix, viz_json, heatmap_html, places_map_srcdoc, report_doc_id=doc_id,
+    )
 
 
 def _build_places_map_html(config: Dict[str, Any], embedded: bool = False, doc_id_filter: Optional[str] = None) -> str:
@@ -2631,19 +2963,16 @@ def _label_suggestion_modal_html() -> str:
 """
 
 
-def _homepage(
+def _build_viz_payload_and_heatmap(
     comparison_by_doc: Dict[str, Dict[str, Any]],
     documents: List[Dict[str, Any]],
     config: Dict[str, Any],
     cat_colours: Dict[str, str],
     fram_colours: Dict[str, str],
-    glossary_categories: Optional[List[Dict[str, Any]]] = None,
-    glossary_framings: Optional[List[Dict[str, Any]]] = None,
-    taxonomy_framings: Optional[List[Dict[str, Any]]] = None,
-    *,
-    glossary_panel_html: str = "",
-) -> Tuple[str, str, str, str]:
-    """Research Lab tab HTML plus viz payload for standalone chart page."""
+    glossary_categories: Optional[List[Dict[str, Any]]],
+    glossary_framings: Optional[List[Dict[str, Any]]],
+    taxonomy_framings: Optional[List[Dict[str, Any]]],
+) -> Tuple[Dict[str, Any], str]:
     stats = _compute_dataset_stats(comparison_by_doc, documents)
     viz_config = config.get("report", {}).get("visualizations", {})
     wc_cfg = viz_config.get("word_cloud", {})
@@ -2655,8 +2984,6 @@ def _homepage(
         stopwords_eng=stopwords_eng if stopwords_eng else None,
         stopwords_rus=stopwords_rus if stopwords_rus else None,
     )
-    feedback_url = config.get("feedback", {}).get("url", "")
-    feedback_email = config.get("feedback", {}).get("email", "")
 
     cat_order, fram_order, cat_ids = _taxonomy_orders_for_viz(
         stats, glossary_categories, glossary_framings, taxonomy_framings, config,
@@ -2674,7 +3001,7 @@ def _homepage(
 
     fram_colours_for_viz = _fram_colours_for_viz_order(fram_order, fram_colours)
 
-    viz_data = {
+    viz_data: Dict[str, Any] = {
         "wordCloudEng": [[w, c] for w, c in word_data_eng],
         "wordCloudRus": [[w, c] for w, c in word_data_rus],
         "perDoc": [
@@ -2725,8 +3052,65 @@ def _homepage(
             },
         },
     }
-    viz_json = json.dumps(viz_data, ensure_ascii=False)
     heatmap_html = _heatmap_html(stats, cat_ids=cat_ids, config=config)
+    return viz_data, heatmap_html
+
+
+def _homepage(
+    comparison_by_doc: Dict[str, Dict[str, Any]],
+    documents: List[Dict[str, Any]],
+    config: Dict[str, Any],
+    cat_colours: Dict[str, str],
+    fram_colours: Dict[str, str],
+    glossary_categories: Optional[List[Dict[str, Any]]] = None,
+    glossary_framings: Optional[List[Dict[str, Any]]] = None,
+    taxonomy_framings: Optional[List[Dict[str, Any]]] = None,
+    *,
+    glossary_panel_html: str = "",
+) -> Tuple[str, str, str, str]:
+    """Research Lab tab HTML plus viz payload for standalone chart page."""
+    viz_primary, heatmap_html = _build_viz_payload_and_heatmap(
+        comparison_by_doc,
+        documents,
+        config,
+        cat_colours,
+        fram_colours,
+        glossary_categories,
+        glossary_framings,
+        taxonomy_framings,
+    )
+    feedback_url = config.get("feedback", {}).get("url", "")
+    feedback_email = config.get("feedback", {}).get("email", "")
+
+    report_cfg = config.get("report") or {}
+    sec_cbd = _load_secondary_comparison_by_doc(config)
+    labels = report_cfg.get("viz_experiment_labels")
+    if isinstance(labels, list) and len(labels) >= 2:
+        lab_a, lab_b = str(labels[0]), str(labels[1])
+    else:
+        lab_a, lab_b = "Experiment A (human-aligned slices)", "Experiment B (free segmentation)"
+
+    if sec_cbd:
+        viz_b, heatmap_b = _build_viz_payload_and_heatmap(
+            sec_cbd,
+            documents,
+            config,
+            cat_colours,
+            fram_colours,
+            glossary_categories,
+            glossary_framings,
+            taxonomy_framings,
+        )
+        viz_bundle = {
+            "vizMultiMode": True,
+            "vizExperiments": [
+                {"label": lab_a, "heatmapHtml": heatmap_html, "payload": viz_primary},
+                {"label": lab_b, "heatmapHtml": heatmap_b, "payload": viz_b},
+            ],
+        }
+        viz_json = json.dumps(viz_bundle, ensure_ascii=False)
+    else:
+        viz_json = json.dumps(viz_primary, ensure_ascii=False)
 
     feedback_form = ""
     if feedback_url:
@@ -2755,7 +3139,14 @@ def _homepage(
     else:
         places_map_srcdoc = '<p style="padding:2rem;color:#6b7280;">No places data. Run scripts/extract_places.py and scripts/geocode_places.py to generate places_geocoded.json.</p>'
 
-    viz_section_markup = _viz_lab_visualizations_section(viz_json, heatmap_html, places_map_srcdoc)
+    viz_section_markup = _viz_lab_visualizations_section(
+        viz_json,
+        heatmap_html,
+        places_map_srcdoc,
+        lab_viz_dual=bool(sec_cbd),
+        experiment_label_a=lab_a,
+        experiment_label_b=lab_b,
+    )
     taxonomy_section = (
         f'<details class="collapsible-section taxonomy-ref-details" id="lab-feature-taxonomy">'
         f'<summary><span data-i18n="taxonomy_reference">How Categories and Framing Are Qualified</span></summary>'
@@ -2789,7 +3180,7 @@ def _homepage(
 
 
 
-def _sidebar(documents: List[Dict[str, Any]], comparison_by_doc: Dict[str, Dict[str, Any]]) -> str:
+def _sidebar(documents: List[Dict[str, Any]]) -> str:
     """Sidebar navigation: Introduction, Research Lab, documents (glossary lives at bottom of Lab)."""
     items = []
     items.append('<div class="sidebar-section-title" data-i18n="navigation">Navigation</div>')
@@ -2811,6 +3202,166 @@ def _tabs(documents: List[Dict[str, Any]]) -> str:
         active = " active" if doc == documents[0] else ""
         buttons.append(f'<button class="tab-button{active}" onclick="showTab(\'tab-{doc_id}\')">{display_name}</button>')
     return '<div class="tabs" id="tabs-container">' + "\n".join(buttons) + "</div>"
+
+
+def _comparison_table_rows_html(
+    doc_id: str,
+    aligned: List[Dict],
+    cat_colours: Dict[str, str],
+    fram_colours: Dict[str, str],
+    *,
+    expert_ground_truth_compare: bool = False,
+    segment_column_layout: str = "eng_then_rus",
+) -> str:
+    """Generate <tr> rows for one comparison run.
+
+    Primary pipeline rows are LLM vs expert ground truth — use ``expert_ground_truth_compare=True``.
+    Secondary experiment rows (e.g. free segmentation) use ``False`` for compact model-first cells.
+
+    ``segment_column_layout``:
+      - ``eng_then_rus`` — Section | ENG | RUS | category | framing | context (Experiment A).
+      - ``preliminary_b`` — Section | # | category | framing | Russian | English | context (Experiment B / preliminary HTML shape).
+    """
+    rows_html: List[str] = []
+    for row_idx, r in enumerate(aligned):
+        cat_cls = "category-match" if r.get("category_match") else "category-mismatch"
+        fram_cls = "framing-match" if r.get("framing_match") else "framing-mismatch"
+        cat_match = bool(r.get("category_match"))
+        fram_match = bool(r.get("framing_match"))
+        llm_cat_raw = str(r.get("llm_category", "") or "")
+        human_cat_raw = str(r.get("human_category", "") or "")
+        llm_fram_raw = str(r.get("llm_framing", "") or "")
+        human_fram_raw = str(r.get("human_framing", "") or "")
+        llm_cat_disp = display_content_category_for_ui(llm_cat_raw)
+        human_cat_disp = display_content_category_for_ui(human_cat_raw)
+        llm_fram_disp = _normalize_framing_label(llm_fram_raw)
+        human_fram_disp = _normalize_framing_label(human_fram_raw)
+        llm_cat_hex = _report_category_colour(llm_cat_raw, cat_colours)
+        human_cat_hex = _report_category_colour(human_cat_raw, cat_colours)
+        llm_fram_hex = _report_framing_colour(llm_fram_raw, fram_colours)
+        human_fram_hex = _report_framing_colour(human_fram_raw, fram_colours)
+        section = html_module.escape(str(r.get("section", "")))
+        entry_eng = html_module.escape(str(r.get("entry_eng", "")))
+        entry_rus = html_module.escape(str(r.get("entry_rus", "")))
+        llm_cat = html_module.escape(llm_cat_disp)
+        human_cat = html_module.escape(human_cat_disp)
+        llm_fram = html_module.escape(llm_fram_disp)
+        human_fram = html_module.escape(human_fram_disp)
+        context = html_module.escape(str(r.get("context", "")))
+        table_layout_attr = "preliminary-b" if segment_column_layout == "preliminary_b" else "standard"
+        data_attrs = (
+            f' data-table-layout="{table_layout_attr}"'
+            f' data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}"'
+            f' data-llm-category="{llm_cat}" data-human-category="{human_cat}"'
+            f' data-llm-framing="{llm_fram}" data-human-framing="{human_fram}" data-context="{context}"'
+            f' data-row-index="{row_idx}"'
+            f' data-llm-category-colour="{html_module.escape(llm_cat_hex, quote=True)}"'
+            f' data-human-category-colour="{html_module.escape(human_cat_hex, quote=True)}"'
+            f' data-llm-framing-colour="{html_module.escape(llm_fram_hex, quote=True)}"'
+            f' data-human-framing-colour="{html_module.escape(human_fram_hex, quote=True)}"'
+        )
+        cat_cell_inner = _comparison_axis_cell_html(
+            match=cat_match,
+            llm_disp=llm_cat_disp,
+            human_disp=human_cat_disp,
+            llm_raw=llm_cat_raw,
+            human_raw=human_cat_raw,
+            colour_map=cat_colours,
+            framing=False,
+            expert_compare=expert_ground_truth_compare,
+        )
+        fram_cell_inner = _comparison_axis_cell_html(
+            match=fram_match,
+            llm_disp=llm_fram_disp,
+            human_disp=human_fram_disp,
+            llm_raw=llm_fram_raw,
+            human_raw=human_fram_raw,
+            colour_map=fram_colours,
+            framing=True,
+            expert_compare=expert_ground_truth_compare,
+        )
+        section_btn = (
+            f'<button type="button" class="section-click-to-view" data-tab="{doc_id}" data-row-index="{row_idx}" '
+            f'title="Open document text view and highlight this entry">{r.get("section", "")}</button>'
+        )
+        doc_id_esc = html_module.escape(doc_id)
+        suggest_btn = (
+            f'<button type="button" class="suggest-label-btn" data-doc="{doc_id_esc}" data-row-index="{row_idx}" '
+            f'data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}" '
+            f'data-llm-cat="{llm_cat}" data-human-cat="{human_cat}" data-llm-fram="{llm_fram}" '
+            f'data-human-fram="{human_fram}" data-i18n-title="suggest_label_tooltip">+</button>'
+        )
+        if segment_column_layout == "preliminary_b":
+            rus_plain = str(r.get("entry_rus") or "")
+            eng_plain = str(r.get("entry_eng") or "")
+            rus_cell_inner = html_module.escape(rus_plain).replace("\n", "<br />\n")
+            eng_cell_inner = html_module.escape(eng_plain).replace("\n", "<br />\n")
+            rows_html.append(
+                f"<tr{data_attrs}>"
+                f"<td class=\"section-cell\">{section_btn} {suggest_btn}</td>"
+                f"<td class=\"comparison-row-index-num\">{row_idx + 1}</td>"
+                f'<td class="{cat_cls}">{cat_cell_inner}</td>'
+                f'<td class="{fram_cls}">{fram_cell_inner}</td>'
+                f"<td class=\"comparison-cell-segment-rus\">{rus_cell_inner}</td>"
+                f"<td class=\"comparison-cell-segment-eng\">{eng_cell_inner}</td>"
+                f"<td class=\"context-cell\">{r.get('context', '')}</td>"
+                f"</tr>"
+            )
+        else:
+            rows_html.append(
+                f"<tr{data_attrs}>"
+                f"<td class=\"section-cell\">{section_btn} {suggest_btn}</td>"
+                f"<td>{r.get('entry_eng', '')}</td>"
+                f"<td>{r.get('entry_rus', '')}</td>"
+                f'<td class="{cat_cls}">{cat_cell_inner}</td>'
+                f'<td class="{fram_cls}">{fram_cell_inner}</td>'
+                f"<td class=\"context-cell\">{r.get('context', '')}</td>"
+                f"</tr>"
+            )
+    return "\n".join(rows_html)
+
+
+def _document_text_panels_html_from_aligned(
+    full_text_eng: str,
+    full_text_rus: str,
+    aligned: List[Dict],
+    cat_colours: Dict[str, str],
+    fram_colours: Dict[str, str],
+) -> Tuple[str, str]:
+    """Build English and Russian panel HTML for document text view."""
+    if full_text_eng or full_text_rus:
+        accepted_eng = _get_accepted_segments(full_text_eng or "", aligned, "entry_eng")
+        accepted_rus = _get_accepted_segments(full_text_rus or "", aligned, "entry_rus")
+        rows_eng = {row_idx for (_, _, _, _, row_idx) in accepted_eng}
+        rows_rus = {row_idx for (_, _, _, _, row_idx) in accepted_rus}
+        eng_html = _spans_to_html(
+            full_text_eng or "", accepted_eng, cat_colours, fram_colours, partner_row_indices=rows_rus,
+        )
+        rus_html = _spans_to_html(
+            full_text_rus or "", accepted_rus, cat_colours, fram_colours, partner_row_indices=rows_eng,
+        )
+    else:
+        eng_html = ""
+        rus_html = ""
+    if not eng_html and full_text_eng:
+        eng_html = (
+            '<span class="doc-entry doc-gap" data-entry-eng="" data-entry-rus="" '
+            'data-category="" data-framing="" data-category-colour="#333" data-framing-colour="#333" '
+            'data-human-category="" data-human-framing="" data-human-category-colour="#333" data-human-framing-colour="#333" '
+            'data-has-partner="true">'
+            + html_module.escape(full_text_eng)
+            + "</span>"
+        )
+    if not rus_html and full_text_rus:
+        rus_html = (
+            '<span class="doc-entry doc-gap" data-entry-eng="" data-entry-rus="" '
+            'data-category="" data-framing="" data-category-colour="#333" data-framing-colour="#333" '
+            'data-human-category="" data-human-framing="" data-human-category-colour="#333" data-human-framing-colour="#333" '
+            'data-has-partner="true">'
+            + html_module.escape(full_text_rus)
+            + "</span>"
+        )
+    return eng_html, rus_html
 
 
 def _doc_tab(
@@ -2835,58 +3386,34 @@ def _doc_tab(
     comparison_json_script: str = "[]",
     doc_viz_section_html: str = "",
     viz_dom_suffix: str = "",
+    comparison_secondary_aligned: Optional[List[Dict]] = None,
+    secondary_cat_pct: Optional[float] = None,
+    secondary_fram_pct: Optional[float] = None,
+    secondary_both_pct: Optional[float] = None,
+    secondary_n_human: Optional[int] = None,
+    secondary_n_llm: Optional[int] = None,
+    secondary_n_matched: Optional[int] = None,
+    viz_experiment_labels: Optional[Tuple[str, str]] = None,
+    experiment_b_agent_rows: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     active_class = " active" if active else ""
-    rows_html = []
-    for row_idx, r in enumerate(aligned):
-        cat_cls = "category-match" if r.get("category_match") else "category-mismatch"
-        fram_cls = "framing-match" if r.get("framing_match") else "framing-mismatch"
-        llm_cat_raw = str(r.get("llm_category", "") or "")
-        human_cat_raw = str(r.get("human_category", "") or "")
-        llm_fram_raw = str(r.get("llm_framing", "") or "")
-        human_fram_raw = str(r.get("human_framing", "") or "")
-        llm_cat_disp = display_content_category_for_ui(llm_cat_raw)
-        human_cat_disp = display_content_category_for_ui(human_cat_raw)
-        llm_fram_disp = _normalize_framing_label(llm_fram_raw)
-        human_fram_disp = _normalize_framing_label(human_fram_raw)
-        cat_style_llm = f"color: {_report_category_colour(llm_cat_raw, cat_colours)}; font-weight: 600;"
-        cat_style_human = f"color: {_report_category_colour(human_cat_raw, cat_colours)}; font-weight: 600;"
-        fram_style_llm = f"color: {_report_framing_colour(llm_fram_raw, fram_colours)}; font-weight: 600;"
-        fram_style_human = f"color: {_report_framing_colour(human_fram_raw, fram_colours)}; font-weight: 600;"
-        section = html_module.escape(str(r.get('section', '')))
-        entry_eng = html_module.escape(str(r.get('entry_eng', '')))
-        entry_rus = html_module.escape(str(r.get('entry_rus', '')))
-        llm_cat = html_module.escape(llm_cat_disp)
-        human_cat = html_module.escape(human_cat_disp)
-        llm_fram = html_module.escape(llm_fram_disp)
-        human_fram = html_module.escape(human_fram_disp)
-        context = html_module.escape(str(r.get('context', '')))
-        data_attrs = (
-            f' data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}"'
-            f' data-llm-category="{llm_cat}" data-human-category="{human_cat}"'
-            f' data-llm-framing="{llm_fram}" data-human-framing="{human_fram}" data-context="{context}"'
-            f' data-row-index="{row_idx}"'
+    dual_compare = comparison_secondary_aligned is not None
+    aligned_b = comparison_secondary_aligned if dual_compare else []
+    table_body = _comparison_table_rows_html(
+        doc_id, aligned, cat_colours, fram_colours, expert_ground_truth_compare=True,
+    )
+    table_body_b = (
+        _comparison_table_rows_html(
+            doc_id,
+            aligned_b,
+            cat_colours,
+            fram_colours,
+            expert_ground_truth_compare=False,
+            segment_column_layout="preliminary_b",
         )
-        section_btn = f'<button type="button" class="section-click-to-view" data-tab="{doc_id}" data-row-index="{row_idx}" title="Open document text view and highlight this entry">{r.get("section","")}</button>'
-        doc_id_esc = html_module.escape(doc_id)
-        suggest_btn = f'<button type="button" class="suggest-label-btn" data-doc="{doc_id_esc}" data-row-index="{row_idx}" data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}" data-llm-cat="{llm_cat}" data-human-cat="{human_cat}" data-llm-fram="{llm_fram}" data-human-fram="{human_fram}" data-i18n-title="suggest_label_tooltip">+</button>'
-        rows_html.append(
-            f"<tr{data_attrs}>"
-            f"<td class=\"section-cell\">{section_btn} {suggest_btn}</td>"
-            f"<td>{r.get('entry_eng','')}</td>"
-            f"<td>{r.get('entry_rus','')}</td>"
-            f"<td class=\"{cat_cls}\"><strong><span data-i18n=\"comparison_model_side_short\">LLM</span>:</strong>"
-            f' <span style="{cat_style_llm}">{html_module.escape(llm_cat_disp)}</span><br/>'
-            f"<strong><span data-i18n=\"comparison_human_side_short\">Human</span>:</strong>"
-            f' <span style="{cat_style_human}">{html_module.escape(human_cat_disp)}</span></td>'
-            f"<td class=\"{fram_cls}\"><strong><span data-i18n=\"comparison_model_side_short\">LLM</span>:</strong>"
-            f' <span style="{fram_style_llm}">{html_module.escape(llm_fram_disp)}</span><br/>'
-            f"<strong><span data-i18n=\"comparison_human_side_short\">Human</span>:</strong>"
-            f' <span style="{fram_style_human}">{html_module.escape(human_fram_disp)}</span></td>'
-            f"<td class=\"context-cell\">{r.get('context','')}</td>"
-            f"</tr>"
-        )
-    table_body = "\n".join(rows_html)
+        if dual_compare
+        else ""
+    )
     doc_cyrillic_popup = (
         f'<div class="doc-tab-cyrillic-keyboard">'
         f'<div class="cyrillic-keyboard-popup-wrap doc-cyrillic-popup-floating" id="cyrillic-popup-{doc_id}" '
@@ -2895,42 +3422,71 @@ def _doc_tab(
         f"{_cyrillic_keyboard_html(doc_id)}"
         f"</div></div>"
     )
-    cat_opts = "".join(f'<option value="{html_module.escape(c.get("id", ""))}">{html_module.escape(c.get("id", ""))}</option>' for c in categories if c.get("id"))
-    fram_opts = "".join(f'<option value="{html_module.escape(f.get("id", ""))}">{html_module.escape(f.get("id", ""))}</option>' for f in framings if f.get("id"))
-    if full_text_eng or full_text_rus:
-        accepted_eng = _get_accepted_segments(full_text_eng or "", aligned, "entry_eng")
-        accepted_rus = _get_accepted_segments(full_text_rus or "", aligned, "entry_rus")
-        rows_eng = {row_idx for (_, _, _, _, row_idx) in accepted_eng}
-        rows_rus = {row_idx for (_, _, _, _, row_idx) in accepted_rus}
-        eng_html = _spans_to_html(full_text_eng or "", accepted_eng, cat_colours, fram_colours, partner_row_indices=rows_rus)
-        rus_html = _spans_to_html(full_text_rus or "", accepted_rus, cat_colours, fram_colours, partner_row_indices=rows_eng)
-    else:
-        eng_html = ""
-        rus_html = ""
-    if not eng_html and full_text_eng:
-        eng_html = (
-            '<span class="doc-entry doc-gap" data-entry-eng="" data-entry-rus="" '
-            'data-category="" data-framing="" data-category-colour="#333" data-framing-colour="#333" '
-            'data-human-category="" data-human-framing="" data-human-category-colour="#333" data-human-framing-colour="#333" '
-            'data-has-partner="true">'
-            + html_module.escape(full_text_eng)
-            + '</span>'
-        )
-    if not rus_html and full_text_rus:
-        rus_html = (
-            '<span class="doc-entry doc-gap" data-entry-eng="" data-entry-rus="" '
-            'data-category="" data-framing="" data-category-colour="#333" data-framing-colour="#333" '
-            'data-human-category="" data-human-framing="" data-human-category-colour="#333" data-human-framing-colour="#333" '
-            'data-has-partner="true">'
-            + html_module.escape(full_text_rus)
-            + '</span>'
-        )
-    text_view = _document_text_view(doc_id, categories, framings, full_text_eng_html=eng_html, full_text_rus_html=rus_html)
-    hidden_stats = (
-        f'<div id="hidden-stats-{doc_id}" class="hidden-stats-data" '
-        f'data-cat-pct="{cat_pct}" data-fram-pct="{fram_pct}" data-both-pct="{both_pct}" '
-        f'data-n-human="{n_human}" data-n-llm="{n_llm}" data-n-matched="{n_matched}"></div>'
+    cat_opts = "".join(
+        f'<option value="{html_module.escape(c.get("id", ""))}">{html_module.escape(c.get("id", ""))}</option>'
+        for c in categories
+        if c.get("id")
     )
+    fram_opts = "".join(
+        f'<option value="{html_module.escape(f.get("id", ""))}">{html_module.escape(f.get("id", ""))}</option>'
+        for f in framings
+        if f.get("id")
+    )
+    exp_lab_a, exp_lab_b = (
+        (viz_experiment_labels[0], viz_experiment_labels[1])
+        if viz_experiment_labels
+        else ("Experiment A", "Experiment B")
+    )
+    eng_html, rus_html = _document_text_panels_html_from_aligned(
+        full_text_eng, full_text_rus, aligned, cat_colours, fram_colours,
+    )
+    doc_text_runs_embed = ""
+    if dual_compare:
+        eng_html_b, rus_html_b = _document_text_panels_html_from_aligned(
+            full_text_eng, full_text_rus, aligned_b, cat_colours, fram_colours,
+        )
+        doc_text_runs_embed = (
+            f'<script type="application/json" id="doc-text-runs-{doc_id}" class="doc-text-runs-bundle">'
+            f"{_json_for_html_script({'runs': [{'eng': eng_html, 'rus': rus_html}, {'eng': eng_html_b, 'rus': rus_html_b}]})}"
+            f"</script>"
+        )
+    text_view = _document_text_view(
+        doc_id,
+        categories,
+        framings,
+        full_text_eng_html=eng_html,
+        full_text_rus_html=rus_html,
+        comparison_run_labels=viz_experiment_labels if dual_compare else None,
+        experiment_label_a=exp_lab_a,
+        experiment_label_b=exp_lab_b,
+    )
+    if dual_compare:
+        sc = secondary_cat_pct if secondary_cat_pct is not None else 0
+        sf = secondary_fram_pct if secondary_fram_pct is not None else 0
+        sb = secondary_both_pct if secondary_both_pct is not None else 0
+        nh = secondary_n_human if secondary_n_human is not None else 0
+        nl = secondary_n_llm if secondary_n_llm is not None else 0
+        nm = secondary_n_matched if secondary_n_matched is not None else len(aligned_b)
+        hidden_stats = (
+            f'<div id="hidden-stats-{doc_id}-run-0" class="hidden-stats-data hidden-stats-run" data-run-index="0" '
+            f'data-cat-pct="{cat_pct}" data-fram-pct="{fram_pct}" data-both-pct="{both_pct}" '
+            f'data-n-human="{n_human}" data-n-llm="{n_llm}" data-n-matched="{n_matched}"></div>'
+            f'<div id="hidden-stats-{doc_id}-run-1" class="hidden-stats-data hidden-stats-run" data-run-index="1" '
+            f'style="display:none;" data-cat-pct="{sc}" data-fram-pct="{sf}" data-both-pct="{sb}" '
+            f'data-n-human="{nh}" data-n-llm="{nl}" data-n-matched="{nm}"></div>'
+        )
+    else:
+        hidden_stats = (
+            f'<div id="hidden-stats-{doc_id}" class="hidden-stats-data" '
+            f'data-cat-pct="{cat_pct}" data-fram-pct="{fram_pct}" data-both-pct="{both_pct}" '
+            f'data-n-human="{n_human}" data-n-llm="{n_llm}" data-n-matched="{n_matched}"></div>'
+        )
+    comparison_runs_embed = ""
+    if dual_compare:
+        comparison_runs_embed = (
+            f'<script type="application/json" id="comparison-runs-{doc_id}" class="comparison-runs-bundle">'
+            f"{_json_for_html_script({'runs': [aligned, aligned_b]})}</script>"
+        )
     if pdf_href:
         esc_pdf = html_module.escape(pdf_href, quote=True)
         pdf_section = f"""<details class="collapsible-section pdf-view-section" id="doc-section-pdf-{doc_id}">
@@ -2950,11 +3506,108 @@ def _doc_tab(
     tab_attrs = f'<div class="tab-content{active_class}" id="tab-{doc_id}"'
     if viz_dom_suffix:
         tab_attrs += f' data-doc-viz-suffix="{viz_dom_suffix}"'
+    if dual_compare:
+        tab_attrs += ' data-comparison-dual="1"'
+        if viz_experiment_labels:
+            tab_attrs += (
+                ' data-viz-exp-label-0="' + html_module.escape(viz_experiment_labels[0], quote=True) + '"'
+                + ' data-viz-exp-label-1="' + html_module.escape(viz_experiment_labels[1], quote=True) + '"'
+            )
     tab_attrs += ">"
+    thead_experiment_a = (
+        '<thead><tr><th data-i18n="section">Section</th><th data-i18n="entry_eng">Entry (ENG)</th>'
+        '<th data-i18n="entry_rus">Entry (RUS)</th><th data-i18n="content_category">Specific detail</th>'
+        '<th data-i18n="framing">Ideological layer</th><th data-i18n="context">Context</th></tr></thead>'
+    )
+    thead_experiment_b = (
+        '<thead class="comparison-thead-run-b"><tr><th data-i18n="section">Section</th>'
+        '<th data-i18n="comparison_b_col_row_num">#</th>'
+        '<th data-i18n="comparison_b_header_detail">Model · specific detail</th>'
+        '<th data-i18n="comparison_b_header_framing">Model · ideological layer</th>'
+        '<th data-i18n="entry_rus">Entry (RUS)</th><th data-i18n="entry_eng">Entry (ENG)</th>'
+        '<th data-i18n="context">Context</th></tr></thead>'
+    )
+    esc_banner_a = html_module.escape(exp_lab_a)
+    esc_banner_b = html_module.escape(exp_lab_b)
+    if dual_compare:
+        comparison_tables_markup = (
+            f'<div class="comparison-run-stack">\n'
+            f'    <div id="comparison-table-panel-{doc_id}-0" class="comparison-run-table-panel comparison-run-table-panel-a" data-run-panel="0">\n'
+            f'      <div class="comparison-run-table-banner comparison-run-table-banner-a">{esc_banner_a}</div>\n'
+            f'      <table class="comparison-table comparison-table-experiment-a">\n'
+            f"    {thead_experiment_a}\n"
+            f'    <tbody id="table-{doc_id}-run-0">{table_body}</tbody>\n'
+            f"      </table>\n"
+            f"    </div>\n"
+            f'    <div id="comparison-table-panel-{doc_id}-1" class="comparison-run-table-panel comparison-run-table-panel-b" data-run-panel="1" style="display:none;">\n'
+            f'      <div class="comparison-run-table-banner comparison-run-table-banner-b">{esc_banner_b}</div>\n'
+            f'      <p class="comparison-run-table-blurb" data-i18n="comparison_table_run_b_blurb">'
+            f"This is a separate experiment table (different segments and alignment than Experiment A). "
+            f"Cells emphasize the model; expert labels appear when they disagree.</p>\n"
+            f'      <table class="comparison-table comparison-table-experiment-b">\n'
+            f"    {thead_experiment_b}\n"
+            f'    <tbody id="table-{doc_id}-run-1">{table_body_b}</tbody>\n'
+            f"      </table>\n"
+            f"    </div>\n"
+            f"</div>"
+        )
+    else:
+        comparison_tables_markup = (
+            f'    <table class="comparison-table">\n'
+            f"    {thead_experiment_a}\n"
+            f'    <tbody id="table-{doc_id}">{table_body}</tbody>\n'
+            f"    </table>"
+        )
+    esc_cmp = html_module.escape(doc_id)
+    experiment_b_prelim_section = ""
+    if experiment_b_agent_rows is not None:
+        if experiment_b_agent_rows:
+            tbody_agent = _experiment_b_agent_only_table_rows_html(
+                experiment_b_agent_rows, cat_colours, fram_colours,
+            )
+            inner_tbl = (
+                '<table class="comparison-table comparison-table-experiment-b table-exp-b-prelim">\n'
+                "<thead><tr>"
+                '<th data-i18n="comparison_b_col_row_num">#</th>'
+                '<th data-i18n="content_category">Specific detail</th>'
+                '<th data-i18n="framing">Ideological layer</th>'
+                '<th data-i18n="entry_rus">Entry (RUS)</th>'
+                '<th data-i18n="entry_eng">Entry (ENG)</th>'
+                '<th data-i18n="context">Context</th>'
+                "</tr></thead>\n"
+                f"<tbody>{tbody_agent}</tbody>\n</table>"
+            )
+        else:
+            inner_tbl = (
+                '<p class="exp-b-prelim-empty" data-i18n="exp_b_prelim_empty_doc">'
+                "No assessor segments are recorded for this document in the configured Experiment B agent assessments file."
+                "</p>"
+            )
+        experiment_b_prelim_section = (
+            f'<details class="collapsible-section exp-b-prelim-details" id="doc-section-exp-b-prelim-{esc_cmp}">\n'
+            '  <summary data-i18n="exp_b_prelim_summary">Experiment B — assessor segments (not compared)</summary>\n'
+            '  <div class="collapsible-body">\n'
+            '    <p class="exp-b-prelim-intro" data-i18n="exp_b_prelim_intro">Rows come from the Experiment B agent assessments file (same source as preliminary_results.html): assessor-defined segments with category, framing, Russian and English text, and context. There are no expert or model comparison columns.</p>\n'
+            f"    {inner_tbl}\n"
+            "  </div>\n"
+            "</details>\n"
+        )
+    dual_run_ctl = ""
+    if dual_compare and viz_experiment_labels:
+        esc_tra = html_module.escape(viz_experiment_labels[0])
+        esc_trb = html_module.escape(viz_experiment_labels[1])
+        dual_run_ctl = (
+            f'<div class="ctl-group comparison-run-toolbar-group">'
+            f'<span class="document-text-filter-head">Comparison run</span>'
+            f'<select id="table-comparison-run-{doc_id}" class="table-comparison-run-select" '
+            f'data-tab="{html_module.escape(doc_id)}"><option value="0">{esc_tra}</option>'
+            f'<option value="1">{esc_trb}</option></select></div>'
+        )
     return f"""
 {tab_attrs}
 <div class="header"><h2>{display_name}</h2></div>
 {hidden_stats}
+{doc_text_runs_embed}
 {pdf_section}
 <details class="collapsible-section" id="doc-section-text-{doc_id}">
   <summary data-i18n="document_text_view">Document text view</summary>
@@ -2977,19 +3630,19 @@ def _doc_tab(
           <span class="document-text-filter-head" data-i18n="ideological_layer_filter_head">Ideological Layers</span>
           <select id="table-fram-{doc_id}" class="comparison-table-fram" data-tab="{doc_id}"><option value="" data-i18n="table_all_framings">All ideological layers</option>{fram_opts}</select>
         </div>
+        {dual_run_ctl}
         <div class="comparison-toolbar-actions">
           <button type="button" class="comparison-export-json" data-doc-id="{html_module.escape(doc_id)}" data-i18n="export_comparison_json">Export JSON</button>
           <button type="button" class="comparison-table-clear" data-tab="{doc_id}" data-i18n="clear_filters">Clear filters</button>
         </div>
       </div>
     </div>
+    {comparison_runs_embed}
     <script type="application/json" id="comparison-export-{doc_id}" class="hidden-comparison-json">{comparison_json_script}</script>
-    <table class="comparison-table">
-    <thead><tr><th data-i18n="section">Section</th><th data-i18n="entry_eng">Entry (ENG)</th><th data-i18n="entry_rus">Entry (RUS)</th><th data-i18n="content_category">Specific detail</th><th data-i18n="framing">Ideological layer</th><th data-i18n="context">Context</th></tr></thead>
-    <tbody id="table-{doc_id}">{table_body}</tbody>
-    </table>
+{comparison_tables_markup}
   </div>
 </details>
+{experiment_b_prelim_section}
 {doc_cyrillic_popup}
 </div>"""
 
@@ -3035,7 +3688,7 @@ def _colour_legend(categories: List[Dict], framings: List[Dict]) -> str:
       <div class="colour-legend-orphan-note" data-i18n="orphan_note">Segments with a dashed underline have no corresponding segment in the other panel; hover for tooltip.</div>
     </div>
     <div class="colour-legend-section">
-      <div class="colour-legend-orphan-note" data-i18n="colour_by_note">Colour by: LLM / Human / Both (agree). Category and framing colours apply only when their filter is not None.</div>
+      <div class="colour-legend-orphan-note" data-i18n="colour_by_note">Colour by: LLM / Human / Both (agree). Category and framing colours apply only when their filter is not None. Use Comparison run (filters row) when Experiment A and B are both bundled.</div>
     </div>
   </div>"""
     )
@@ -3053,10 +3706,32 @@ def _document_text_view(
     *,
     full_text_eng_html: str = "",
     full_text_rus_html: str = "",
+    comparison_run_labels: Optional[Tuple[str, str]] = None,
+    experiment_label_a: str = "Experiment A",
+    experiment_label_b: str = "Experiment B",
 ) -> str:
     """Block: search, category/framing filters; two panels show full document text (with aligned segments as spans when provided)."""
     legend = _colour_legend(categories, framings)
     esc_id = html_module.escape(doc_id)
+    esc_la = html_module.escape(experiment_label_a)
+    esc_lb = html_module.escape(experiment_label_b)
+    if comparison_run_labels:
+        experiment_ctl = f"""      <div class="ctl-group">
+        <span class="document-text-filter-head">Comparison run</span>
+        <select id="doc-comparison-run-{esc_id}" class="doc-comparison-run-select" data-tab="{esc_id}" title="Alignment run for highlighted text, table, and export (same as comparison table)">
+          <option value="0">{esc_la}</option>
+          <option value="1">{esc_lb}</option>
+        </select>
+      </div>
+"""
+    else:
+        experiment_ctl = f"""      <div class="ctl-group">
+        <span class="document-text-filter-head">Comparison run</span>
+        <select id="doc-comparison-run-{esc_id}" class="document-comparison-run-locked" data-tab="{esc_id}" disabled title="Only one alignment is bundled. Add report.secondary_comparison_json when building the report for Experiment B.">
+          <option value="0">{esc_la}</option>
+        </select>
+      </div>
+"""
     return f"""
 <div class="document-text-view layout-split" data-tab-id="{esc_id}">
   <div class="document-text-controls-sticky">
@@ -3082,6 +3757,7 @@ def _document_text_view(
           <option value="both" data-i18n="colour_by_both">Colour by: Both (agree only)</option>
         </select>
       </div>
+{experiment_ctl}
     </div>
     <div class="document-text-controls-actions">
       <div class="reader-layout-toggle" data-tab="{esc_id}">
@@ -3134,8 +3810,10 @@ def _normalize_for_group(s: str) -> str:
     return _normalize_framing_label(s)
 
 
-def _collect_terms_from_comparison(
+def _collect_terms_from_comparison_fields(
     comparison_by_doc: Dict[str, Dict[str, Any]],
+    cat_field: str,
+    fram_field: str,
 ) -> Tuple[
     Dict[str, Set[Tuple[str, str]]],
     Dict[str, Set[Tuple[str, str]]],
@@ -3143,8 +3821,7 @@ def _collect_terms_from_comparison(
     Dict[Tuple[str, str], Set[str]],
     Dict[Tuple[str, str], List[Tuple[str, int]]],
 ]:
-    """Extract unique (entry_eng, entry_rus) terms by content category and framing from aligned rows.
-    Also returns term_docs: (eng, rus) -> set of doc_ids; term_locations: (eng, rus) -> [(doc_id, row_index)]."""
+    """Extract terms keyed by category/framing using the given aligned row fields (e.g. human vs LLM)."""
     terms_by_cat: Dict[str, Set[Tuple[str, str]]] = {}
     terms_by_fram: Dict[str, Set[Tuple[str, str]]] = {}
     all_terms: Set[Tuple[str, str]] = set()
@@ -3160,15 +3837,50 @@ def _collect_terms_from_comparison(
             all_terms.add(pair)
             term_docs.setdefault(pair, set()).add(doc_id)
             term_locations.setdefault(pair, []).append((doc_id, row_idx))
-            cat_raw = r.get("llm_category") or ""
+            cat_raw = r.get(cat_field) or ""
             cat_fold = display_content_category_for_ui(cat_raw.strip()) if cat_raw else ""
             cat = canonical_content_category_id(cat_fold) if cat_fold else ""
-            fram = _normalize_for_group(r.get("llm_framing") or "")
+            fram = _normalize_for_group(r.get(fram_field) or "")
             if cat:
                 terms_by_cat.setdefault(cat, set()).add(pair)
             if fram:
                 terms_by_fram.setdefault(fram, set()).add(pair)
     return terms_by_cat, terms_by_fram, all_terms, term_docs, term_locations
+
+
+def _collect_terms_from_comparison(
+    comparison_by_doc: Dict[str, Dict[str, Any]],
+) -> Tuple[
+    Dict[str, Set[Tuple[str, str]]],
+    Dict[str, Set[Tuple[str, str]]],
+    Set[Tuple[str, str]],
+    Dict[Tuple[str, str], Set[str]],
+    Dict[Tuple[str, str], List[Tuple[str, int]]],
+]:
+    """Extract unique (entry_eng, entry_rus) terms by LLM content category and framing from aligned rows."""
+    return _collect_terms_from_comparison_fields(
+        comparison_by_doc, "llm_category", "llm_framing",
+    )
+
+
+def _glossary_sorted_terms_block(
+    terms_set: Set[Tuple[str, str]],
+    term_docs: Dict[Tuple[str, str], Set[str]],
+    term_locations: Dict[Tuple[str, str], List[Tuple[str, int]]],
+    colour: str,
+    doc_names: Dict[str, str],
+) -> Tuple[str, int]:
+    terms_html_parts: List[str] = []
+    for (eng, rus) in sorted(terms_set, key=lambda x: (x[0] or x[1]).lower()):
+        doc_ids = term_docs.get((eng, rus), set())
+        locs = term_locations.get((eng, rus), [])
+        terms_html_parts.append(_glossary_term_item(eng, rus, colour, doc_ids, locs, doc_names))
+    terms_html = (
+        "\n".join(terms_html_parts)
+        if terms_html_parts
+        else '<p style="color: #999;"><span data-i18n="glossary_no_terms_in_docs">No terms in analyzed documents.</span></p>'
+    )
+    return terms_html, len(terms_set)
 
 
 def _glossary_term_item(
@@ -3217,28 +3929,61 @@ def _glossary_tab(
     *,
     from_categories_explained: bool = False,
     config: Optional[Dict[str, Any]] = None,
+    comparison_secondary_by_doc: Optional[Dict[str, Dict[str, Any]]] = None,
+    viz_experiment_labels: Optional[Tuple[str, str]] = None,
 ) -> str:
     """Build glossary HTML embedded at the bottom of the Research Lab tab."""
-    terms_by_cat, terms_by_fram, all_terms, term_docs, term_locations = _collect_terms_from_comparison(
-        comparison_by_doc
+    dual_exp = bool(comparison_secondary_by_doc)
+    sec_map = comparison_secondary_by_doc or {}
+    lab_a = (viz_experiment_labels or ("Experiment A", "Experiment B"))[0]
+    lab_b = (viz_experiment_labels or ("Experiment A", "Experiment B"))[1]
+    esc_lab_a = html_module.escape(lab_a)
+    esc_lab_b = html_module.escape(lab_b)
+
+    h_cat, h_fram, h_all, h_docs, h_locs = _collect_terms_from_comparison_fields(
+        comparison_by_doc, "human_category", "human_framing",
     )
-    if _framings_excluded_from_document_ui(config):
-        terms_by_fram = {
+    a_cat, a_fram, a_all, a_docs, a_locs = _collect_terms_from_comparison_fields(
+        comparison_by_doc, "llm_category", "llm_framing",
+    )
+    if dual_exp:
+        b_cat, b_fram, b_all, b_docs, b_locs = _collect_terms_from_comparison_fields(
+            sec_map, "llm_category", "llm_framing",
+        )
+    else:
+        b_cat = {}
+        b_fram = {}
+        b_all = set()
+        b_docs = {}
+        b_locs = {}
+
+    def _filter_fram_terms(d: Dict[str, Set[Tuple[str, str]]]) -> Dict[str, Set[Tuple[str, str]]]:
+        if not _framings_excluded_from_document_ui(config):
+            return dict(d)
+        return {
             k: v
-            for k, v in terms_by_fram.items()
+            for k, v in d.items()
             if not _framing_label_excluded_from_report_ui(k, config)
         }
+
+    h_fram = _filter_fram_terms(h_fram)
+    a_fram = _filter_fram_terms(a_fram)
+    b_fram = _filter_fram_terms(b_fram)
+
+    terms_by_cat, terms_by_fram = a_cat, a_fram
+    all_terms = a_all
     total_unique = len(all_terms)
     n_cat_with_terms = len(terms_by_cat)
     n_fram_with_terms = len(terms_by_fram)
     unique_by_cat = sum(len(s) for s in terms_by_cat.values())
     unique_by_fram = sum(len(s) for s in terms_by_fram.values())
-    doc_names = {d.get("document_id", ""): d.get("display_name", d.get("document_id", "")) for d in (documents or []) if d.get("document_id")}
+    nh_all, na_all, nb_all = len(h_all), len(a_all), len(b_all)
+    doc_names = {
+        d.get("document_id", ""): d.get("display_name", d.get("document_id", ""))
+        for d in (documents or [])
+        if d.get("document_id")
+    }
 
-    # Build content categories section: definitions + terms
-    cat_ids = [c.get("id", "") for c in categories if c.get("id")]
-    fram_ids = [f.get("id", "") for f in framings if f.get("id")]
-    cat_by_id = {c.get("id", ""): c for c in categories}
     fram_by_id = {f.get("id", ""): f for f in framings}
     for fid in list(fram_by_id.keys()):
         if fid not in fram_colours and "Generic" in fid:
@@ -3252,16 +3997,27 @@ def _glossary_tab(
         desc = scrub_retired_multiword_category_labels((c.get("description") or c.get("label_en", "") or ""))
         examples = scrub_retired_multiword_category_labels(str(c.get("examples", "") or ""))
         colour = cat_colours.get(cid, "#8b7355")
-        terms_set = terms_by_cat.get(cid) or terms_by_cat.get(c.get("label_en", "")) or set()
-        n_terms = len(terms_set)
-        terms_html_parts: List[str] = []
-        for (eng, rus) in sorted(terms_set, key=lambda x: (x[0] or x[1]).lower()):
-            doc_ids = term_docs.get((eng, rus), set())
-            locs = term_locations.get((eng, rus), [])
-            terms_html_parts.append(_glossary_term_item(eng, rus, colour, doc_ids, locs, doc_names))
-        terms_html = "\n".join(terms_html_parts) if terms_html_parts else '<p style="color: #999;"><span data-i18n="glossary_no_terms_in_docs">No terms in analyzed documents.</span></p>'
+        terms_set_h = h_cat.get(cid) or h_cat.get(c.get("label_en", "")) or set()
+        terms_set_a = a_cat.get(cid) or a_cat.get(c.get("label_en", "")) or set()
+        terms_set_b = b_cat.get(cid) or b_cat.get(c.get("label_en", "")) or set()
+        html_h, nh = _glossary_sorted_terms_block(terms_set_h, h_docs, h_locs, colour, doc_names)
+        html_a, na = _glossary_sorted_terms_block(terms_set_a, a_docs, a_locs, colour, doc_names)
+        html_b, nb = _glossary_sorted_terms_block(terms_set_b, b_docs, b_locs, colour, doc_names)
+        if not dual_exp:
+            html_b = (
+                '<p style="color:#6b7280;font-size:0.9rem;">Experiment B comparison is not loaded. '
+                "Add <code>report.secondary_comparison_json</code> when building the report.</p>"
+            )
+            nb = 0
+        layers_inner = (
+            f'<div class="glossary-terms-layers">'
+            f'<div class="glossary-terms-layer" data-glossary-layer="human">{html_h}</div>'
+            f'<div class="glossary-terms-layer glossary-layer-hidden" data-glossary-layer="exp_a">{html_a}</div>'
+            f'<div class="glossary-terms-layer glossary-layer-hidden" data-glossary-layer="exp_b">{html_b}</div>'
+            f"</div>"
+        )
         search_text = " ".join(filter(None, [cid, c.get("label_en", ""), desc, examples])).lower()
-        params_summary = json.dumps({"n": n_terms})
+        params_summary = json.dumps({"n": nh})
         ex_html = ""
         if examples:
             ex_html = f'<p style="color: #666;"><strong data-i18n="glossary_examples_label">Examples:</strong> {html_module.escape(examples)}</p>'
@@ -3271,8 +4027,8 @@ def _glossary_tab(
 <p style="margin-bottom: 0.5rem;"><strong data-i18n="glossary_purpose_label">Purpose:</strong> {html_module.escape(desc)}</p>
 {ex_html}
 <details style="margin-top: 0.75rem;">
-<summary style="cursor: pointer; font-weight: 500;" data-total="{n_terms}"><span class="glossary-terms-summary-label" data-i18n="glossary_terms_from_documents_count" data-i18n-params='{params_summary}'></span></summary>
-<div style="margin-top: 0.5rem;">{terms_html}</div>
+<summary style="cursor: pointer; font-weight: 500;" data-total-human="{nh}" data-total-exp-a="{na}" data-total-exp-b="{nb}" data-total="{nh}"><span class="glossary-terms-summary-label" data-i18n="glossary_terms_from_documents_count" data-i18n-params='{params_summary}'></span></summary>
+<div style="margin-top: 0.5rem;">{layers_inner}</div>
 </details>
 </div>''')
 
@@ -3285,16 +4041,27 @@ def _glossary_tab(
         examples = scrub_retired_multiword_category_labels(str(f.get("examples", "") or ""))
         colour = fram_colours.get(fid, "#8b7355")
         canon = _normalize_for_group(fid) or _normalize_for_group(f.get("label_en", ""))
-        terms_set = terms_by_fram.get(fid) or terms_by_fram.get(canon) or terms_by_fram.get(f.get("label_en", "")) or set()
-        n_terms = len(terms_set)
-        terms_html_parts = []
-        for (eng, rus) in sorted(terms_set, key=lambda x: (x[0] or x[1]).lower()):
-            doc_ids = term_docs.get((eng, rus), set())
-            locs = term_locations.get((eng, rus), [])
-            terms_html_parts.append(_glossary_term_item(eng, rus, colour, doc_ids, locs, doc_names))
-        terms_html = "\n".join(terms_html_parts) if terms_html_parts else '<p style="color: #999;"><span data-i18n="glossary_no_terms_in_docs">No terms in analyzed documents.</span></p>'
+        terms_set_h = h_fram.get(fid) or h_fram.get(canon) or h_fram.get(f.get("label_en", "")) or set()
+        terms_set_a = a_fram.get(fid) or a_fram.get(canon) or a_fram.get(f.get("label_en", "")) or set()
+        terms_set_b = b_fram.get(fid) or b_fram.get(canon) or b_fram.get(f.get("label_en", "")) or set()
+        html_h, nh = _glossary_sorted_terms_block(terms_set_h, h_docs, h_locs, colour, doc_names)
+        html_a, na = _glossary_sorted_terms_block(terms_set_a, a_docs, a_locs, colour, doc_names)
+        html_b, nb = _glossary_sorted_terms_block(terms_set_b, b_docs, b_locs, colour, doc_names)
+        if not dual_exp:
+            html_b = (
+                '<p style="color:#6b7280;font-size:0.9rem;">Experiment B comparison is not loaded. '
+                "Add <code>report.secondary_comparison_json</code> when building the report.</p>"
+            )
+            nb = 0
+        layers_inner = (
+            f'<div class="glossary-terms-layers">'
+            f'<div class="glossary-terms-layer" data-glossary-layer="human">{html_h}</div>'
+            f'<div class="glossary-terms-layer glossary-layer-hidden" data-glossary-layer="exp_a">{html_a}</div>'
+            f'<div class="glossary-terms-layer glossary-layer-hidden" data-glossary-layer="exp_b">{html_b}</div>'
+            f"</div>"
+        )
         search_text = " ".join(filter(None, [fid, f.get("label_en", ""), desc, examples])).lower()
-        params_summary = json.dumps({"n": n_terms})
+        params_summary = json.dumps({"n": nh})
         ex_html = ""
         if examples:
             ex_html = f'<p style="color: #666;"><strong data-i18n="glossary_examples_label">Examples:</strong> {html_module.escape(examples)}</p>'
@@ -3304,20 +4071,35 @@ def _glossary_tab(
 <p style="margin-bottom: 0.5rem;"><strong data-i18n="glossary_function_label">Function:</strong> {html_module.escape(desc)}</p>
 {ex_html}
 <details style="margin-top: 0.75rem;">
-<summary style="cursor: pointer; font-weight: 500;" data-total="{n_terms}"><span class="glossary-terms-summary-label" data-i18n="glossary_terms_from_documents_count" data-i18n-params='{params_summary}'></span></summary>
-<div style="margin-top: 0.5rem;">{terms_html}</div>
+<summary style="cursor: pointer; font-weight: 500;" data-total-human="{nh}" data-total-exp-a="{na}" data-total-exp-b="{nb}" data-total="{nh}"><span class="glossary-terms-summary-label" data-i18n="glossary_terms_from_documents_count" data-i18n-params='{params_summary}'></span></summary>
+<div style="margin-top: 0.5rem;">{layers_inner}</div>
 </details>
 </div>''')
 
+    opt_b_dis = "" if dual_exp else " disabled"
+    glossary_src_opts = (
+        f'<div class="glossary-filter-wrap glossary-label-source-wrap">'
+        f'<label for="glossary-label-source">Group terms by</label>'
+        f'<select id="glossary-label-source" class="glossary-label-source">'
+        f'<option value="human">Human labelled</option>'
+        f'<option value="exp_a">{esc_lab_a}</option>'
+        f'<option value="exp_b"{opt_b_dis}>{esc_lab_b}</option>'
+        f"</select></div>"
+    )
+
     summary_html = ""
-    if total_unique > 0:
+    if total_unique > 0 or nh_all > 0:
         params_cat = json.dumps({"n_types": n_cat_with_terms, "n_inst": unique_by_cat})
         params_fram = json.dumps({"n_types": n_fram_with_terms, "n_inst": unique_by_fram})
+        nb_line = str(nb_all) if dual_exp else "— (not loaded)"
         summary_html = f"""
 <hr style="margin: 3rem 0; border: none; border-top: 2px solid #dee2e6;"/>
 <h3 style="color: #4a5568; margin-bottom: 1.5rem; font-size: 1.5rem; margin-top: 3rem;" data-i18n="terms_found_summary">Terms Found in Documents - Summary</h3>
 <div style="background: #e8e4dc; padding: 1.5rem; border-radius: 4px; margin-bottom: 2rem; border: 1px solid rgba(139,115,85,0.3);">
-<p style="margin-bottom: 1rem;"><strong data-i18n="total_unique_terms">Total unique terms extracted:</strong> {total_unique}</p>
+<p style="margin-bottom: 0.65rem;"><strong data-i18n="total_unique_terms">Total unique terms extracted:</strong> {total_unique} <span style="color:#5a5348;">(primary comparison, Experiment A LLM slice)</span></p>
+<p style="margin-bottom: 0.45rem;"><strong>Human-labelled segments (unique terms):</strong> {nh_all}</p>
+<p style="margin-bottom: 0.45rem;"><strong>{esc_lab_a} (LLM on primary alignment, unique terms):</strong> {na_all}</p>
+<p style="margin-bottom: 1rem;"><strong>{esc_lab_b} (LLM on secondary comparison, unique terms):</strong> {nb_line}</p>
 <p style="margin-bottom: 1rem;"><strong data-i18n="content_categories_stats">Content Categories:</strong> <span data-i18n="glossary_stats_cat_detail" data-i18n-params='{params_cat}'>{n_cat_with_terms} types · {unique_by_cat} term instances</span></p>
 <p style="margin-bottom: 1rem;"><strong data-i18n="framing_strategies_stats">Framing Strategies:</strong> <span data-i18n="glossary_stats_fram_detail" data-i18n-params='{params_fram}'>{n_fram_with_terms} types · {unique_by_fram} term instances</span></p>
 </div>"""
@@ -3351,6 +4133,9 @@ def _glossary_tab(
         + """
 </select>
 </div>
+"""
+        + glossary_src_opts
+        + """
 </div>
 <p class="glossary-search-hint" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.5rem; margin-bottom: 1.5rem;" data-i18n-html="glossary_search_hint">Plain text matches anywhere (case-insensitive). Regex: /pattern/ or /pattern/flags. <strong>CLOSING SLASH REQUIRED</strong> after the pattern.</p>
 <h3 style="color: #4a5568; margin-bottom: 1.5rem; font-size: 1.5rem;" data-i18n="content_categories">Content Categories</h3>
@@ -3595,7 +4380,7 @@ function setLanguage(lang) {
   var vizSel = document.getElementById('viz-select');
   if (vizSel && typeof buildConfigPanel === 'function') {
     var dataEl = document.getElementById('viz-data');
-    if (dataEl) { try { var d = JSON.parse(dataEl.textContent); buildConfigPanel('viz-' + vizSel.value, d); } catch(e){} }
+    if (dataEl) { try { buildConfigPanel('viz-' + vizSel.value, getActiveVizPayloadFromDom()); } catch(e){} }
   }
   document.querySelectorAll('[data-doc-viz-root]').forEach(function(sec) {
     var sfx = sec.getAttribute('data-doc-viz-root');
@@ -3723,40 +4508,205 @@ function evaluateSegmentFilters(seg, search, catFilter, framFilter, colourBy) {
   if (colourBy === 'human') { catCol = seg.humanCatCol || catCol; framCol = seg.humanFramCol || framCol; }
   return { visible: visible, useCatHighlight: useCatHighlight, useFramColour: useFramColour, catCol: catCol, framCol: framCol, passSearch: passSearch, passSearchInPanel: passSearchInPanel };
 }
+function destroyAllDocVizChartsForSuffix(suffix) {
+  var prefix = 'doc:' + suffix + ':';
+  Object.keys(vizChartInstances).forEach(function(k) {
+    if (k.indexOf(prefix) !== 0) return;
+    var ch = vizChartInstances[k];
+    if (ch && typeof ch.destroy === 'function') { try { ch.destroy(); } catch(e) {} }
+    vizChartInstances[k] = null;
+  });
+}
+function docExperimentStorageKey(docId) {
+  return 'vozmezdie_doc_exp_' + docId;
+}
+function getDocExperimentIndex(docId) {
+  var idx = 0;
+  try {
+    idx = parseInt(sessionStorage.getItem(docExperimentStorageKey(docId)) || '0', 10) || 0;
+  } catch (e) {}
+  if (idx !== 1) idx = 0;
+  return idx;
+}
+function setDocExperimentIndex(docId, idx) {
+  if (idx !== 1) idx = 0;
+  try { sessionStorage.setItem(docExperimentStorageKey(docId), String(idx)); } catch (e) {}
+}
+function getActiveComparisonTbody(tid) {
+  var tab = document.getElementById('tab-' + tid);
+  if (tab && tab.getAttribute('data-comparison-dual') === '1') {
+    var idx = getDocExperimentIndex(tid);
+    return document.getElementById('table-' + tid + '-run-' + idx);
+  }
+  return document.getElementById('table-' + tid);
+}
+function updateDocumentTextRunHint(docId, idx) {
+  if (idx !== 1) idx = 0;
+  var tab = document.getElementById('tab-' + docId);
+  if (!tab || tab.getAttribute('data-comparison-dual') !== '1') return;
+  var l0 = tab.getAttribute('data-viz-exp-label-0') || 'Experiment A';
+  var l1 = tab.getAttribute('data-viz-exp-label-1') || 'Experiment B';
+  var active = idx === 1 ? l1 : l0;
+  var cb = document.getElementById('doc-colour-by-' + docId);
+  if (cb) {
+    cb.setAttribute('title', 'LLM / Human / Both use labels from the comparison run now selected (' + active + ').');
+  }
+}
+function syncDocumentComparisonRun(docId, idx) {
+  if (idx !== 1) idx = 0;
+  var tab = document.getElementById('tab-' + docId);
+  if (!tab || tab.getAttribute('data-comparison-dual') !== '1') return;
+  setDocExperimentIndex(docId, idx);
+  var panel0 = document.getElementById('comparison-table-panel-' + docId + '-0');
+  var panel1 = document.getElementById('comparison-table-panel-' + docId + '-1');
+  var tb0 = document.getElementById('table-' + docId + '-run-0');
+  var tb1 = document.getElementById('table-' + docId + '-run-1');
+  if (panel0 && panel1) {
+    panel0.style.display = idx === 0 ? '' : 'none';
+    panel1.style.display = idx === 1 ? '' : 'none';
+  } else if (tb0 && tb1) {
+    tb0.style.display = idx === 0 ? '' : 'none';
+    tb1.style.display = idx === 1 ? '' : 'none';
+  } else {
+    return;
+  }
+  var hs0 = document.getElementById('hidden-stats-' + docId + '-run-0');
+  var hs1 = document.getElementById('hidden-stats-' + docId + '-run-1');
+  if (hs0) hs0.style.display = idx === 0 ? '' : 'none';
+  if (hs1) hs1.style.display = idx === 1 ? '' : 'none';
+  /* Dual-run document text must mirror the active comparison tbody so filters /
+     Analysis by use the same labels as the table (SSR / JSON snapshot can drift). */
+  if (typeof buildDocumentTextView === 'function') buildDocumentTextView(docId);
+  var bundle = document.getElementById('comparison-runs-' + docId);
+  var main = document.getElementById('comparison-export-' + docId);
+  if (bundle && main) {
+    try {
+      var cp = JSON.parse(bundle.textContent);
+      main.textContent = JSON.stringify(cp.runs[idx]);
+    } catch(e3) {}
+  }
+  tab.querySelectorAll('.doc-comparison-run-select, .table-comparison-run-select, .doc-viz-experiment-select').forEach(function(sel) {
+    sel.value = String(idx);
+  });
+  updateDocumentTextRunHint(docId, idx);
+  if (typeof applyComparisonTableFilters === 'function') applyComparisonTableFilters(docId);
+  if (typeof applyDocumentSearchAndFilter === 'function') applyDocumentSearchAndFilter(docId);
+  syncDocVizForDocument(docId, idx);
+}
+function initPerDocumentExperimentUIs() {
+  document.querySelectorAll('.tab-content[data-comparison-dual="1"]').forEach(function(tab) {
+    var tid = tab.id.replace(/^tab-/, '');
+    if (!tid || tid === 'home' || tid === 'intro') return;
+    syncDocumentComparisonRun(tid, getDocExperimentIndex(tid));
+  });
+}
+function syncDocVizForDocument(docId, idx) {
+  if (idx !== 1) idx = 0;
+  document.querySelectorAll('[data-doc-viz-root]').forEach(function(root) {
+    if ((root.getAttribute('data-report-doc-id') || '') !== docId) return;
+    var sfx = root.getAttribute('data-doc-viz-root');
+    if (!sfx) return;
+    var jsonEl = document.getElementById('viz-data-' + sfx);
+    if (!jsonEl) return;
+    var rawTop;
+    try { rawTop = JSON.parse(jsonEl.textContent); } catch(e) { return; }
+    if (!rawTop.vizMultiMode || !rawTop.vizExperiments || rawTop.vizExperiments.length < 2) return;
+    destroyAllDocVizChartsForSuffix(sfx);
+    var ex = rawTop.vizExperiments[idx];
+    if (!ex) return;
+    var hm = root.querySelector('.doc-viz-heatmap-mount');
+    if (hm && ex.heatmapHtml) hm.innerHTML = ex.heatmapHtml;
+    var plw = root.querySelector('.doc-viz-places-embed-wrap');
+    if (plw && ex.placesEmbedHtml != null) plw.innerHTML = ex.placesEmbedHtml;
+    root.removeAttribute('data-doc-viz-inited');
+    var det = root.closest('details.doc-viz-details');
+    if (det && det.open && typeof initDocViz === 'function') initDocViz(root);
+  });
+}
 function buildDocumentTextView(tid) {
   var tabEl = document.getElementById('tab-' + tid);
   if (!tabEl) return;
-  var tbody = tabEl.querySelector('tbody[id="table-' + tid + '"]');
   var containerEng = document.getElementById('doc-text-eng-' + tid);
   var containerRus = document.getElementById('doc-text-rus-' + tid);
-  if (!tbody || !containerEng || !containerRus) return;
+  if (!containerEng || !containerRus) return;
+  var tbody = getActiveComparisonTbody(tid);
   var catSelect = tabEl.querySelector('select.document-category-filter');
   var framSelect = tabEl.querySelector('select.document-framing-filter');
-  var rows = tbody.querySelectorAll('tr');
+  var dualDoc = tabEl.getAttribute('data-comparison-dual') === '1';
+  var rows = tbody ? tbody.querySelectorAll('tr') : [];
+  /* Dual-run: prefer embedded SSR panels per experiment so full originals stay intact with gaps (avoid rebuilding from table rows only). */
+  var appliedFromRunsBundle = false;
+  var textRunsEl = document.getElementById('doc-text-runs-' + tid);
+  if (dualDoc && textRunsEl) {
+    try {
+      var trPayload = JSON.parse(textRunsEl.textContent);
+      var runsArr = trPayload.runs;
+      var ri = typeof getDocExperimentIndex === 'function' ? getDocExperimentIndex(tid) : 0;
+      var rr = runsArr && runsArr[ri];
+      if (!rr && runsArr && runsArr.length) rr = runsArr[0];
+      if (rr && typeof rr.eng === 'string' && typeof rr.rus === 'string') {
+        containerEng.innerHTML = rr.eng;
+        containerRus.innerHTML = rr.rus;
+        appliedFromRunsBundle = true;
+      }
+    } catch (tre) {}
+  }
+  if (dualDoc && !appliedFromRunsBundle) {
+    while (containerEng.firstChild) containerEng.removeChild(containerEng.firstChild);
+    while (containerRus.firstChild) containerRus.removeChild(containerRus.firstChild);
+  }
   var hasPreFilled = containerEng.children.length > 0;
-  if (!hasPreFilled) {
+  if (!hasPreFilled && tbody) {
     var catFilter = catSelect ? catSelect.value : '';
     var framFilter = framSelect ? framSelect.value : '';
     for (var i = 0; i < rows.length; i++) {
-      var tds = rows[i].querySelectorAll('td');
-      if (tds.length < 5) continue;
-      var eng = (tds[1] && tds[1].textContent) ? tds[1].textContent.trim() : '';
-      var rus = (tds[2] && tds[2].textContent) ? tds[2].textContent.trim() : '';
-      var catCell = tds[3], framCell = tds[4];
-      var catSpans = catCell ? catCell.querySelectorAll('span[style*="color"]') : [];
-      var framSpans = framCell ? framCell.querySelectorAll('span[style*="color"]') : [];
-      var llmCatSpan = catSpans[0] || null;
-      var humanCatSpan = catSpans.length >= 2 ? catSpans[1] : catSpans[0];
-      var llmFramSpan = framSpans[0] || null;
-      var humanFramSpan = framSpans.length >= 2 ? framSpans[1] : framSpans[0];
-      var catText = canonicalCategoryOption(llmCatSpan ? llmCatSpan.textContent.trim() : '');
-      var framText = canonicalFramingOption(llmFramSpan ? llmFramSpan.textContent.trim() : '');
-      var humanCatText = canonicalCategoryOption(humanCatSpan ? humanCatSpan.textContent.trim() : '');
-      var humanFramText = canonicalFramingOption(humanFramSpan ? humanFramSpan.textContent.trim() : '');
-      var catColor = llmCatSpan && llmCatSpan.style.color ? llmCatSpan.style.color : '#333';
-      var framColor = (framText && typeof resolveFramingColour === 'function') ? resolveFramingColour(framText, (llmFramSpan && llmFramSpan.style.color ? llmFramSpan.style.color : '#333')) : '#333';
-      var humanCatColor = humanCatSpan && humanCatSpan.style.color ? humanCatSpan.style.color : '#333';
-      var humanFramColor = (humanFramText && typeof resolveFramingColour === 'function') ? resolveFramingColour(humanFramText, (humanFramSpan && humanFramSpan.style.color ? humanFramSpan.style.color : '#333')) : '#333';
+      var row = rows[i];
+      var tds = row.querySelectorAll('td');
+      var layout = row.getAttribute('data-table-layout') || 'standard';
+      if (layout === 'preliminary-b' && tds.length < 7) continue;
+      if (layout !== 'preliminary-b' && tds.length < 5) continue;
+      var eng = '';
+      var rus = '';
+      var daEng = row.getAttribute('data-entry-eng');
+      var daRus = row.getAttribute('data-entry-rus');
+      if (daEng !== null && daRus !== null) {
+        eng = String(daEng).trim();
+        rus = String(daRus).trim();
+      } else {
+        eng = (tds[1] && tds[1].textContent) ? tds[1].textContent.trim() : '';
+        rus = (tds[2] && tds[2].textContent) ? tds[2].textContent.trim() : '';
+      }
+      var catIdx = layout === 'preliminary-b' ? 2 : 3;
+      var framIdx = layout === 'preliminary-b' ? 3 : 4;
+      var catCell = tds[catIdx], framCell = tds[framIdx];
+      var catText = canonicalCategoryOption(row.getAttribute('data-llm-category') || '');
+      var humanCatText = canonicalCategoryOption(row.getAttribute('data-human-category') || '');
+      var framText = canonicalFramingOption(row.getAttribute('data-llm-framing') || '');
+      var humanFramText = canonicalFramingOption(row.getAttribute('data-human-framing') || '');
+      var catColor = row.getAttribute('data-llm-category-colour') || '#333';
+      var humanCatColor = row.getAttribute('data-human-category-colour') || '#333';
+      var framColor = row.getAttribute('data-llm-framing-colour') || '#333';
+      var humanFramColor = row.getAttribute('data-human-framing-colour') || '#333';
+      if (!row.getAttribute('data-llm-category-colour') && catCell) {
+        var catSpans = catCell.querySelectorAll('span[style*="color"]');
+        var llmCatSpan = catSpans[0] || null;
+        var humanCatSpan = catSpans.length >= 2 ? catSpans[1] : catSpans[0];
+        if (!catText && llmCatSpan) catText = canonicalCategoryOption(llmCatSpan.textContent.trim());
+        if (!humanCatText && humanCatSpan) humanCatText = canonicalCategoryOption(humanCatSpan.textContent.trim());
+        if (llmCatSpan && llmCatSpan.style.color) catColor = llmCatSpan.style.color;
+        if (humanCatSpan && humanCatSpan.style.color) humanCatColor = humanCatSpan.style.color;
+      }
+      if (!row.getAttribute('data-llm-framing-colour') && framCell) {
+        var framSpans = framCell.querySelectorAll('span[style*="color"]');
+        var llmFramSpan = framSpans[0] || null;
+        var humanFramSpan = framSpans.length >= 2 ? framSpans[1] : framSpans[0];
+        if (!framText && llmFramSpan) framText = canonicalFramingOption(llmFramSpan.textContent.trim());
+        if (!humanFramText && humanFramSpan) humanFramText = canonicalFramingOption(humanFramSpan.textContent.trim());
+        if (llmFramSpan && llmFramSpan.style.color) framColor = llmFramSpan.style.color;
+        if (humanFramSpan && humanFramSpan.style.color) humanFramColor = humanFramSpan.style.color;
+      }
+      framColor = (framText && typeof resolveFramingColour === 'function') ? resolveFramingColour(framText, framColor) : framColor;
+      humanFramColor = (humanFramText && typeof resolveFramingColour === 'function') ? resolveFramingColour(humanFramText, humanFramColor) : humanFramColor;
       var spanEng = document.createElement('span');
       spanEng.className = 'doc-entry';
       spanEng.textContent = eng;
@@ -3853,8 +4803,10 @@ function buildDocumentTextView(tid) {
   }
   var filterHandler = function() { applyDocumentSearchAndFilter(tid); };
   var searchInput = document.getElementById('doc-search-' + tid);
+  var colourByEl = document.getElementById('doc-colour-by-' + tid);
   if (catSelect) { catSelect.removeEventListener('change', filterHandler); catSelect.addEventListener('change', filterHandler); }
   if (framSelect) { framSelect.removeEventListener('change', filterHandler); framSelect.addEventListener('change', filterHandler); }
+  if (colourByEl) { colourByEl.removeEventListener('change', filterHandler); colourByEl.addEventListener('change', filterHandler); }
   if (searchInput) { searchInput.removeEventListener('input', filterHandler); searchInput.addEventListener('input', filterHandler); }
   var docTextView = tabEl.querySelector('.document-text-view');
   if (docTextView) {
@@ -4038,7 +4990,7 @@ function applyDocumentSearchAndFilter(tid) {
   containerRus.querySelectorAll('.doc-entry').forEach(applyToSpan);
 }
 function applyComparisonTableFilters(tid) {
-  var tbody = document.getElementById('table-' + tid);
+  var tbody = getActiveComparisonTbody(tid);
   if (!tbody) return;
   var searchEl = document.getElementById('table-search-' + tid);
   var catEl = document.getElementById('table-cat-' + tid);
@@ -4076,7 +5028,16 @@ function onSectionClickToView(tid, rowIndex) {
   var spansEng = containerEng.querySelectorAll('.doc-entry[data-row-index="' + rowIdxStr + '"]');
   var spansRus = containerRus.querySelectorAll('.doc-entry[data-row-index="' + rowIdxStr + '"]');
   if (spansEng.length === 0 && spansRus.length === 0) {
-    var row = document.querySelector('#table-' + tid + ' tr[data-row-index="' + rowIdxStr + '"]');
+    var row = null;
+    var tbodyAct = getActiveComparisonTbody(tid);
+    if (tbodyAct) row = tbodyAct.querySelector('tr[data-row-index="' + rowIdxStr + '"]');
+    if (!row) row = document.querySelector('#table-' + tid + ' tr[data-row-index="' + rowIdxStr + '"]');
+    if (!row) {
+      var tb0f = document.getElementById('table-' + tid + '-run-0');
+      var tb1f = document.getElementById('table-' + tid + '-run-1');
+      if (tb0f) row = tb0f.querySelector('tr[data-row-index="' + rowIdxStr + '"]');
+      if (!row && tb1f) row = tb1f.querySelector('tr[data-row-index="' + rowIdxStr + '"]');
+    }
     if (row) {
       var entryEng = (row.getAttribute('data-entry-eng') || '').trim();
       var entryRus = (row.getAttribute('data-entry-rus') || '').trim();
@@ -4155,6 +5116,15 @@ function glossarySearchMatcher(query) {
   var qLower = q.toLowerCase();
   return function(text) { return (text || '').toLowerCase().indexOf(qLower) !== -1; };
 }
+function applyGlossaryLabelLayers() {
+  var sel = document.getElementById('glossary-label-source');
+  var src = sel ? sel.value : 'human';
+  document.querySelectorAll('#lab-glossary .glossary-terms-layer').forEach(function(layer) {
+    var match = layer.getAttribute('data-glossary-layer') === src;
+    layer.classList.toggle('glossary-layer-hidden', !match);
+  });
+  applyGlossaryFilters();
+}
 function applyGlossaryFilters() {
   var searchEl = document.getElementById('glossary-search');
   var filterEl = document.getElementById('glossary-doc-filter');
@@ -4165,7 +5135,8 @@ function applyGlossaryFilters() {
   sections.forEach(function(s) {
     var sectionBlob = s.getAttribute('data-text') || '';
     var sectionMatchesSearch = !q || matchFn(sectionBlob);
-    var items = s.querySelectorAll('.glossary-term-item');
+    var layer = s.querySelector('.glossary-terms-layer:not(.glossary-layer-hidden)');
+    var items = layer ? layer.querySelectorAll('.glossary-term-item') : s.querySelectorAll('.glossary-term-item');
     items.forEach(function(it) {
       var termText = it.textContent || '';
       var termMatchesSearch = !q || matchFn(termText);
@@ -4181,7 +5152,10 @@ function applyGlossaryFilters() {
     s.classList.toggle('hidden', !sectionVisible);
     var summaryEl = s.querySelector('summary');
     if (summaryEl) {
-      var totalRaw = summaryEl.getAttribute('data-total');
+      var srcEl = document.getElementById('glossary-label-source');
+      var src = srcEl ? srcEl.value : 'human';
+      var attr = src === 'human' ? 'data-total-human' : (src === 'exp_a' ? 'data-total-exp-a' : 'data-total-exp-b');
+      var totalRaw = summaryEl.getAttribute(attr) || summaryEl.getAttribute('data-total');
       var totalNum = parseInt(totalRaw, 10);
       if (isNaN(totalNum)) totalNum = items.length;
       var n = (q || docId) ? visibleCount : totalNum;
@@ -4189,18 +5163,39 @@ function applyGlossaryFilters() {
       if (labelSpan && typeof t === 'function') {
         labelSpan.setAttribute('data-i18n-params', JSON.stringify({n: n}));
         labelSpan.textContent = t('glossary_terms_from_documents_count', {n: n});
-      } else {
+      } else if (!labelSpan) {
         summaryEl.textContent = typeof t === 'function' ? t('glossary_terms_from_documents_count', {n: n}) : ('Terms from documents (' + n + ')');
       }
     }
   });
 }
 var vizChartInstances = {};
+function getVizExperimentIndex() {
+  var idx = 0;
+  try { idx = parseInt(sessionStorage.getItem('vozmezdie_viz_exp') || '0', 10) || 0; } catch(e) {}
+  return idx;
+}
+function setVizExperimentIndex(idx) {
+  try { sessionStorage.setItem('vozmezdie_viz_exp', String(idx)); } catch(e) {}
+}
+function getActiveVizPayloadFromDom() {
+  var jsonEl = document.getElementById('viz-data');
+  if (!jsonEl) return {};
+  try {
+    var rawTop = JSON.parse(jsonEl.textContent);
+    if (rawTop.vizMultiMode && rawTop.vizExperiments && rawTop.vizExperiments.length) {
+      var idx = getVizExperimentIndex();
+      if (idx < 0 || idx >= rawTop.vizExperiments.length) idx = 0;
+      var ex = rawTop.vizExperiments[idx];
+      return (ex && ex.payload) ? ex.payload : {};
+    }
+    return rawTop;
+  } catch(e) { return {}; }
+}
 function getVizConfig() {
   var jsonEl = document.getElementById('viz-data');
   if (!jsonEl) return { selection: 'wordcloud', config: {} };
-  var data;
-  try { data = JSON.parse(jsonEl.textContent); } catch(e) { return { selection: 'wordcloud', config: {} }; }
+  var data = getActiveVizPayloadFromDom();
   var defaults = data.configDefaults || {};
   var stored;
   try { stored = JSON.parse(localStorage.getItem('vozmezdie_viz') || '{}'); } catch(e) { stored = {}; }
@@ -4881,8 +5876,23 @@ function initDocViz(root) {
   if (!suffix) return;
   var jsonEl = document.getElementById('viz-data-' + suffix);
   if (!jsonEl) return;
-  var data;
-  try { data = JSON.parse(jsonEl.textContent); } catch (e) { return; }
+  var rawTop;
+  try { rawTop = JSON.parse(jsonEl.textContent); } catch (e) { return; }
+  var multiDoc = !!(rawTop.vizMultiMode && rawTop.vizExperiments && rawTop.vizExperiments.length > 1);
+  var reportDocId = root.getAttribute('data-report-doc-id') || '';
+  var idx = multiDoc ? getDocExperimentIndex(reportDocId) : 0;
+  if (multiDoc) {
+    if (idx < 0 || idx >= rawTop.vizExperiments.length) idx = 0;
+    var ex0 = rawTop.vizExperiments[idx];
+    if (ex0) {
+      var hm0 = root.querySelector('.doc-viz-heatmap-mount');
+      if (hm0 && ex0.heatmapHtml) hm0.innerHTML = ex0.heatmapHtml;
+      var plw0 = root.querySelector('.doc-viz-places-embed-wrap');
+      if (plw0 && ex0.placesEmbedHtml != null) plw0.innerHTML = ex0.placesEmbedHtml;
+    }
+  }
+  var data = multiDoc ? (rawTop.vizExperiments[idx] && rawTop.vizExperiments[idx].payload) : rawTop;
+  if (!data || typeof data !== 'object') return;
   root.setAttribute('data-doc-viz-inited', '1');
   var sel = document.getElementById('viz-select-' + suffix);
   var panels = root.querySelectorAll('.doc-viz-panel');
@@ -5098,9 +6108,10 @@ function buildConfigPanel(panelId, data, docCtx) {
 function initViz() {
   var jsonEl = document.getElementById('viz-data');
   if (!jsonEl) return;
-  var data;
-  try { data = JSON.parse(jsonEl.textContent); } catch(e) { return; }
-  var cfg = getVizConfig();
+  var rawTop;
+  try { rawTop = JSON.parse(jsonEl.textContent); } catch(e) { return; }
+  var multi = !!(rawTop.vizMultiMode && rawTop.vizExperiments && rawTop.vizExperiments.length > 1);
+  function payload() { return getActiveVizPayloadFromDom(); }
   var labDet = document.getElementById('lab-visualizations');
   function labVizSectionOpen() {
     return !labDet || labDet.tagName !== 'DETAILS' || labDet.open;
@@ -5108,12 +6119,73 @@ function initViz() {
   function syncPanelsAndRender(selection) {
     document.querySelectorAll('#lab-visualizations .viz-panel').forEach(function(p) { p.classList.remove('active'); });
     var panel = document.getElementById('viz-' + selection);
+    var d = payload();
     if (panel) {
       panel.classList.add('active');
-      if (labVizSectionOpen()) renderVizPanel('viz-' + selection, data);
+      if (labVizSectionOpen()) renderVizPanel('viz-' + selection, d);
     }
-    buildConfigPanel('viz-' + selection, data);
+    buildConfigPanel('viz-' + selection, d);
   }
+  function destroyAllVizCharts() {
+    Object.keys(vizChartInstances).forEach(function(k) {
+      var ch = vizChartInstances[k];
+      if (ch && typeof ch.destroy === 'function') { try { ch.destroy(); } catch(e2) {} }
+      vizChartInstances[k] = null;
+    });
+  }
+  function applyExperimentIndex(idx) {
+    if (!multi) return;
+    if (idx < 0 || idx >= rawTop.vizExperiments.length) idx = 0;
+    setVizExperimentIndex(idx);
+    var ex = rawTop.vizExperiments[idx];
+    var hm = document.getElementById('viz-heatmap-mount');
+    if (hm && ex && ex.heatmapHtml) hm.innerHTML = ex.heatmapHtml;
+    destroyAllVizCharts();
+    var cur = getVizConfig();
+    syncPanelsAndRender(cur.selection);
+    var expSelLab = document.getElementById('viz-experiment-select');
+    if (expSelLab) expSelLab.value = String(idx);
+  }
+  var idx0 = 0;
+  if (multi) {
+    idx0 = getVizExperimentIndex();
+    if (idx0 < 0 || idx0 >= rawTop.vizExperiments.length) idx0 = 0;
+    var expSel = document.getElementById('viz-experiment-select');
+    if (!expSel) {
+      var vizControls = document.querySelector('#lab-visualizations .viz-controls');
+      var firstLbl = vizControls && vizControls.querySelector('label[for="viz-select"]');
+      if (vizControls && firstLbl) {
+        var wrap = document.createElement('div');
+        wrap.className = 'viz-experiment-switch lab-viz-experiment-row';
+        wrap.style.cssText = 'margin-bottom:0.65rem;display:flex;flex-wrap:wrap;align-items:center;gap:0.5rem 1rem;width:100%;';
+        var lab = document.createElement('label');
+        lab.setAttribute('for', 'viz-experiment-select');
+        lab.textContent = 'Visualization experiment: ';
+        expSel = document.createElement('select');
+        expSel.id = 'viz-experiment-select';
+        expSel.className = 'lab-viz-experiment-select';
+        rawTop.vizExperiments.forEach(function(ex, i) {
+          var o = document.createElement('option');
+          o.value = String(i);
+          o.textContent = ex.label || ('Run ' + (i + 1));
+          expSel.appendChild(o);
+        });
+        wrap.appendChild(lab);
+        wrap.appendChild(expSel);
+        vizControls.insertBefore(wrap, firstLbl);
+      }
+    }
+    expSel = document.getElementById('viz-experiment-select');
+    if (expSel && expSel.getAttribute('data-viz-exp-bound') !== '1') {
+      expSel.setAttribute('data-viz-exp-bound', '1');
+      expSel.addEventListener('change', function() {
+        applyExperimentIndex(parseInt(expSel.value, 10) || 0);
+      });
+    }
+    if (expSel) expSel.value = String(idx0);
+    applyExperimentIndex(idx0);
+  }
+  var cfg = getVizConfig();
   var select = document.getElementById('viz-select');
   if (select) {
     select.value = cfg.selection;
@@ -5124,13 +6196,13 @@ function initViz() {
       syncPanelsAndRender(v);
     });
   }
-  syncPanelsAndRender(cfg.selection);
+  if (!multi) syncPanelsAndRender(cfg.selection);
   if (labDet && labDet.tagName === 'DETAILS') {
     labDet.addEventListener('toggle', function() {
       if (!labDet.open) return;
       var cur = getVizConfig();
       var sel = (select && select.value) ? select.value : cur.selection;
-      renderVizPanel('viz-' + sel, data);
+      renderVizPanel('viz-' + sel, payload());
       requestAnimationFrame(function() {
         Object.keys(vizChartInstances).forEach(function(k) {
           var ch = vizChartInstances[k];
@@ -5156,7 +6228,7 @@ function initViz() {
       if (e.target.id === 'viz-segment-x-step') c.config.segment_length.x_tick_step = parseInt(e.target.value, 10);
       if (e.target.id && (/^viz-(max-words|weight-factor|language|stopwords-extra)$/.test(e.target.id) || /^viz-radar-(mode|compare-count)$/.test(e.target.id) || /^viz-segment-(scale|x-step)$/.test(e.target.id))) {
         saveVizConfig(c.selection, c.config);
-        renderVizPanel('viz-' + c.selection, data);
+        renderVizPanel('viz-' + c.selection, payload());
       }
     });
   }
@@ -5289,6 +6361,7 @@ document.addEventListener('DOMContentLoaded', function() {
   } else {
   applySavedReaderLayout();
   initViz();
+  if (typeof initPerDocumentExperimentUIs === 'function') initPerDocumentExperimentUIs();
   function applyHashNav() {
     var h = window.location.hash;
     var vizCompact = h && h.match(/^#viz-(.+)$/);
@@ -5400,6 +6473,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (glossaryDocFilter) {
     glossaryDocFilter.addEventListener('change', applyGlossaryFilters);
   }
+  var glossaryLabelSrc = document.getElementById('glossary-label-source');
+  if (glossaryLabelSrc) {
+    glossaryLabelSrc.addEventListener('change', applyGlossaryLabelLayers);
+    applyGlossaryLabelLayers();
+  }
   var tabsContainer = document.getElementById('tabs-container');
   if (tabsContainer) tabsContainer.addEventListener('click', function(e) {
     var tid = e.target.getAttribute('data-tab');
@@ -5415,6 +6493,21 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   document.body.addEventListener('change', function(e) {
+    if (e.target.classList && e.target.classList.contains('doc-viz-experiment-select')) {
+      var drid = e.target.getAttribute('data-report-doc-id');
+      if (drid && typeof syncDocumentComparisonRun === 'function') syncDocumentComparisonRun(drid, parseInt(e.target.value, 10) || 0);
+      return;
+    }
+    if (e.target.classList && e.target.classList.contains('doc-comparison-run-select')) {
+      var tdx = e.target.getAttribute('data-tab');
+      if (tdx && typeof syncDocumentComparisonRun === 'function') syncDocumentComparisonRun(tdx, parseInt(e.target.value, 10) || 0);
+      return;
+    }
+    if (e.target.classList && e.target.classList.contains('table-comparison-run-select')) {
+      var tdx2 = e.target.getAttribute('data-tab');
+      if (tdx2 && typeof syncDocumentComparisonRun === 'function') syncDocumentComparisonRun(tdx2, parseInt(e.target.value, 10) || 0);
+      return;
+    }
     var tid = e.target.getAttribute('data-tab');
     if (!tid && e.target.id && /^doc-(?:search|cat|fram|colour-by)-(.+)$/.test(e.target.id)) tid = e.target.id.replace(/^doc-(?:search|cat|fram|colour-by)-/, '');
     if (!tid && e.target.id && /^table-(?:search|cat|fram)-(.+)$/.test(e.target.id)) tid = e.target.id.replace(/^table-(?:search|cat|fram)-/, '');

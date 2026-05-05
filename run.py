@@ -115,6 +115,17 @@ def main(
         json.dump({"documents": documents, "comparison_by_doc": comparison_by_doc}, f, indent=2, ensure_ascii=False)
     print(f"Saved: {json_path}")
 
+    # Optional secondary comparison (Experiment B) for merged Research Lab viz
+    from report import _load_secondary_comparison_by_doc
+
+    sec_rel = (config.get("report") or {}).get("secondary_comparison_json") or ""
+    if sec_rel.strip():
+        sec_cbd = _load_secondary_comparison_by_doc(config)
+        if sec_cbd is None:
+            print("Note: secondary_comparison_json set but file missing or empty; Lab charts use primary run only.")
+        else:
+            print(f"Research Lab: secondary comparison loaded ({len(sec_cbd)} documents) for viz toggle.")
+
     # 5. Report
     from report import run as report_run
     out_path = report_run(comparison_by_doc, documents, taxonomy, config)
