@@ -5,13 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Places Map Demo — Vozmezdie</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: 'Crimson Text', Georgia, serif; background: #f5f0e6; color: #4a5568; }
     .demo-header { padding: 1rem 1.5rem; background: #2d3748; color: #e8e4dc; border-bottom: 1px solid rgba(139,0,0,0.3); }
     .demo-header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
-    .demo-header .badge { display: inline-block; margin-left: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #8b0000; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+    .demo-header .badge {
+      display: inline-block;
+      margin-left: 0.55rem;
+      vertical-align: middle;
+      font-family: 'Stardos Stencil', 'Impact', sans-serif;
+      font-size: 0.96rem;
+      font-weight: 700;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      white-space: nowrap;
+      padding: 0.42rem 1.08rem 0.38rem;
+      border-radius: 3px 2px 4px 3px;
+      color: #520f14;
+      background:
+        radial-gradient(ellipse 130% 100% at 28% 0%, rgba(255,252,248,0.96), transparent 54%),
+        linear-gradient(170deg, #fffefb 0%, #f4e6d8 38%, #e2cbb8 100%);
+      border: 2px solid #3f0b12;
+      box-shadow:
+        0 0 0 1px #b42323,
+        0 0 0 5px rgba(254, 226, 226, 0.32),
+        inset 0 1px 1px rgba(255,255,255,0.88),
+        inset 0 -8px 22px rgba(127, 29, 29, 0.11),
+        0 4px 18px rgba(0, 0, 0, 0.38);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.52),
+        0 0 3px rgba(82, 15, 20, 0.32),
+        0 2px 8px rgba(0, 0, 0, 0.12);
+      transform: rotate(-4.75deg);
+      transform-origin: 50% 50%;
+    }
     .demo-header p { margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.9; }
     #map { height: 70vh; min-height: 400px; }
     .demo-footer { padding: 1rem 1.5rem; font-size: 0.85rem; color: #6b7280; }
@@ -23,7 +52,7 @@
 <body>
   <div class="demo-header">
     <h1>Places Map <span class="badge">Declassified</span></h1>
-    <p>Places mentioned in KGB archival documents. Marker size = segment count. Data from Places-tagged segments.</p>
+    <p>Places come from passages labelled Places in the documents. Larger markers mean more passages mention that spot. The eyes of the KGB are upon you.</p>
   </div>
   <div id="map"></div>
   <div class="demo-footer">
