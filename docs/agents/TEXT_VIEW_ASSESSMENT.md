@@ -7,12 +7,11 @@
 **Path A – Server-filled (when raw document text exists)**  
 - For each doc the server has `full_text_eng` and `full_text_rus` (from ingest) and `aligned` (comparison rows).  
 - It runs overlap resolution **per language** via `_get_accepted_segments(full_text, aligned, entry_key)` for English and for Russian. Each returns a list of (position, length, segment, row, row_index).  
-- It then keeps only **rows that were accepted in both panels**: (see below: show all, allow orphans). So a segment is shown in the English panel **only if** the same row’s Russian segment was also accepted in the Russian panel, and vice versa.  
-- That way every span in the English panel has a **matching span in the Russian panel** (same aligned row), so they always share the same `data-category` and `data-framing`. Category and framing highlighting therefore stay in sync (e.g. “Delegation Members” and “членов делегаций” highlight together).  
-- Orphans (segments with no partner in the other panel) get class `doc-entry-orphan`, dashed underline, and tooltip "No corresponding segment in the other panel".  
+- English and Russian panels are built independently from those matches. A span may correspond to an aligned row whose **other-language** snippet did not match in the opposite full text (different substring occurrence counts, OCR, etc.). Those spans still render like other segments but carry `data-has-partner="false"` for internal consistency only — **no dashed underline, tooltip, or user-facing copy** about “missing” pairs (to avoid implying translation tricks).  
+- When both snippets for the same row match in their respective full texts, spans get `data-has-partner="true"`. Category/framing metadata still comes from the same aligned row, so highlighting stays aligned wherever both sides resolved to that row.  
 - **Important:** `data-framing` and `data-category` are taken from **`llm_framing` and `llm_category`** (our/agent assessment), not from Human/GT.  
 - The returned HTML is written into `<div id="doc-text-eng-{doc_id}">` and `<div id="doc-text-rus-{doc_id}">`.  
-- So when you have raw text, the spans in the panels are **LLM-labelled**; orphans are visually marked (dashed underline, tooltip on hover).
+- So when you have raw text, the spans in the panels are **LLM-labelled**; partner flags are present in the DOM only for tooling, not advertised in the UI.
 
 **Path B – Table-built (when panels are empty)**  
 - On load, the script checks `hasPreFilled = (containerEng.children.length > 0)`.  

@@ -111,6 +111,29 @@ Report-only iteration: `python run_report_only.py` — no need to re-run full pi
 
 ---
 
+## Git: merge conflicts in generated `docs/` HTML
+
+When merging **`main`** into a branch or opening a PR, Git often reports conflicts only in **`docs/index.html`** and **`docs/lab_visualization.html`**. Both are **generated** (same content family as the report in `report/__init__.py`), so different branches editing the report will collide there.
+
+**Do not** manually splice conflict markers inside those HTML files.
+
+**Agent workflow (automate on push / merge):**
+
+1. Finish merging non-generated files (`report/__init__.py`, `report/viz_lab_html.py`, config, etc.) as usual.
+2. From the repo root run:
+
+   ```bash
+   python scripts/build_github_pages_docs.py
+   ```
+
+   This rebuilds Pages outputs from the current report code (uses `data/output/comparison_results.json` or `docs/fixtures/comparison_results.json` per the script).
+
+3. `git add docs/index.html docs/lab_visualization.html` and any other paths that script updated (`docs/introduction.html`, `docs/original_pdfs/`, etc.), then complete the merge or amend as needed.
+
+For local **`data/output/manual_analysis_report.html`** only, use `python run_report_only.py`; GitHub Pages artifacts under **`docs/`** are driven by **`scripts/build_github_pages_docs.py`**.
+
+---
+
 ## Next Priority
 
 **UX roadmap:** Stakeholder scope, epic list, and decisions (landing page, PDF/image wheel, UI-only label policy, etc.) live in **[docs/agents/UI_SCOPE_AND_ROADMAP.md](docs/agents/UI_SCOPE_AND_ROADMAP.md)**. **Label mapping** (Specific Details / Ideological Layers ↔ JSON and `taxonomy.json`): **[docs/agents/UI_LABEL_MAP.md](docs/agents/UI_LABEL_MAP.md)**.
