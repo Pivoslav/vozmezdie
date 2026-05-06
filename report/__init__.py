@@ -7,6 +7,8 @@ import copy
 import html as html_module
 import json
 import re
+import shutil
+import unicodedata
 from pathlib import Path
 from urllib.parse import quote
 from collections import defaultdict
@@ -31,6 +33,19 @@ from .viz_lab_html import viz_lab_visualizations_section as _viz_lab_visualizati
 
 # Project root (report/__init__.py -> parent's parent)
 _REPORT_ROOT = Path(__file__).resolve().parent.parent
+_CUIS_LOGO_SRC = _REPORT_ROOT / "docs" / "fixtures" / "CIUS_Logo_RGB_Blue_EngUkr.png"
+_CUIS_LOGO_REPORT_NAME = "CIUS_Logo_RGB_Blue_EngUkr.png"
+
+
+def _copy_cuis_logo_for_report(out_dir: Path) -> Optional[str]:
+    """Copy CIUS logo beside generated HTML; return filename for use as img src, or None."""
+    if not _CUIS_LOGO_SRC.is_file():
+        return None
+    try:
+        shutil.copy2(_CUIS_LOGO_SRC, out_dir / _CUIS_LOGO_REPORT_NAME)
+    except OSError:
+        return None
+    return _CUIS_LOGO_REPORT_NAME
 
 
 def _load_allowed_taxonomy_ids_from_json(config: Dict[str, Any]) -> Tuple[frozenset, frozenset]:
@@ -131,7 +146,7 @@ def _comparison_axis_cell_html(
         )
         return (
             '<div class="comparison-axis-cell comparison-axis-expert-pair">'
-            '<div class="comparison-side-line"><strong><span data-i18n="comparison_model_side_short">LLM</span>:</strong> '
+            '<div class="comparison-side-line"><strong><span data-i18n="comparison_model_side_short">AI</span>:</strong> '
             f"{llm_pill}</div>"
             '<div class="comparison-side-line"><strong><span data-i18n="comparison_expert_side_short">Expert</span>:</strong> '
             f"{human_pill}</div></div>"
@@ -145,7 +160,7 @@ def _comparison_axis_cell_html(
         return f'<div class="comparison-axis-cell">{pill}</div>'
     note = (
         f'<div class="comparison-annotator-ref"><span class="comparison-annotator-tag" '
-        f'data-i18n="comparison_human_side_short">Human</span>'
+        f'data-i18n="comparison_human_side_short">Expert</span>'
         f'<span class="comparison-annotator-sep">·</span>'
         f'<span class="comparison-human-value" style="color:{human_hex}">{human_disp_esc}</span></div>'
     )
@@ -159,6 +174,30 @@ _DEFAULT_PALETTE = [
     "#2dd4bf", "#c084fc", "#4ade80",
 ]
 _DEFAULT_VIZ_EXPERIMENT_LABELS = ("Human Segmented", "AI Segmented")
+
+_DOCUMENT_TEXT_LEGEND_NOTE_EN = """<div class="legend-narrative-prose">
+<details class="legend-highlighting-details">
+<summary class="legend-highlighting-summary"><span class="legend-highlighting-summary-text">Highlighting &amp; Segmentation</span></summary>
+<div class="legend-note-tab-list">
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner"><strong>Analysis by</strong> answers a simple question: in the bilingual reader, <em>whose labels</em> should tint each passage? <strong>AI</strong> uses the model’s categories and framing. <strong>Expert coder labels</strong> (menu label “Human Segmented run”) apply the human reference coding. <strong>Both</strong> only highlights passages where AI and expert assignments agree. Which tint modes appear depends on how passages are split (<strong>Comparison run</strong>; next card).</div></div></div>
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner"><strong>Comparison run</strong> appears when a document ships two segmentation passes: <strong>expert-drawn passages</strong> (<em>Human Segmented</em> in menus) versus <strong>AI-drawn passages</strong> (<em>AI Segmented</em>). The toggle picks which slice map drives the reader, because each pass is a full alternate grid over the same text—you cannot honour both layouts at once without clashes. That choice also decides which tint modes make sense, so <strong>Analysis by</strong> only lists compatible options (<em>AI Segmented</em> locks highlights to that run’s labels; expert-drawn mode brings back AI labels, expert coder labels, or both-agree). The comparison table has its own Comparison run switch so you can read one segmentation in the illuminator while scanning rows tied to the other pass.</div></div></div>
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner">When <strong>Comparison run</strong> is <strong>AI Segmented</strong>, <strong>Analysis by</strong> stays on <strong>Labels: AI Segmented</strong> so highlights track model-drawn slices. Plain <strong>AI</strong>, <strong>expert coder labels</strong>, and <strong>Both</strong> are hidden because they assume expert-drawn slices. Choose <strong>Human Segmented</strong> (expert-drawn passages) to compare <strong>AI-assigned labels with expert reference labels on the same passages</strong>.</div></div></div>
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner"><strong>Specific detail</strong> (background wash) and <strong>Ideological layer</strong> (text colour) use the swatches above; leave both on <strong>None</strong> for neutral body text.</div></div></div>
+</div>
+</details>
+</div>"""
+
+_DOCUMENT_TEXT_LEGEND_NOTE_UK = """<div class="legend-narrative-prose">
+<details class="legend-highlighting-details">
+<summary class="legend-highlighting-summary"><span class="legend-highlighting-summary-text">Підсвічування та сегментація</span></summary>
+<div class="legend-note-tab-list">
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner"><strong>Аналіз за</strong> відповідає на просте питання: у двомовному перегляді <em>чиї мітки</em> мають тонувати кожен уривок? <strong>ШІ</strong> бере категорії та фреймінг моделі. <strong>Мітки експерта-кодувальника</strong> (пункт меню «прогін Людина-сегментація») відповідають людському еталону. <strong>Обидва</strong> підсвічує лише там, де мітки ШІ й експерта збігаються. Які режими доступні, залежить від того, як розрізано текст (<strong>Прогін порівняння</strong>; наступна картка).</div></div></div>
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner"><strong>Прогін порівняння</strong> з’являється, коли для документа є два способи сегментації: <strong>уривки за межами експерта</strong> (у меню «Людина-сегментація») порівняно з <strong>уривками за межами моделі</strong> («ШІ-сегментація»). Перемикач задає, яка сітка зрізів живе в перегляді, бо обидва прогони — повні альтернативні карти одного тексту; сумістити їх одночасно без суперечностей неможливо. Від активного прогону залежить і набір режимів «Аналіз за»: на ШІ-сегментації лишаються мітки того прогону; на експертних межах знову доступні ШІ, мітки експерта-кодувальника або Обидва (див. наступну картку). У таблиці порівняння є окремий селектор прогону, щоб можна було читати одну сегментацію в ілюмінаторі й водночас дивитися рядки, прив’язані до іншого прогону.</div></div></div>
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner">Коли активний <strong>Прогін порівняння</strong> «<strong>ШІ-сегментація</strong>», «<strong>Аналіз за</strong>» лишається на <strong>Мітки: ШІ-сегментація</strong>, щоб кольори відповідали межам моделі. Звичайні режими <strong>ШІ</strong>, <strong>мітки експерта-кодувальника</strong> та <strong>Обидва</strong> тут недоступні, бо вони припускають експертні межі уривків. Оберіть «<strong>Людина-сегментація</strong>» (експертні межі), щоб на одних і тих самих уривках порівнювати <strong>мітки ШІ з еталоном експерта</strong>.</div></div></div>
+<div class="legend-note-tab"><div class="legend-note-tab-sheet"><div class="legend-note-tab-inner"><strong>Конкретна деталь</strong> (фон) та <strong>ідеологічний шар</strong> (колір тексту) беруть кольори зі смужок вище; для нейтрального тексту лишіть обидва на <strong>«Немає»</strong>.</div></div></div>
+</div>
+</details>
+</div>"""
 
 
 def _nav_label(doc: Dict[str, Any]) -> str:
@@ -175,9 +214,9 @@ _UI_TRANSLATIONS = {
     "intro_capabilities_heading": {"en": "What you can do here", "uk": "Що ви можете зробити"},
     "intro_cap_a": {"en": "Read aligned English and Russian segments side by side with search and filters.", "uk": "Читати вирівняні англійські та російські сегменти поруч із пошуком і фільтрами."},
     "intro_cap_b": {"en": "Inspect specific details (what the segment is about) and ideological layers (how it is phrased).", "uk": "Переглядати конкретні деталі (про що сегмент) та ідеологічні шари (як це сформульовано)."},
-    "intro_cap_c": {"en": "Open human vs AI comparison tables and optional scans (PDF) when configured.", "uk": "Відкривати таблиці порівняння людина проти ШІ та за потреби скани (PDF)."},
+    "intro_cap_c": {"en": "Open expert-reference versus AI comparison tables and optional scans (PDF) when configured.", "uk": "Відкривати таблиці порівняння еталон експерта проти ШІ та за потреби скани (PDF)."},
     "intro_cap_d": {"en": "Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.", "uk": "Використовуйте дослідницьку лабораторію для графіків по корпусу, карт і глосарія (внизу сторінки лабораторії) з визначеннями таксономії."},
-    "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.", "uk": "Екранна кирилична клавіатура: відкрийте вкладку документа або поле пошуку глосарія на сторінці лабораторії й натисніть у поле пошуку — з’явиться спливаюча клавіатура."},
+    "intro_cap_e": {"en": "Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — a Ukrainian-layout popup opens; extra Russian letters (ё, ы, э, ъ) sit on the bottom row when you need original spelling.", "uk": "Екранна кирилична клавіатура української розкладки: відкрийте вкладку документа або пошук глосарія й натисніть у полі пошуку — з’явиться клавіатура; додаткові російські літери (ё, ы, э, ъ) на нижньому ряду для орфографії оригіналів."},
     "intro_video_heading": {"en": "How to use this site (video)", "uk": "Як користуватися сайтом (відео)"},
     "intro_video_note": {"en": "Short overview of the Research Lab layout and main tools.", "uk": "Короткий огляд інтерфейсу дослідницької лабораторії та основних інструментів."},
     "intro_cap_f": {"en": "Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.", "uk": "Альтернативні мітки з таблиці порівняння — кнопка «+»: модальне вікно; пропозиції зберігаються в браузері й експортуються як JSON."},
@@ -189,11 +228,11 @@ _UI_TRANSLATIONS = {
     "intro_tools_heading": {"en": "Ways to interact with the data", "uk": "Як працювати з даними"},
     "intro_tools_lead": {"en": "Each capability lives in this Research Lab unless noted. Combine close reading with corpus-level patterns.", "uk": "Можливості нижче доступні в цій лабораторії. Поєднуйте читання тексту з оглядом корпусу."},
     "intro_tool_doc_tag": {"en": "Document tabs", "uk": "Вкладки документів"},
-    "intro_tool_doc_h": {"en": "Bilingual text view", "uk": "Двомовний текст"},
-    "intro_tool_doc_p": {"en": "Aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.", "uk": "Вирівняні англійські й російські сегменти з синхронним прокручуванням, пошуком і фільтрами за категорією та фреймінгом."},
+    "intro_tool_doc_h": {"en": "Document Text Illuminator", "uk": "Ілюмінатор тексту документа"},
+    "intro_tool_doc_p": {"en": "The Document Text Illuminator shows aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.", "uk": "Ілюмінатор тексту документа показує вирівняні англійські й російські сегменти з синхронним прокручуванням, пошуком і фільтрами за категорією та фреймінгом."},
     "intro_tool_compare_tag": {"en": "Same tab", "uk": "Та сама вкладка"},
-    "intro_tool_compare_h": {"en": "Comparison table", "uk": "Таблиця порівняння"},
-    "intro_tool_compare_p": {"en": "Human vs model labels row by row; jump from a row into the text view. Export aligned comparison as JSON where enabled.", "uk": "Мітки людини проти моделі по рядках; перехід до тексту з рядка. Експорт JSON за підтримки."},
+    "intro_tool_compare_h": {"en": "Expert reference vs AI labels", "uk": "Еталон експерта проти міток ШІ"},
+    "intro_tool_compare_p": {"en": "Each row pairs expert reference labels with AI labels on the same expert-drawn passage; click a section number to open the Document Text Illuminator there. Export aligned comparison as JSON where enabled.", "uk": "У кожному рядку еталон експерта поруч із мітками ШІ на тому самому експертному уривку; клік по номеру розділу відкриває Ілюмінатор. Експорт JSON за підтримки."},
     "intro_tool_viz_tag": {"en": "Research Lab", "uk": "Лабораторія"},
     "intro_tool_viz_h": {"en": "Corpus visualizations", "uk": "Візуалізації корпусу"},
     "intro_tool_viz_p": {"en": "Word clouds, category and framing distributions, agreement summaries, mismatch views, and charts tied to loaded documents.", "uk": "Хмари слів, розподіли категорій і фреймінгу, узгодженість, невідповідності та діаграми за документами."},
@@ -211,7 +250,7 @@ _UI_TRANSLATIONS = {
     "intro_tool_suggest_p": {"en": "In-page modal from the “+” control: propose alternate labels; persist in the browser and download JSON.", "uk": "Модальне вікно через «+»: альтернативні мітки; збереження в браузері та завантаження JSON."},
     "intro_tool_ui_tag": {"en": "Throughout", "uk": "Усюди"},
     "intro_tool_ui_h": {"en": "UI language & typing", "uk": "Мова інтерфейсу й введення"},
-    "intro_tool_ui_p": {"en": "English / Ukrainian toggle where available. Cyrillic popup keyboard on search fields without switching OS layouts.", "uk": "Перемикач EN/UK де доступно. Спливаюча кирилична клавіатура в полях пошуку."},
+    "intro_tool_ui_p": {"en": "English / Ukrainian toggle where available. Popup Cyrillic keyboard (Ukrainian layout; Russian letters ё ы э ъ on the bottom row) on search fields without switching OS layouts.", "uk": "Перемикач EN/UK де доступно. Спливаюча кирилична клавіатура (українська розкладка; літери ё ы э ъ на нижньому ряду) у полях пошуку."},
     "intro_framework_heading": {"en": "Analytical framework", "uk": "Аналітична рамка"},
     "intro_framework_visual_title": {"en": "Vozmezdie analytical framework", "uk": "Аналітична рамка Vozmezdie"},
     "intro_fw_specific_label": {"en": "Specific Details", "uk": "Конкретні деталі"},
@@ -226,11 +265,17 @@ _UI_TRANSLATIONS = {
     },
     "intro_seg_ai_title": {"en": "AI Segmented", "uk": "ШІ-сегментація"},
     "intro_seg_ai_desc": {
-        "en": "The model draws its own spans first, then assigns labels. Row counts and alignment therefore need not match the human-sliced run.",
+        "en": "The model draws its own spans first, then assigns labels. Row counts and alignment therefore need not match the expert-drawn pass.",
         "uk": "Спочатку модель сама будує проміжки, потім ставить мітки. Тож кількість рядків і вирівнювання можуть не збігатися з людинним прогоном.",
     },
     "intro_seg_vs": {"en": "vs", "uk": "проти"},
     "analysis_by_head": {"en": "Analysis by", "uk": "Аналіз за"},
+    "comparison_run_head": {"en": "Comparison run", "uk": "Прогін порівняння"},
+    "colour_by_select_title": {"en": "Whose labels tint each segment", "uk": "Чиї мітки фарбують кожен сегмент"},
+    "analysis_by_ai_run_hint": {
+        "en": "This pass uses AI-drawn slices only; switch Comparison run to expert-drawn passages (Human Segmented) to compare AI labels with expert reference labels on the same slices.",
+        "uk": "Цей прогін використовує лише зрізи моделі; перемкніть прогін порівняння на експертні межі («Людина-сегментація»), щоб порівняти мітки ШІ з еталоном на тих самих уривках.",
+    },
     "viz_standalone_full_report": {"en": "Open full Research Lab", "uk": "Відкрити повну дослідницьку лабораторію"},
     "viz_standalone_subtitle": {"en": "Single-chart view. Language and chart choice sync with the main lab when possible.", "uk": "Окремий перегляд діаграми. Мова та вибір графіка синхронізуються з основною лабораторією за можливості."},
     "navigation": {"en": "Navigation", "uk": "Навігація"},
@@ -241,36 +286,58 @@ _UI_TRANSLATIONS = {
     "category_accuracy": {"en": "Specific-detail accuracy", "uk": "Точність конкретних деталей"},
     "framing_accuracy": {"en": "Ideological-layer accuracy", "uk": "Точність ідеологічних шарів"},
     "both_match": {"en": "Both Match", "uk": "Обидва збіги"},
-    "document_text_view": {"en": "Document text view", "uk": "Текст документа"},
+    "document_text_view": {"en": "Document Text Illuminator", "uk": "Ілюмінатор тексту документа"},
     "doc_quick_nav_label": {"en": "Jump to section:", "uk": "Перейти до розділу:"},
     "doc_jump_pdf": {"en": "PDF scan", "uk": "PDF-скан"},
-    "doc_jump_text": {"en": "Bilingual text", "uk": "Двомовний текст"},
-    "doc_jump_compare": {"en": "Comparison table", "uk": "Таблиця порівняння"},
+    "doc_jump_text": {"en": "Text illuminator", "uk": "Ілюмінатор тексту"},
+    "doc_jump_compare": {"en": "Expert vs AI comparison", "uk": "Порівняння експерт vs ШІ"},
     "reader_layout_split": {"en": "Side-by-side", "uk": "Поруч"},
     "reader_layout_stacked": {"en": "Stacked", "uk": "Стовпчиком"},
     "viz_open_new_tab": {"en": "Open this chart in new tab", "uk": "Відкрити цю діаграму в новій вкладці"},
-    "comparison_table": {"en": "Expert vs Human Segmented — Comparison Table", "uk": "Експерт vs людина-сегментація — таблиця порівняння"},
+    "comparison_table": {
+        "en": "Comparison table: expert reference labels vs AI (expert-drawn passages)",
+        "uk": "Таблиця порівняння: еталон експерта проти ШІ (за експертними межами уривків)",
+    },
     "comparison_b_header_detail": {"en": "Model · specific detail", "uk": "Модель · конкретна деталь"},
     "comparison_b_header_framing": {"en": "Model · ideological layer", "uk": "Модель · ідеологічний шар"},
     "comparison_b_col_row_num": {"en": "#", "uk": "№"},
     "comparison_table_run_b_blurb": {
-        "en": "This table uses the AI Segmented run: different segment boundaries and alignment than Human Segmented. Cells emphasize the model; expert labels appear when they disagree.",
-        "uk": "Таблиця для режиму «ШІ-сегментація»: інші межі й вирівнювання, ніж у «Людина-сегментація». Клітинки підкреслюють модель; мітки експерта — лише за розбіжності.",
+        "en": "The upper table lists expert-drawn passages: human coders chose each slice’s boundaries, so every row pairs expert reference labels with AI labels on that same passage. This lower table lists AI-drawn passages: the model split the text differently, so rows may be shorter, longer, or shifted—you are not looking at the same slices as above. The category and framing columns foreground the model’s choices; expert wording appears beside them only when we could align an expert label to that model-sized passage.",
+        "uk": "У верхній таблиці уривки за експертними межами: кодувальники задали межі зрізів, тож у кожному рядку еталон експерта поруч із мітками ШІ на тому самому тексті. У нижній таблиці уривки за межами моделі: текст розбито інакше, тому рядки можуть відрізнятися довжиною чи зміщенням — це не ті самі зрізи, що зверху. Стовпці конкретної деталі та ідеологічного шару насамперед показують вибір моделі; формулювання експерта з’являються поруч лише там, де вдалося вирівняти людську мітку з цим уривком моделі.",
     },
     "exp_b_prelim_summary": {
-        "en": "AI Segmented — assessor segments (no comparison)",
-        "uk": "ШІ-сегментація — сегменти оцінювача (без порівняння)",
+        "en": "AI Segmented: labelled passages only (no expert-vs-AI comparison columns)",
+        "uk": "ШІ-сегментація: лише розмічені уривки (без колонок порівняння експерт проти ШІ)",
     },
     "exp_b_prelim_intro": {
-        "en": "Rows come from the AI Segmented agent assessments file (same source as preliminary_results.html): assessor-defined segments with category, framing, Russian and English text, and context. There are no expert or model comparison columns.",
-        "uk": "Рядки з файлу оцінок режиму ШІ-сегментації (джерело як у preliminary_results.html): межі та мітки оцінювача; без стовпців порівняння з експертом чи моделлю.",
+        "en": "This optional block lists passages that were coded directly in the AI Segmented workflow. Each row shows the Russian and English text, the chosen specific detail and ideological layer, and any surrounding context we saved with it. You will not see side-by-side expert-versus-model comparison columns here. That pairing lives in the main comparison table for expert-drawn passages.",
+        "uk": "Цей блок показує уривки, які розмічували безпосередньо в режимі «ШІ-сегментація». У кожному рядку — російський і англійський текст, обрана конкретна деталь та ідеологічний шар і збережений контекст. Стовпці порівняння експерта з моделлю тут відсутні — вони в основній таблиці порівняння за експертними межами уривків.",
     },
     "exp_b_prelim_empty_doc": {
-        "en": "No assessor segments are recorded for this document in the configured AI Segmented agent assessments file.",
-        "uk": "У налаштованому файлі оцінок ШІ-сегментації для цього документа немає сегментів.",
+        "en": "No AI Segmented labelled passages are loaded for this document.",
+        "uk": "Для цього документа не завантажено жодного уривка з режиму «ШІ-сегментація».",
     },
-    "comparison_model_side_short": {"en": "LLM", "uk": "LLM"},
-    "comparison_human_side_short": {"en": "Human", "uk": "Людина"},
+    "comparison_model_side_short": {"en": "AI", "uk": "ШІ"},
+    "comparison_human_side_short": {"en": "Expert", "uk": "Експерт"},
+    "comparison_open_illuminator_tooltip": {
+        "en": "Open the Document Text Illuminator and highlight this passage",
+        "uk": "Відкрити Ілюмінатор тексту документа й виділити цей уривок",
+    },
+    "illuminator_vignette_label": {"en": "Warm edge vignette when jumping from the table", "uk": "Тепла віньєтка при переході з таблиці"},
+    "illuminator_vignette_hint": {
+        "en": "Briefly dims panel edges when you open a passage from the comparison table (preference saved in this browser).",
+        "uk": "Коротко затемнює краї панелей, коли відкриваєте уривок з таблиці порівняння (налаштування зберігаються в браузері).",
+    },
+    "terms_vocab_alignment_note": {
+        "en": "(Expert-drawn alignment · model-assigned labels)",
+        "uk": "(За експертними межами · мітки моделі)",
+    },
+    "glossary_group_terms_by": {"en": "Group terms by", "uk": "Групувати терміни за"},
+    "glossary_group_expert_coder": {"en": "Expert coder labels", "uk": "Мітки експерта-кодувальника"},
+    "glossary_expert_segments_terms": {
+        "en": "Expert coder segments (unique terms):",
+        "uk": "Сегменти за мітками експерта-кодувальника (унікальні терміни):",
+    },
     "comparison_expert_side_short": {"en": "Expert", "uk": "Експерт"},
     "section": {"en": "Section", "uk": "Розділ"},
     "entry_eng": {"en": "Entry (ENG)", "uk": "Запис (АНГЛ)"},
@@ -280,18 +347,21 @@ _UI_TRANSLATIONS = {
     "context": {"en": "Context", "uk": "Контекст"},
     "content_category_highlight": {"en": "Specific detail (highlight)", "uk": "Конкретна деталь (виділення)"},
     "framing_text_colour": {"en": "Ideological layer (text colour)", "uk": "Ідеологічний шар (колір тексту)"},
-    "orphan_note": {"en": "Segments with a dashed underline have no corresponding segment in the other panel; hover for tooltip.", "uk": "Сегменти з пунктирною лінією не мають відповідного сегмента в іншій панелі; наведіть для підказки."},
-    "colour_by_note": {"en": "Colour by: LLM / Human / Both (agree). Specific-detail and ideological-layer colours apply only when that filter is not None.", "uk": "Колір за: LLM / Людина / Обидва (згода). Кольори конкретних деталей і ідеологічних шарів застосовуються лише коли відповідний фільтр не Немає."},
-    "document_text_legend_note": {
-        "en": "<strong>Two alignment modes.</strong> <em>Human Segmented</em> follows expert paragraph boundaries; <em>AI Segmented</em> uses model-drawn spans before labelling, so counts can differ. When both runs are loaded, pick which alignment drives highlighting with <strong>Comparison run</strong>; colours come from that run’s pairing.<br/><br/><strong>Dashed underline</strong> means no matching slice exists in the other language column (hover for a short explanation).<br/><br/><strong>Colours.</strong> <em>Analysis by</em> chooses whose labels tint segments (model, human, or both only where they agree). Category and framing rainbow colours appear after you pick a specific detail or ideological layer from the dropdowns (not when those filters stay on None).",
-        "uk": "<strong>Два режими вирівнювання.</strong> <em>Людина-сегментація</em> зберігає межі абзаців експерта; <em>ШІ-сегментація</em> будує власні сегменти перед розміткою, тож кількість рядків може відрізнятися. Якщо завантажено обидва прогони, оберіть джерело підсвітки у полі <strong>Comparison run</strong>; кольори беруться з того вирівнювання.<br/><br/><strong>Пунктирне підкреслення</strong> означає, що у парній колонці немає відповідного фрагмента (наведіть для підказки).<br/><br/><strong>Кольори.</strong> Поле <em>Аналіз за</em> визначає, чиї мітки фарбують текст (модель, людина або лише збіги). Веселка категорій і фреймінгу з’являється лише після вибору конкретної деталі чи шару у списках (не коли лишається «Немає»).",
-    },
+    "colour_by_note": {"en": "Tint using AI labels, expert coder labels, or both-agree (matching labels only). When Comparison run is AI Segmented, use Labels: AI Segmented. Specific-detail and ideological-layer colours apply only when those filters are not None.", "uk": "Тонування за мітками ШІ, мітками експерта-кодувальника або лише за збігом обох. Коли активний прогін «ШІ-сегментація», оберіть «Мітки: ШІ-сегментація». Кольори конкретних деталей і ідеологічних шарів застосовуються лише коли відповідний фільтр не Немає."},
+    "document_text_legend_note": {"en": _DOCUMENT_TEXT_LEGEND_NOTE_EN, "uk": _DOCUMENT_TEXT_LEGEND_NOTE_UK},
     "search_placeholder": {"en": "Search in text (English or Russian)...", "uk": "Пошук у тексті (англійською або російською)..."},
     "table_search_placeholder": {"en": "Search in table...", "uk": "Пошук у таблиці..."},
     "none": {"en": "None", "uk": "Немає"},
-    "colour_by_llm": {"en": "Colour by: LLM", "uk": "Колір за: LLM"},
-    "colour_by_human": {"en": "Colour by: Human", "uk": "Колір за: Людина"},
-    "colour_by_both": {"en": "Colour by: Both (agree only)", "uk": "Колір за: Обидва (лише згода)"},
+    "colour_by_llm": {"en": "Colour by: AI", "uk": "Колір за: ШІ"},
+    "colour_by_human": {"en": "Colour by: expert coder labels", "uk": "Колір за: мітки експерта-кодувальника"},
+    "colour_by_both": {
+        "en": "Colour by: Both (only where AI & expert labels match)",
+        "uk": "Колір за: Обидва (лише де збігаються мітки ШІ й експерта)",
+    },
+    "colour_by_ai_segmented": {
+        "en": "Labels: AI Segmented",
+        "uk": "Мітки: ШІ-сегментація",
+    },
     "clear_filters": {"en": "Clear filters", "uk": "Очистити фільтри"},
     "table_all_categories": {"en": "All specific details", "uk": "Усі конкретні деталі"},
     "table_all_framings": {"en": "All ideological layers", "uk": "Усі ідеологічні шари"},
@@ -299,16 +369,15 @@ _UI_TRANSLATIONS = {
     "legend_toggle_summary": {"en": "Colour legend & notes", "uk": "Легенда кольорів та примітки"},
     "specific_detail_filter_head": {"en": "Specific Details", "uk": "Конкретні деталі"},
     "ideological_layer_filter_head": {"en": "Ideological Layers", "uk": "Ідеологічні шари"},
-    "doc_text_capabilities_intro": {"en": "Use the mirrored text panels to:", "uk": "Використовуйте дзеркальні панелі тексту, щоб:"},
+    "doc_text_capabilities_intro": {"en": "In the Document Text Illuminator you can:", "uk": "У Ілюмінаторі тексту документа ви можете:"},
     "doc_text_cap_search": {"en": "Search in text for specific information (such as date/time, place, people, etc.), in English and Russian.", "uk": "Шукати у тексті конкретну інформацію (дата/час, місце, особи тощо) англійською та російською."},
     "doc_text_cap_highlight": {"en": "Find and highlight different ideological layers in the text.", "uk": "Знаходити та виділяти різні ідеологічні шари в тексті."},
     "doc_text_cap_compare": {"en": "Compare how specific details and ideological layers intersect within segments.", "uk": "Порівнювати, як конкретні деталі та ідеологічні шари перетинаються в сегментах."},
-    "doc_text_cap_lab": {"en": "Pair this view with Research Lab charts to compare Human Segmented and AI Segmented outputs.", "uk": "Поєднуйте з графіками лабораторії для порівняння прогонів «Людина-сегментація» та «ШІ-сегментація»."},
-    "cyrillic_keyboard_label": {"en": "Cyrillic keyboard", "uk": "Кирилична клавіатура"},
-    "cyrillic_key_caps": {"en": "Caps Lock", "uk": "Caps Lock"},
+    "doc_text_cap_lab": {"en": "Pair this illuminator with Research Lab charts—those charts reflect whichever segmentation pass is loaded (expert-drawn vs AI-drawn).", "uk": "Поєднуйте ілюмінатор із графіками лабораторії: на них видно дані за активним прогоном сегментації (експертні межі проти меж моделі)."},
     "cyrillic_key_shift": {"en": "⇧ Shift", "uk": "⇧ Shift"},
     "cyrillic_key_space": {"en": "Space", "uk": "Пробіл"},
     "cyrillic_key_backspace": {"en": "⌫ Backspace", "uk": "⌫ Назад"},
+    "cyrillic_key_caps": {"en": "Caps Lock", "uk": "Caps Lock"},
     "cyrillic_key_caps_title": {"en": "Toggle locked uppercase letters", "uk": "Фіксовані великі літери"},
     "cyrillic_key_shift_title": {"en": "Next letter only: uppercase, or lowercase if Caps Lock is on", "uk": "Лише наступна літера: велика, або мала якщо Caps Lock увімкнено"},
     "pdf_view_summary": {"en": "PDF view (scanned document)", "uk": "PDF (скан документа)"},
@@ -348,8 +417,30 @@ _UI_TRANSLATIONS = {
     "glossary_search_placeholder": {"en": "Search glossary by name or definition...", "uk": "Пошук у глосарії за назвою або визначенням..."},
     "glossary_how_search_summary": {"en": "How do I search?", "uk": "Як шукати?"},
     "glossary_how_search_html": {
-        "en": "<p><strong>Plain text</strong> matches titles and definitions anywhere (case-insensitive).</p><p><strong>Regex:</strong> wrap a pattern in slashes, e.g. <code>/Kyiv/</code> or <code>/вітаю|привіт/i</code>. You must include a <strong>closing slash</strong>. For a literal slash inside the pattern, use a backslash before the slash.</p><p><strong>Examples (English):</strong> <code>/\\bOUN\\b/</code> (word boundary); <code>/Kyiv|Kiev/</code>.</p><p><strong>Russian:</strong> <code>/ОУН/</code>; <code>/операци[ия]/</code>.</p><p><strong>Ukrainian:</strong> <code>/Радянськ/</code>; <code>/вітаю|привіт/</code>.</p>",
-        "uk": "<p><strong>Звичайний текст</strong> шукає у заголовках і визначеннях будь-де (без урахування регістру).</p><p><strong>Regex:</strong> шаблон у слешах, напр. <code>/Київ/</code> або <code>/вітаю|привіт/i</code>. Потрібен <strong>закривний слеш</strong>. Літеральний слеш у шаблоні: зворотна коса риска перед слешем.</p><p><strong>English:</strong> <code>/\\bOUN\\b/</code>; <code>/Kyiv|Kiev/</code>.</p><p><strong>Російська:</strong> <code>/ОУН/</code>; <code>/операци[ия]/</code>.</p><p><strong>Українська:</strong> <code>/Радянськ/</code>; <code>/вітаю|привіт/</code>.</p>",
+        "en": "<p><strong>Plain text</strong> matches titles and definitions anywhere (case-insensitive substring).</p>"
+        "<p><strong>Regex:</strong> wrap your pattern in forward slashes <code>/like this/</code>. The first <code>/</code> switches to pattern matching; you must type a <strong>closing</strong> <code>/</code>. Optional letters after the closing slash are regex flags (this glossary always applies Unicode-aware, case-insensitive matching on top of your pattern).</p>"
+        "<p><strong>Example <code>/ukrain*/</code></strong> In regular expressions the asterisk <code>*</code> is a <strong>quantifier</strong>: it repeats the <strong>one character immediately before it</strong>, zero or more times. Here <code>*</code> repeats the letter <code>n</code> after <code>ukrai</code>, so it matches substrings such as <code>ukrai</code>, <code>ukrain</code>, <code>ukrainn</code>, and so on. It does <strong>not</strong> mean add any letters after <code>ukrain</code>. To match stems like <em>Ukraine</em> or <em>Ukrainian</em>, use something like <code>/ukrain/</code> or include <code>.</code> (see below).</p>"
+        "<p><strong>Symbols used in these examples:</strong><br/>"
+        "<code>/</code> … <code>/</code> — boundary of the pattern (opening and closing slash).<br/>"
+        "<code>*</code> — zero or more repetitions of the character <em>just before</em> the star.<br/>"
+        "<code>.</code> — any single character.<br/>"
+        "<code>|</code> — OR between alternatives; example <code>/вітаю|привіт/</code>.<br/>"
+        "<code>[ ]</code> — match one character from the set inside the brackets; example <code>/операци[ия]/</code>.<br/>"
+        "<code>\\</code> — escape the next character; use <code>\\/</code> if you need a literal slash inside the pattern.<br/>"
+        "<code>\\b</code> — word boundary; example <code>/\\bOUN\\b/</code>.</p>"
+        "<p><strong>More examples:</strong> English <code>/Kyiv|Kiev/</code>; Russian <code>/ОУН/</code>; Ukrainian <code>/Радянськ/</code>; <code>/вітаю|привіт/</code>.</p>",
+        "uk": "<p><strong>Звичайний текст</strong> знаходить збіг у заголовках і визначеннях будь-де (підрядок без урахування регістру).</p>"
+        "<p><strong>Regex:</strong> обгорніть шаблон у косі риски <code>/ось так/</code>. Перша <code>/</code> вмикає пошук за шаблоном; обов’язкова <strong>закривна</strong> <code>/</code>. Літери після закривної слеша — прапорці regex (глосарій додатково застосовує режим з Юнікодом і без урахування регістру).</p>"
+        "<p><strong>Приклад <code>/ukrain*/</code></strong> Зірочка <code>*</code> у regex — це <strong>квантифікатор</strong>: вона повторює <strong>один символ безпосередньо перед нею</strong> нуль або більше разів. Тут <code>*</code> стоїть після літери <code>n</code> у фрагменті <code>ukrai</code>, тож збігається з <code>ukrai</code>, <code>ukrain</code>, <code>ukrainn</code> тощо. Це <strong>не</strong> означає «будь-які літери після ukrain». Для коренів на кшталт <em>Ukraine</em> / <em>Ukrainian</em> краще <code>/ukrain/</code> або шаблон із <code>.</code> (див. нижче).</p>"
+        "<p><strong>Символи в цих прикладах:</strong><br/>"
+        "<code>/</code> … <code>/</code> — межі шаблону (відкривна та закривна коса риска).<br/>"
+        "<code>*</code> — «нуль або більше» повторів символу одразу перед зірочкою.<br/>"
+        "<code>.</code> — будь-який один символ.<br/>"
+        "<code>|</code> — АБО між варіантами; приклад <code>/вітаю|привіт/</code>.<br/>"
+        "<code>[ ]</code> — один символ із набору в дужках; приклад <code>/операци[ия]/</code>.<br/>"
+        "<code>\\</code> — екранує наступний символ; для літерального слеша в шаблоні використовуйте <code>\\/</code>.<br/>"
+        "<code>\\b</code> — межа слова; приклад <code>/\\bOUN\\b/</code>.</p>"
+        "<p><strong>Інші приклади:</strong> англійська <code>/Kyiv|Kiev/</code>; російська <code>/ОУН/</code>; українська <code>/Радянськ/</code>; <code>/вітаю|привіт/</code>.</p>",
     },
     "filter_by_document": {"en": "Filter by document:", "uk": "Фільтр за документом:"},
     "all_documents": {"en": "All documents", "uk": "Усі документи"},
@@ -372,7 +463,7 @@ _UI_TRANSLATIONS = {
     "project_overview": {"en": "Project Overview", "uk": "Огляд проекту"},
     "taxonomy_reference": {"en": "How Specific Details and Ideological Layers Are Qualified", "uk": "Як кваліфікуються конкретні деталі та ідеологічні шари"},
     "taxonomy_reference_intro": {"en": "This report uses a reference taxonomy from Categories Explained. Segments carry labels for specific details (what is discussed; stored as content categories) and ideological layers (how it is phrased; stored as framing strategies). Below is how each is defined and qualified.", "uk": "Цей звіт використовує довідкову таксономію з Categories Explained. Сегменти мають мітки конкретних деталей (що обговорюється; зберігаються як категорії контенту) та ідеологічних шарів (як це сформульовано; зберігаються як стратегії фреймінгу). Нижче наведено визначення та критерії кваліфікації."},
-    "project_description": {"en": "Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified documents. Text is ingested, processed by a model for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.", "uk": "Vozmezdie — модульний конвеєр для експертної оцінки LLM щодо розсекречених документів. Текст інгестують, обробляють моделлю для екстракції (конкретні деталі та ідеологічні шари) та порівнюють із експертно розміченими даними. Ця дослідницька лабораторія дає інтерактивний аналіз: текст із двомовним виділенням, таблиці порівняння, візуалізації та глосарій внизу сторінки лабораторії."},
+    "project_description": {"en": "Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified documents. Text is ingested, processed by a model for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: the Document Text Illuminator with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.", "uk": "Vozmezdie — модульний конвеєр для експертної оцінки LLM щодо розсекречених документів. Текст інгестують, обробляють моделлю для екстракції (конкретні деталі та ідеологічні шари) та порівнюють із експертно розміченими даними. Ця дослідницька лабораторія дає інтерактивний аналіз: Ілюмінатор тексту документа з двомовним виділенням, таблиці порівняння, візуалізації та глосарій внизу сторінки лабораторії."},
     "dataset_statistics": {"en": "Dataset Statistics", "uk": "Статистика набору даних"},
     "document": {"en": "Document", "uk": "Документ"},
     "segments": {"en": "Segments", "uk": "Сегменти"},
@@ -401,15 +492,14 @@ _UI_TRANSLATIONS = {
     "viz_wc_filter_category": {"en": "Limit to specific detail (human label):", "uk": "Обмежити конкретною деталлю (людська мітка):"},
     "viz_wc_filter_framing": {"en": "Limit to ideological layer (human label):", "uk": "Обмежити ідеологічним шаром (людська мітка):"},
     "viz_wc_filter_all_option": {"en": "All (no filter)", "uk": "Усі (без фільтра)"},
-    "wordcloud_caption_full": {"en": "Dataset: words counted from the full English and Russian document text loaded for this view (not split by segment labels).", "uk": "Набір: слова з повного англійського та російського тексту документів для цього перегляду (без поділу за мітками сегментів)."},
-    "wordcloud_caption_segments": {"en": "Dataset: words from aligned segment snippets (English + Russian segment text and short context), using expert human labels for filters.", "uk": "Набір: слова з вирівняних уривків сегментів (англ. + рос. текст і короткий контекст); фільтри за експертними людськими мітками."},
-    "wordcloud_caption_seg_filter_cat": {"en": "Only segments whose human specific-detail label is: {cat}.", "uk": "Лише сегменти з людською міткою конкретної деталі: {cat}."},
-    "wordcloud_caption_seg_filter_fram": {"en": "Only segments whose human ideological-layer label is: {fram}.", "uk": "Лише сегменти з людською міткою ідеологічного шару: {fram}."},
-    "wordcloud_caption_seg_filter_both": {"en": "Only segments with both labels: specific detail \"{cat}\" and ideological layer \"{fram}\".", "uk": "Лише сегменти з обома мітками: деталь «{cat}» і шар «{fram}»."},
-    "wordcloud_caption_auto_segments": {"en": "Category or layer filters always use segment text (not the full files).", "uk": "Фільтри за категорією чи шаром завжди використовують текст сегментів (не повні файли)."},
     "viz_config_apply": {"en": "Apply", "uk": "Застосувати"},
     "viz_config_doc_radar_note": {"en": "This document view shows a single profile. Multi-document radar modes are available in the Research Lab.", "uk": "Тут показано профіль одного документа. Режими радару для кількох документів доступні в Дослідницькій лабораторії."},
     "viz_both": {"en": "Both", "uk": "Обидві"},
+    "viz_config_chart_text_lang": {"en": "Segment text language:", "uk": "Мова тексту сегментів:"},
+    "viz_config_chart_text_lang_hint": {
+        "en": "For charts built from segment or whole-document words (top terms, vocabulary diversity, segment-length axis, term × framing). Word clouds use the Language control above.",
+        "uk": "Для діаграм із тексту сегментів або повних документів (топ термінів, різноманітність словника, вісь довжини сегмента, термін × фреймінг). Хмари слів мають окреме поле «Мова».",
+    },
     "no_data": {"en": "No text data available.", "uk": "Немає текстових даних."},
     "viz_terms_cat": {"en": "Top Terms by Specific Detail", "uk": "Топ термінів за конкретною деталлю"},
     "viz_terms_fram": {"en": "Top Terms by Ideological Layer", "uk": "Топ термінів за ідеологічним шаром"},
@@ -600,15 +690,16 @@ _FRAMING_COLOUR_FALLBACK = {
     "Ideological Framing (Discrediting)": "#dc2626",
 }
 
-# Shared Cyrillic letters (Russian-typewriter layout) + Ukrainian letters і ї є ґ emphasized on the bottom row.
-_CYRILLIC_KEYBOARD_ROWS: Tuple[Tuple[str, ...], ...] = (
-    ("й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х"),
-    ("ф", "ы", "в", "а", "п", "р", "о", "л", "д", "ж", "э"),
-    ("я", "ч", "с", "м", "и", "т", "ь", "б", "ю", "ъ"),
+# Ukrainian JCUKEN. Letters ё ы э ъ share the bottom row with Shift / Space / Backspace for Russian originals text.
+_CYRILLIC_KEYBOARD_UA_ROWS: Tuple[Tuple[str, ...], ...] = (
+    ("й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х", "ї"),
+    ("ф", "і", "в", "а", "п", "р", "о", "л", "д", "ж", "є"),
+    ("я", "ч", "с", "м", "и", "т", "ь", "б", "ю", "ґ"),
 )
+_CYRILLIC_KEYBOARD_RU_ACCESSORY: Tuple[str, ...] = ("ё", "ы", "э", "ъ")
 
 
-def _cyrillic_keyboard_html(doc_id: str) -> str:
+def _cyrillic_keyboard_html(doc_id: str, *, logo_href: Optional[str] = None) -> str:
     esc_id = html_module.escape(doc_id)
 
     def letter_key(ch: str, extra_class: str = "") -> str:
@@ -620,18 +711,17 @@ def _cyrillic_keyboard_html(doc_id: str) -> str:
         )
 
     rows_out: List[str] = []
-    r0 = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[0]) + letter_key("ё", "cyr-key-minor")
+    r0 = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_UA_ROWS[0])
     rows_out.append(f'<div class="cyrillic-keyboard-row kb-row-top kb-stagger-1">{r0}</div>')
-    rk_mid = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[1])
+    rk_mid = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_UA_ROWS[1])
     rows_out.append(f'<div class="cyrillic-keyboard-row kb-stagger-2">{rk_mid}</div>')
-    letters_bottom = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[2])
+    letters_bottom = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_UA_ROWS[2])
     caps_btn = (
         f'<button type="button" class="cyr-key-mod cyr-key-caps" data-tab="{esc_id}" '
         f'data-i18n="cyrillic_key_caps" data-i18n-title="cyrillic_key_caps_title">Caps Lock</button>'
     )
     rows_out.append(f'<div class="cyrillic-keyboard-row kb-stagger-2">{caps_btn}{letters_bottom}</div>')
-    ua = ("і", "ї", "є", "ґ")
-    ua_keys = "".join(letter_key(c, "cyr-key-ua-emphasis") for c in ua)
+    ru_keys = "".join(letter_key(c, "cyr-key-bottom-letter") for c in _CYRILLIC_KEYBOARD_RU_ACCESSORY)
     shift_btn = (
         f'<button type="button" class="cyr-key-mod cyr-key-shift" data-tab="{esc_id}" '
         f'data-i18n="cyrillic_key_shift" data-i18n-title="cyrillic_key_shift_title">⇧ Shift</button>'
@@ -644,11 +734,39 @@ def _cyrillic_keyboard_html(doc_id: str) -> str:
         f'data-i18n="cyrillic_key_backspace">⌫</button>'
     )
     rows_out.append(
-        f'<div class="cyrillic-keyboard-row kb-stagger-1">{shift_btn}{ua_keys}{space_btn}{back_btn}</div>'
+        f'<div class="cyrillic-keyboard-row kb-stagger-1 kb-row-bottom">{shift_btn}{ru_keys}{space_btn}{back_btn}</div>'
     )
     inner = "\n".join(rows_out)
+    logo_cell = ""
+    brand_mod = ""
+    text_mod = ""
+    if logo_href:
+        esc_logo = html_module.escape(logo_href, quote=True)
+        logo_cell = (
+            '<div class="typewriter-plaque-brand-logo-cell"><img class="typewriter-plaque-logo" '
+            f'src="{esc_logo}" width="72" alt="Canadian Institute of Ukrainian Studies" '
+            'loading="lazy" decoding="async"/></div>'
+        )
+    else:
+        brand_mod = " typewriter-plaque-brand--solo"
+        text_mod = " typewriter-plaque-brand-text--solo"
+    text_block = (
+        f'<div class="typewriter-plaque-brand-text{text_mod}">'
+        '<span class="typewriter-plaque-adalet">Adalet</span>'
+        "</div>"
+    )
+    model_strip = (
+        '<div class="typewriter-plaque-model-strip" role="group" '
+        f'aria-label="Model designation Liščák">'
+        '<span class="typewriter-plaque-model-codicil" lang="en">Model</span>'
+        f'<span class="typewriter-plaque-mark" lang="cs">Liščák</span>'
+        "</div>"
+    )
     return (
-        f'<div class="cyrillic-keyboard" data-caps-on="0" data-shift-next="0">'
+        f'<div class="typewriter-keyboard cyrillic-keyboard" data-caps-on="0" data-shift-next="0">'
+        f'<div class="typewriter-plaque typewriter-plaque-brand{brand_mod}" id="cyrillic-popup-label-{esc_id}">'
+        f"{logo_cell}{text_block}{model_strip}"
+        f"</div>"
         f'<div class="cyrillic-keyboard-frame">{inner}</div></div>'
     )
 
@@ -876,7 +994,7 @@ def _spans_to_html(
 ) -> str:
     """Build HTML from full text and list of (idx, length, segment, row_dict) or (idx, length, segment, row_dict, row_index).
     When partner_row_indices is set, accepted must be 5-tuples; spans with row_index not in partner_row_indices get
-    data-has-partner=\"false\", class doc-entry-orphan, and tooltip."""
+    data-has-partner=\"false\" (no public styling or tooltip — avoids implying translation issues)."""
     if not full_text and not accepted:
         return ""
     accepted_sorted = sorted(accepted, key=lambda x: x[0])
@@ -911,9 +1029,7 @@ def _spans_to_html(
         human_cat_col = _report_category_colour(human_cat_raw, cat_colours)
         human_fram_col = _report_framing_colour(human_fram_raw, fram_colours)
         cls = "doc-entry"
-        if not has_partner:
-            cls += " doc-entry-orphan"
-        extra = ' data-has-partner="true"' if has_partner else ' data-has-partner="false" title="No corresponding segment in the other panel"'
+        extra = ' data-has-partner="true"' if has_partner else ' data-has-partner="false"'
         entry_eng = (r.get("entry_eng") or "").strip()
         entry_rus = (r.get("entry_rus") or "").strip()
         entry_attrs = f' data-entry-eng="{html_module.escape(entry_eng)}" data-entry-rus="{html_module.escape(entry_rus)}"'
@@ -979,6 +1095,7 @@ def run(
     out_config = config.get("output", {})
     out_dir = Path(out_config.get("dir", "data/output"))
     out_dir.mkdir(parents=True, exist_ok=True)
+    keyboard_logo_href = _copy_cuis_logo_for_report(out_dir.resolve())
     html_name = out_config.get("report_html", "manual_analysis_report.html")
     viz_html_name = out_config.get("lab_visualization_html", "lab_visualization.html")
     out_path = out_dir / html_name
@@ -1058,6 +1175,7 @@ def run(
         config=config,
         comparison_secondary_by_doc=sec_cbd_docs,
         viz_experiment_labels=(viz_lab_a, viz_lab_b),
+        keyboard_logo_href=keyboard_logo_href,
     )
     home_html, viz_json, heatmap_html, places_map_srcdoc = _homepage(
         comparison_by_doc,
@@ -1147,6 +1265,7 @@ def run(
                 secondary_n_matched=comp_b.get("n_matched", len(aligned_b or [])) if sec_cbd_docs else None,
                 viz_experiment_labels=(viz_lab_a, viz_lab_b) if sec_cbd_docs else None,
                 experiment_b_agent_rows=exp_b_agent_rows_arg,
+                keyboard_logo_href=keyboard_logo_href,
             )
         )
 
@@ -1194,7 +1313,7 @@ def _head(*, body_attrs: str = "", build_meta: str = "") -> str:
 """
         + meta_extra
         + """<title>Vozmezdie — Research Lab</title>
-<link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Fraunces:wght@600;700&family=JetBrains+Mono:wght@400;500&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.0.2/wordcloud2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
@@ -1219,21 +1338,21 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
   white-space: nowrap;
   padding: 0.42rem 1.08rem 0.38rem;
   border-radius: 3px 2px 4px 3px;
-  color: #520f14;
+  overflow: hidden;
+  box-sizing: border-box;
+  color: #c92f3e;
   background:
-    radial-gradient(ellipse 130% 100% at 28% 0%, rgba(255,252,248,0.96), transparent 54%),
-    linear-gradient(170deg, #fffefb 0%, #f4e6d8 38%, #e2cbb8 100%);
-  border: 2px solid #3f0b12;
+    radial-gradient(ellipse 125% 95% at 35% 18%, rgba(255, 252, 248, 0.97), transparent 52%),
+    linear-gradient(175deg, #fefcfa 0%, #fcefea 42%, #f8e4df 100%);
+  background-clip: padding-box;
+  border: 3px solid #c93644;
   box-shadow:
-    0 0 0 1px #b42323,
-    0 0 0 5px rgba(254, 226, 226, 0.32),
-    inset 0 1px 1px rgba(255,255,255,0.88),
-    inset 0 -8px 22px rgba(127, 29, 29, 0.11),
-    0 4px 18px rgba(0, 0, 0, 0.38);
+    0 4px 14px rgba(160, 42, 52, 0.32),
+    inset 0 1px 1px rgba(255, 248, 246, 0.55),
+    inset 0 -2px 10px rgba(235, 160, 155, 0.14);
   text-shadow:
-    0 1px 0 rgba(255,255,255,0.52),
-    0 0 3px rgba(82, 15, 20, 0.32),
-    0 2px 8px rgba(0, 0, 0, 0.12);
+    0 0 2px rgba(185, 45, 58, 0.28),
+    0 1px 3px rgba(165, 38, 48, 0.22);
   transform: rotate(-4.75deg);
   transform-origin: 50% 50%;
 }
@@ -1364,11 +1483,11 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
   width: min(100vw - 2rem, 52rem);
   max-width: 100%;
   box-sizing: border-box;
-  padding: 0.55rem 0.72rem 0.72rem;
-  background: linear-gradient(180deg, #faf8f4 0%, #efeae2 100%);
-  border: 1px solid #8b7355;
+  padding: 0.32rem 0.58rem 0.46rem;
+  background: linear-gradient(180deg, #45403b 0%, #302d2a 100%);
+  border: 1px solid #242220;
   border-radius: 10px;
-  box-shadow: 0 14px 36px rgba(0,0,0,0.2), 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.42), 0 6px 14px rgba(0,0,0,0.26);
   z-index: 50;
 }
 /* Per-document keyboard lives outside <details> so it stays visible when only Comparison (or other) sections are open */
@@ -1387,18 +1506,17 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 /* Tab-local wrapper: never steal clicks when keyboard is closed (avoids fixed-popup stacking quirks on some hosts). */
 .doc-tab-cyrillic-keyboard { pointer-events: none; }
 .doc-tab-cyrillic-keyboard .cyrillic-keyboard-popup-wrap.is-open { pointer-events: auto; }
-.cyrillic-keyboard-popup-wrap .cyrillic-keyboard-label { margin-top: 0; margin-bottom: 0.35rem; }
-.cyrillic-keyboard-popup-wrap .cyrillic-keyboard { margin-top: 0; margin-bottom: 0; max-width: 100%; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard { margin-top: 0.08rem; margin-bottom: 0.26rem; max-width: 100%; }
 .document-text-controls-filters, .comparison-table-controls-filters { display: grid; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); gap: 0.65rem 1rem; align-items: end; margin-bottom: 0.45rem; }
 .comparison-table-controls-filters { margin-bottom: 0; grid-column: 1 / -1; }
 .document-text-controls-actions { display: flex; flex-wrap: wrap; gap: 0.65rem; align-items: center; margin-bottom: 0.35rem; }
 .document-text-controls-filters .document-colour-by { min-width: 12rem; max-width: 100%; }
+.document-text-controls-filters .comparison-run-toolbar-group { position: relative; z-index: 30; }
 .document-text-intro-block { font-size: 0.9rem; color: #5a5348; margin-bottom: 1rem; line-height: 1.55; }
 .doc-controls-capabilities { margin: 0.35rem 0 0.5rem 1.25rem; padding: 0; }
 .doc-controls-capabilities li { margin-bottom: 0.35rem; }
 .document-text-filter-head { display: block; font-weight: 700; font-size: 0.8rem; color: #2d3748; margin-bottom: 0.25rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .document-text-controls .ctl-group, .comparison-table-controls .ctl-group { display: flex; flex-direction: column; align-items: stretch; min-width: 140px; }
-.cyrillic-keyboard-label { font-size: 0.78rem; color: #6b7280; margin: 0.35rem 0 0.25rem; }
 .cyrillic-keyboard { margin: 0.35rem 0 0.65rem; max-width: min(100%, 52rem); }
 .cyrillic-keyboard-frame {
   background: linear-gradient(168deg, #ddd9d0 0%, #c9c3b8 42%, #bcb6ab 100%);
@@ -1449,9 +1567,15 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
   opacity: 0.92;
   border-style: dashed;
 }
-.cyr-key-ins.cyr-key-ua-emphasis {
-  border-color: #14532d;
-  box-shadow: 0 2px 0 #6b8f67, 0 3px 6px rgba(45,90,39,0.15);
+.cyrillic-keyboard-row.kb-row-bottom {
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.cyr-key-ins.cyr-key-bottom-letter {
+  flex: 0 0 auto;
+  min-width: 1.65rem;
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
 }
 .cyr-key-mod {
   flex: 0 0 auto;
@@ -1516,8 +1640,348 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .colour-legend-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem 1.25rem; }
 .colour-legend-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.25rem 0; }
 .colour-swatch { width: 16px; height: 16px; border-radius: 3px; border: 1px solid rgba(0,0,0,0.25); flex-shrink: 0; }
-.colour-legend-orphan-note { font-size: 0.85rem; color: #5a5348; margin-top: 0.5rem; line-height: 1.5; }
-.document-text-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
+.colour-legend-narrative-block { font-size: 0.85rem; color: #5a5348; margin-top: 0.5rem; line-height: 1.5; }
+.legend-narrative-prose { margin-bottom: 0.35rem; max-width: 54rem; }
+.legend-highlighting-details { margin-top: 0.35rem; border: 1px solid rgba(139,115,85,0.45); border-radius: 8px; background: linear-gradient(165deg, #f1ebe1 0%, #e8e0d4 100%); box-shadow: inset 0 1px 0 rgba(255,255,255,0.72); overflow: hidden; }
+.legend-highlighting-details[open] { background: linear-gradient(165deg, #f7f1e8 0%, #ece5da 100%); }
+.legend-highlighting-summary { list-style: none; cursor: pointer; padding: 0.48rem 0.75rem 0.48rem 0.65rem; font-weight: 700; font-size: 0.82rem; color: #3d2f24; letter-spacing: 0.03em; background: linear-gradient(180deg,#ebe4d6,#dfd6c4); border-bottom: 1px solid rgba(139,115,85,0.38); display: block; user-select: none; }
+.legend-highlighting-summary::-webkit-details-marker { display: none; }
+.legend-highlighting-summary-text { font-family: ui-serif, Georgia, 'Times New Roman', serif; display: inline; }
+.legend-highlighting-summary-text::after {
+  content: '';
+  display: inline-block;
+  margin-left: 0.38rem;
+  vertical-align: 0.15em;
+  width: 0.42rem;
+  height: 0.42rem;
+  border-right: 2px solid #6b5344;
+  border-bottom: 2px solid #6b5344;
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+  opacity: 0.85;
+}
+.legend-highlighting-details[open] > .legend-highlighting-summary .legend-highlighting-summary-text::after {
+  transform: rotate(-135deg);
+  vertical-align: 0.08em;
+}
+.legend-highlighting-summary:focus-visible { outline: 2px solid rgba(139,0,0,0.45); outline-offset: 2px; }
+.legend-note-tab-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.52rem;
+  padding: 0.68rem 0.72rem 0.88rem 0.88rem;
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 11px, rgba(139,115,85,0.055) 11px, rgba(139,115,85,0.055) 12px),
+    linear-gradient(180deg, rgba(255,254,249,0.65), rgba(246,241,230,0.98));
+  border-top: 1px solid rgba(139,115,85,0.14);
+}
+.legend-note-tab { margin: 0; }
+.legend-note-tab-sheet {
+  position: relative;
+  padding: 0.32rem 0.55rem 0.4rem 1rem;
+  border-radius: 3px 11px 11px 4px;
+  background: linear-gradient(180deg, #fffef9 0%, #faf6ec 100%);
+  border: 1px solid rgba(90,72,58,0.2);
+  border-left: none;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.92),
+    0 2px 5px rgba(45,34,20,0.06),
+    1px 3px 0 rgba(70,52,38,0.04);
+  transform-origin: 8% 50%;
+  transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
+}
+.legend-note-tab-sheet::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  bottom: 5px;
+  width: 6px;
+  border-radius: 3px 0 0 3px;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.11);
+}
+.legend-note-tab:nth-child(1) .legend-note-tab-sheet::before {
+  background: linear-gradient(180deg, #c02626 0%, #991b1b 52%, #7f1d1d 100%);
+}
+.legend-note-tab:nth-child(2) .legend-note-tab-sheet::before {
+  background: linear-gradient(180deg, #14b8a6 0%, #0d9488 52%, #115e59 100%);
+}
+.legend-note-tab:nth-child(3) .legend-note-tab-sheet::before {
+  background: linear-gradient(180deg, #818cf8 0%, #6366f1 52%, #4338ca 100%);
+}
+.legend-note-tab:nth-child(4) .legend-note-tab-sheet::before {
+  background: linear-gradient(180deg, #eab308 0%, #ca8a04 52%, #a16207 100%);
+}
+.legend-note-tab:nth-child(n+5) .legend-note-tab-sheet::before {
+  background: linear-gradient(180deg, #78716c 0%, #57534e 52%, #44403c 100%);
+}
+.legend-note-tab-inner { padding: 0.28rem 0.08rem 0.34rem 0.05rem; font-size: 0.82rem; line-height: 1.52; color: #4a5568; }
+.legend-note-tab-inner strong { color: #2d3748; }
+.legend-note-tab:hover .legend-note-tab-sheet {
+  transform: translateY(-3px) rotate(-0.4deg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.98),
+    0 12px 24px rgba(45,34,20,0.09),
+    2px 5px 0 rgba(70,52,38,0.06);
+  border-color: rgba(139,115,85,0.42);
+}
+.legend-highlighting-details[open] .legend-note-tab .legend-note-tab-sheet {
+  animation: legendSheetLand 0.46s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+.legend-highlighting-details[open] .legend-note-tab:nth-child(1) .legend-note-tab-sheet { animation-delay: 0.03s; }
+.legend-highlighting-details[open] .legend-note-tab:nth-child(2) .legend-note-tab-sheet { animation-delay: 0.09s; }
+.legend-highlighting-details[open] .legend-note-tab:nth-child(3) .legend-note-tab-sheet { animation-delay: 0.15s; }
+.legend-highlighting-details[open] .legend-note-tab:nth-child(4) .legend-note-tab-sheet { animation-delay: 0.21s; }
+@keyframes legendSheetLand {
+  from {
+    opacity: 0;
+    transform: translateY(16px) rotate(-1.1deg) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .document-text-panels.illuminator-vignette-pulse::after {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+  .collapsible-section[open] > .collapsible-body,
+  .legend-highlighting-details[open] .legend-note-tab .legend-note-tab-sheet {
+    animation: none !important;
+  }
+  .tab-content:not(#tab-intro):not(#tab-dev-label-export) .collapsible-section[open] > summary::after,
+  .tab-content:not(#tab-intro):not(#tab-dev-label-export) .colour-legend-details[open] > summary::after,
+  .tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details[open] > .legend-highlighting-summary::after,
+  .tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-config-panel[open] > summary::after,
+  .tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-how-calculated[open] > summary::after,
+  .tab-content:not(#tab-intro):not(#tab-dev-label-export) .glossary-how-search-details[open] > summary::after,
+  body.standalone-viz-page .viz-config-panel[open] > summary::after,
+  body.standalone-viz-page .viz-how-calculated[open] > summary::after {
+    animation: none !important;
+    opacity: 0.94;
+    transform: translateY(-50%) rotate(-2.5deg);
+  }
+  .legend-note-tab:hover .legend-note-tab-sheet {
+    transform: none;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.92),
+      0 2px 5px rgba(45,34,20,0.06),
+      1px 3px 0 rgba(70,52,38,0.04);
+    border-color: rgba(90,72,58,0.2);
+  }
+}
+.document-text-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; position: relative; }
+.document-text-panels::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 0 rgba(120, 55, 20, 0);
+  opacity: 0;
+  z-index: 4;
+  transition: opacity 0.35s ease;
+}
+.document-text-panels.illuminator-vignette-pulse::after {
+  animation: illuminatorVignetteWarm 1.15s ease-out forwards;
+}
+@keyframes illuminatorVignetteWarm {
+  0% { opacity: 0; box-shadow: inset 0 0 0 0 rgba(120, 55, 20, 0); }
+  40% { opacity: 1; box-shadow: inset 0 0 5rem 1.5rem rgba(210, 120, 48, 0.33); }
+  100% { opacity: 0; box-shadow: inset 0 0 4rem 1rem rgba(210, 120, 48, 0); }
+}
+.illuminator-vignette-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.82rem;
+  color: #4a5568;
+  cursor: pointer;
+  user-select: none;
+  margin-left: 0.15rem;
+}
+.illuminator-vignette-opt input { accent-color: #8b0000; cursor: pointer; }
+.typewriter-plaque-logo {
+  display: block;
+  max-width: min(100%, 4.35rem);
+  width: auto;
+  height: auto;
+  margin: 0;
+  object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.14));
+}
+.typewriter-plaque-brand {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: 0.28rem;
+  row-gap: 0.16rem;
+  margin: 0 0 0.22rem;
+  padding: 0.14rem 0.38rem 0.16rem;
+  border: 1px solid rgba(105, 82, 62, 0.52);
+  border-radius: 3px;
+  background: linear-gradient(168deg, #f3ebe0 0%, #dfd3c5 42%, #cbbdae 100%);
+  box-shadow:
+    inset 0 2px 5px rgba(255,255,255,0.65),
+    inset 0 -4px 12px rgba(55, 42, 32, 0.07),
+    0 2px 8px rgba(0,0,0,0.12);
+}
+.typewriter-plaque-brand--solo {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+}
+.typewriter-plaque-brand--solo .typewriter-plaque-brand-text {
+  justify-self: center;
+}
+.typewriter-plaque-model-strip {
+  grid-column: 1 / -1;
+  justify-self: stretch;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.06rem;
+  padding: 0.24rem 0.55rem 0.28rem;
+  margin: 0.02rem 0 0;
+  border-radius: 2px;
+  background:
+    linear-gradient(165deg, rgba(56, 50, 44, 0.16) 0%, rgba(24, 22, 20, 0.26) 48%, rgba(18, 16, 15, 0.32) 100%);
+  border: 1px solid rgba(62, 54, 46, 0.65);
+  box-shadow:
+    inset 0 4px 14px rgba(0, 0, 0, 0.35),
+    inset 0 -3px 8px rgba(255, 250, 242, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 1px 0 rgba(255, 255, 255, 0.45);
+}
+.typewriter-plaque-model-codicil {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.46rem;
+  font-weight: 500;
+  letter-spacing: 0.48em;
+  text-transform: uppercase;
+  color: rgba(62, 52, 42, 0.78);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+  padding-left: 0.48em;
+  line-height: 1;
+}
+.typewriter-plaque-brand-logo-cell {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 0.22rem 0 0.06rem;
+}
+.typewriter-plaque-brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0;
+  padding: 0 0.06rem 0 0.22rem;
+  line-height: 1.05;
+  min-width: 0;
+}
+.typewriter-plaque-brand-text--solo {
+  align-items: center;
+  padding: 0;
+}
+.typewriter-plaque-adalet {
+  font-family: "Cormorant", "Crimson Text", Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  padding-left: 0.26em;
+  line-height: 1.02;
+  color: #251c17;
+  font-variant: small-caps;
+  text-shadow: 0 1px 0 rgba(255,255,255,0.5);
+}
+.typewriter-plaque-mark {
+  display: inline-block;
+  position: relative;
+  margin-top: 0;
+  padding-top: 0;
+  font-family: "Fraunces", "Cormorant", Georgia, serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  font-style: normal;
+  font-optical-sizing: auto;
+  letter-spacing: 0.17em;
+  line-height: 1.15;
+  color: #b24c22;
+  text-shadow:
+    0 1px 0 rgba(255, 240, 224, 0.92),
+    0 -1px 1px rgba(56, 26, 14, 0.42),
+    0 2px 5px rgba(200, 96, 48, 0.28);
+}
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .typewriter-plaque-mark {
+    background-image: linear-gradient(
+      168deg,
+      #fce8b8 0%,
+      #e89438 32%,
+      #c24e1f 62%,
+      #742314 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none;
+    filter: drop-shadow(0 1px 0 rgba(255, 247, 236, 0.92)) drop-shadow(0 2px 5px rgba(90, 42, 22, 0.38));
+  }
+}
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyrillic-keyboard-frame { padding: 0.48rem 0.52rem 0.56rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyrillic-keyboard-row { gap: 0.3rem; margin-bottom: 0.34rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .kb-stagger-1 { padding-left: 0.72rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .kb-stagger-2 { padding-left: 1.42rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-ins { font-size: 0.8rem; padding: 0.38rem 0.24rem; min-width: 1.56rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-ins.cyr-key-bottom-letter { min-width: 1.48rem; padding-left: 0.24rem; padding-right: 0.24rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-mod { font-size: 0.61rem; padding: 0.4rem 0.46rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-space { min-width: 4.4rem; font-size: 0.65rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-caps { min-width: 4.05rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-shift { min-width: 3.55rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-backsp { min-width: 2.95rem; font-size: 0.6rem; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyrillic-keyboard-frame {
+  background: linear-gradient(168deg, #3f3c38 0%, #282624 45%, #1b1a18 100%);
+  border: 1px solid #0f0e0d;
+  box-shadow: inset 0 3px 14px rgba(0,0,0,0.55), 0 6px 22px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-ins {
+  background: linear-gradient(180deg, #504c47 0%, #353330 48%, #262422 100%);
+  color: #f4f1ea;
+  border-color: #0c0c0c;
+  box-shadow: 0 2px 0 #121110, 0 4px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.07);
+}
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-ins:hover {
+  background: linear-gradient(180deg, #5c5853 0%, #3d3a37 50%, #2f2c29 100%);
+}
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-ins:active {
+  box-shadow: 0 0 0 #121110, 0 1px 3px rgba(0,0,0,0.28), inset 0 2px 6px rgba(0,0,0,0.35);
+}
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-mod {
+  background: linear-gradient(180deg, #6f726d 0%, #4a4d48 52%, #3a3d38 100%);
+  color: #eceae5;
+  border-color: #1e201d;
+  box-shadow: 0 2px 0 #252824, 0 3px 6px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.12);
+}
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-mod:hover { filter: brightness(1.06); }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-mod:active { box-shadow: 0 0 0 #252824; }
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-caps.active {
+  background: linear-gradient(180deg, #b8d4b4 0%, #6a9a62 45%, #4a7a42 100%);
+  border-color: #2d5a27;
+  color: #0f2410;
+}
+.cyrillic-keyboard-popup-wrap .cyrillic-keyboard .cyr-key-shift.active {
+  background: linear-gradient(180deg, #93b8e8 0%, #4a78c4 50%, #355fa8 100%);
+  border-color: #1d4ed8;
+  color: #e8eefc;
+}
 .document-text-view.layout-stacked .document-text-panels { grid-template-columns: 1fr !important; }
 .reader-layout-toggle { display: inline-flex; border: 1px solid #8b7355; border-radius: 4px; overflow: hidden; margin-right: 0.35rem; }
 .reader-layout-btn { padding: 0.38rem 0.7rem; border: none; background: #fffef9; cursor: pointer; font-family: inherit; font-size: 0.82rem; color: #4a5568; }
@@ -1544,13 +2008,14 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .document-text-content.filter-active .doc-entry.filter-match { opacity: 1 !important; color: inherit !important; }
 .document-text-content.filter-active .doc-entry.filter-match mark.doc-search-hit { opacity: 1 !important; color: inherit !important; background: rgba(255, 193, 7, 0.82) !important; }
 .document-text-content mark.doc-search-hit { background: rgba(255, 193, 7, 0.72) !important; color: inherit !important; padding: 0 1px; border-radius: 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
-.document-text-content .doc-entry.doc-entry-orphan { border-bottom: 1px dashed #8b7355; }
 @media (max-width: 900px) { .document-text-panels { grid-template-columns: 1fr; } }
 /* Glossary search and filter */
-.glossary-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
+.glossary-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 0; }
+.glossary-controls-search { margin-bottom: 0.75rem; }
+.glossary-controls-filters { margin-bottom: 1.5rem; align-items: flex-end; }
 .glossary-controls .glossary-search { min-width: min(100%, 520px); flex: 1 1 520px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
-.glossary-how-search-details { margin: 0 0 1rem 0; border: 1px solid rgba(139,115,85,0.45); border-radius: 4px; background: #faf8f4; }
-.glossary-how-search-details > summary { padding: 0.45rem 0.75rem; cursor: pointer; font-weight: 600; color: #4a5568; font-size: 0.92rem; list-style: none; }
+.glossary-how-search-details { margin: 0 0 1rem 0; border: 1px solid rgba(139,115,85,0.45); border-radius: 4px; background: #faf8f4; width: 100%; max-width: 100%; box-sizing: border-box; }
+.glossary-how-search-details > summary { padding: 0.55rem 0.9rem; cursor: pointer; font-weight: 600; color: #4a5568; font-size: 0.92rem; list-style: none; white-space: normal; line-height: 1.35; min-height: 2.5rem; display: flex; align-items: center; box-sizing: border-box; }
 .glossary-how-search-details > summary::-webkit-details-marker { display: none; }
 .glossary-how-search-body { padding: 0.6rem 0.85rem 0.85rem; font-size: 0.88rem; line-height: 1.55; color: #4a5568; border-top: 1px dashed rgba(139,115,85,0.35); }
 .glossary-how-search-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; background: rgba(139,115,85,0.12); padding: 0.08rem 0.28rem; border-radius: 3px; }
@@ -1563,25 +2028,201 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .glossary-controls .glossary-label-source-wrap label { font-size: 0.9rem; color: #4a5568; white-space: nowrap; }
 .glossary-controls .glossary-label-source { min-width: 220px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
 .glossary-terms-layer.glossary-layer-hidden { display: none !important; }
-.doc-comparison-run-select, .table-comparison-run-select { padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; background: #fff; max-width: 100%; }
-.document-text-controls-sticky .ctl-group:has(.doc-comparison-run-select),
+.table-comparison-run-select, .doc-comparison-run-select { padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; background: #fff; max-width: 100%; }
 .comparison-table-controls .comparison-run-toolbar-group { position: relative; z-index: 30; }
-.document-comparison-run-locked { padding: 0.45rem 0.6rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 0.9rem; max-width: 100%; opacity: 0.65; cursor: not-allowed; background: #f0ebe3; color: #4a5568; }
 .glossary-searchable-section.hidden { display: none; }
 .glossary-term-item.hidden { display: none; }
 .glossary-view-link { color: #8b0000; text-decoration: none; font-weight: 600; }
 .glossary-view-link:hover { text-decoration: underline; }
-/* Collapsible sections: sealed-doc aesthetic (CLASSIFIED/DECLASSIFIED stamp) */
-.collapsible-section { margin-bottom: 1rem; border: 1px solid #8b7355; border-radius: 4px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-.collapsible-section summary { display: flex; align-items: center; padding: 1rem 1.25rem; font-weight: 600; cursor: pointer; list-style: none; position: relative; background: linear-gradient(135deg, #e8e4dc 0%, #ddd9d0 100%); user-select: none; border-bottom: 1px dashed rgba(139,115,85,0.4); }
-.collapsible-section summary::-webkit-details-marker { display: none; }
-.collapsible-section summary::before { content: ""; display: inline-block; width: 1rem; height: 1rem; margin-right: 0.75rem; background: radial-gradient(circle at 30% 30%, #8b0000, #6b0000); border-radius: 50%; border: 1px solid #4a0000; box-shadow: inset 0 1px 2px rgba(255,255,255,0.2); flex-shrink: 0; }
-.collapsible-section[open] summary::before { background: radial-gradient(circle at 30% 30%, #2d5a27, #1a3518); border-color: #1a3518; }
-.collapsible-section:not([open]) summary::after { content: "CLASSIFIED"; position: absolute; right: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; color: #8b0000; opacity: 0.7; }
-.collapsible-section[open] summary::after { content: "DECLASSIFIED"; position: absolute; right: 1rem; font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; letter-spacing: 0.2em; color: #2d5a27; }
-.collapsible-section summary:hover { background: linear-gradient(135deg, #ddd9d0 0%, #d0ccc4 100%); }
-.collapsible-section .collapsible-body { padding: 1.25rem; background: #fffef9; animation: sealBreak 0.4s ease-out; }
-@keyframes sealBreak { from { opacity: 0; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+/* Collapsible sections: style direct child summary only so unrelated nested <details> are not styled as section headers. */
+.collapsible-section {
+  margin-bottom: 1rem;
+  border: 1px solid #8b7355;
+  border-radius: 4px;
+  overflow: visible;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.collapsible-section:not([open]) > summary {
+  border-radius: 4px;
+}
+.collapsible-section[open] > summary {
+  border-radius: 4px 4px 0 0;
+  border-bottom: 1px dashed rgba(139,115,85,0.4);
+}
+.collapsible-section > summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 1rem 1.25rem;
+  min-width: 0;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  background: linear-gradient(135deg, #e8e4dc 0%, #ddd9d0 100%);
+  user-select: none;
+}
+.collapsible-section > summary > * { min-width: 0; }
+.collapsible-section > summary::-webkit-details-marker { display: none; }
+.collapsible-section > summary::before {
+  content: "";
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  margin-right: 0;
+  background: radial-gradient(circle at 30% 30%, #8b0000, #6b0000);
+  border-radius: 50%;
+  border: 1px solid #4a0000;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+  flex-shrink: 0;
+}
+.collapsible-section[open] > summary::before {
+  background: radial-gradient(circle at 30% 30%, #2d5a27, #1a3518);
+  border-color: #1a3518;
+}
+.collapsible-section > summary:hover { background: linear-gradient(135deg, #ddd9d0 0%, #d0ccc4 100%); }
+.collapsible-section .collapsible-body {
+  padding: 1.25rem;
+  background: #fffef9;
+  border-radius: 0 0 4px 4px;
+}
+.collapsible-section[open] > .collapsible-body { animation: collapsibleBodyReveal 0.38s cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes collapsibleBodyReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+/* Nested <details> (colour legend, highlighting notes, viz config, glossary help): same status dot + stamp as collapsibles; each row's [open] only — never inherited from parent sections */
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .colour-legend-details > summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details > .legend-highlighting-summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-config-panel > summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-how-calculated > summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .glossary-how-search-details > summary,
+body.standalone-viz-page .viz-config-panel > summary,
+body.standalone-viz-page .viz-how-calculated > summary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details > .legend-highlighting-summary .legend-highlighting-summary-text {
+  min-width: 0;
+}
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .colour-legend-details > summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details > .legend-highlighting-summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-config-panel > summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-how-calculated > summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .glossary-how-search-details > summary::before,
+body.standalone-viz-page .viz-config-panel > summary::before,
+body.standalone-viz-page .viz-how-calculated > summary::before {
+  content: "";
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  background: radial-gradient(circle at 30% 30%, #8b0000, #6b0000);
+  border-radius: 50%;
+  border: 1px solid #4a0000;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.2);
+}
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .colour-legend-details[open] > summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details[open] > .legend-highlighting-summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-config-panel[open] > summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-how-calculated[open] > summary::before,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .glossary-how-search-details[open] > summary::before,
+body.standalone-viz-page .viz-config-panel[open] > summary::before,
+body.standalone-viz-page .viz-how-calculated[open] > summary::before {
+  background: radial-gradient(circle at 30% 30%, #2d5a27, #1a3518);
+  border-color: #1a3518;
+}
+/* CLASSIFIED / DECLASSIFIED (Intro & dev export excluded); scoped per <details> row */
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .collapsible-section > summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .colour-legend-details > summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details > .legend-highlighting-summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-config-panel > summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-how-calculated > summary,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .glossary-how-search-details > summary,
+body.standalone-viz-page .viz-config-panel > summary,
+body.standalone-viz-page .viz-how-calculated > summary {
+  padding-right: 7.25rem;
+}
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .collapsible-section:not([open]) > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .colour-legend-details:not([open]) > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details:not([open]) > .legend-highlighting-summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-config-panel:not([open]) > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-how-calculated:not([open]) > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .glossary-how-search-details:not([open]) > summary::after,
+body.standalone-viz-page .viz-config-panel:not([open]) > summary::after,
+body.standalone-viz-page .viz-how-calculated:not([open]) > summary::after {
+  content: "CLASSIFIED";
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  display: block;
+  margin: 0;
+  padding: 0.08rem 0.28rem 0.12rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(0.52rem, 1.65vw, 0.62rem);
+  letter-spacing: 0.1em;
+  line-height: 1.15;
+  white-space: nowrap;
+  color: #6b1212;
+  pointer-events: none;
+  text-align: center;
+  border: 1px solid rgba(139, 0, 0, 0.42);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.38) 0%, rgba(254, 226, 226, 0.58) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 1px 2px rgba(0,0,0,0.12);
+  transform-origin: 50% 55%;
+  opacity: 0.88;
+  transform: translateY(-50%) rotate(-2.5deg);
+}
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .collapsible-section[open] > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .colour-legend-details[open] > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .legend-highlighting-details[open] > .legend-highlighting-summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-config-panel[open] > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .viz-how-calculated[open] > summary::after,
+.tab-content:not(#tab-intro):not(#tab-dev-label-export) .glossary-how-search-details[open] > summary::after,
+body.standalone-viz-page .viz-config-panel[open] > summary::after,
+body.standalone-viz-page .viz-how-calculated[open] > summary::after {
+  content: "DECLASSIFIED";
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  display: block;
+  margin: 0;
+  padding: 0.08rem 0.28rem 0.12rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: clamp(0.52rem, 1.65vw, 0.62rem);
+  letter-spacing: 0.1em;
+  line-height: 1.15;
+  white-space: nowrap;
+  color: #1e4620;
+  pointer-events: none;
+  text-align: center;
+  border: 1px solid rgba(45, 90, 39, 0.55);
+  border-radius: 2px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.35) 0%, rgba(220, 237, 220, 0.65) 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 1px 2px rgba(0,0,0,0.12);
+  transform-origin: 50% 55%;
+  animation: declassifiedStampIn 0.58s cubic-bezier(0.33, 1.24, 0.48, 1) forwards;
+}
+@keyframes declassifiedStampIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-50%) translate(12px, -28px) scale(1.42) rotate(-22deg);
+  }
+  52% {
+    opacity: 1;
+    transform: translateY(-50%) translate(-3px, 5px) scale(0.86) rotate(-7deg);
+  }
+  72% {
+    transform: translateY(-50%) translate(2px, -3px) scale(1.05) rotate(-4deg);
+  }
+  100% {
+    opacity: 0.95;
+    transform: translateY(-50%) translate(0, 0) scale(1) rotate(-2.5deg);
+  }
+}
 /* Sticky document text controls */
 .document-text-controls-sticky { position: sticky; top: 0; z-index: 10; background: #f5f0e6; padding: 0.75rem 0; margin-bottom: 0.5rem; border-bottom: 1px solid rgba(139,115,85,0.3); }
 /* Clickable segments: definition popover */
@@ -1723,7 +2364,6 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .voyant-iframe-wrap { overflow-x: auto; overflow-y: hidden; margin-top: 0.5rem; border-radius: 4px; border: 1px solid #8b7355; -webkit-overflow-scrolling: touch; }
 .voyant-iframe-wrap iframe { display: block; width: 100%; min-width: 1100px; height: 70vh; min-height: 500px; border: none; border-radius: 4px; }
 .wordcloud-dual { display: flex; flex-direction: column; gap: 1.5rem; }
-.viz-wordcloud-caption { font-size: 0.85rem; color: #4b5563; margin: 0 0 0.75rem 0; line-height: 1.45; max-width: 52rem; }
 .wordcloud-single { background: #fff; border: 1px solid #8b7355; border-radius: 4px; padding: 1rem; }
 .wordcloud-single.hidden { display: none; }
 .wordcloud-label { font-weight: 600; color: #4a5568; margin-bottom: 0.5rem; font-size: 0.95rem; }
@@ -2212,12 +2852,17 @@ def _build_per_document_viz_section(
     )
     agreement_stats = _compute_agreement_stats(comp_one, docs_one, config)
     terms_by_cat, terms_by_fram = _compute_terms_counts_for_viz(comp_one)
+    tc_eng_cat, tc_rus_cat, tc_eng_fram, tc_rus_fram = _terms_counts_for_viz_by_language(comp_one)
     vocab_diversity = _compute_vocab_diversity(docs_one)
     segment_length_vs_accuracy = _compute_segment_length_vs_accuracy(comp_one, docs_one)
     mismatch_flow = _compute_mismatch_flow(comp_one, fram_order)
     doc_fingerprint = _compute_document_fingerprint(stats, fram_order)
-    terms_by_framing_detailed = _compute_terms_by_framing_detailed(comp_one, fram_order)
+    terms_by_framing_detailed = _compute_terms_by_framing_detailed(comp_one, fram_order, language="both")
+    terms_by_framing_detailed_en = _compute_terms_by_framing_detailed(comp_one, fram_order, language="en")
+    terms_by_framing_detailed_ru = _compute_terms_by_framing_detailed(comp_one, fram_order, language="ru")
     term_framing_heatmap = _compute_term_framing_heatmap(comp_one, fram_order)
+    term_framing_heatmap_en = _compute_term_framing_heatmap(comp_one, fram_order, language="en")
+    term_framing_heatmap_ru = _compute_term_framing_heatmap(comp_one, fram_order, language="ru")
 
     fram_colours_for_viz = _fram_colours_for_viz_order(fram_order, fram_colours)
 
@@ -2241,7 +2886,11 @@ def _build_per_document_viz_section(
         "catOrder": cat_order,
         "framOrder": fram_order,
         "termsByCat": terms_by_cat,
+        "termsByCatEng": tc_eng_cat,
+        "termsByCatRus": tc_rus_cat,
         "termsByFram": _filter_framing_counts_dict_for_report_ui(dict(terms_by_fram), cat_ids, config),
+        "termsByFramEng": _filter_framing_counts_dict_for_report_ui(dict(tc_eng_fram), cat_ids, config),
+        "termsByFramRus": _filter_framing_counts_dict_for_report_ui(dict(tc_rus_fram), cat_ids, config),
         "vocabDiversity": vocab_diversity,
         "segmentLengthVsAccuracy": segment_length_vs_accuracy,
         "agreementStats": agreement_stats,
@@ -2249,9 +2898,14 @@ def _build_per_document_viz_section(
         "mismatchFlow": mismatch_flow,
         "docFingerprint": doc_fingerprint,
         "termsByFramingDetailed": terms_by_framing_detailed,
+        "termsByFramingDetailedEn": terms_by_framing_detailed_en,
+        "termsByFramingDetailedRu": terms_by_framing_detailed_ru,
         "termFramingHeatmap": term_framing_heatmap,
+        "termFramingHeatmapEn": term_framing_heatmap_en,
+        "termFramingHeatmapRu": term_framing_heatmap_ru,
         "configDefaults": {
             "word_cloud": _word_cloud_config_defaults(wc_cfg),
+            "chart_text": {"language": "both"},
             "segment_length": {"scale": 100, "x_tick_step": 0},
         },
     }
@@ -2270,12 +2924,17 @@ def _build_per_document_viz_section(
         )
         agreement_stats_b = _compute_agreement_stats(comp_one_b, docs_one, config)
         terms_by_cat_b, terms_by_fram_b = _compute_terms_counts_for_viz(comp_one_b)
+        tc_eng_cat_b, tc_rus_cat_b, tc_eng_fram_b, tc_rus_fram_b = _terms_counts_for_viz_by_language(comp_one_b)
         vocab_diversity_b = _compute_vocab_diversity(docs_one)
         segment_length_vs_accuracy_b = _compute_segment_length_vs_accuracy(comp_one_b, docs_one)
         mismatch_flow_b = _compute_mismatch_flow(comp_one_b, fram_order_b)
         doc_fingerprint_b = _compute_document_fingerprint(stats_b, fram_order_b)
-        terms_by_framing_detailed_b = _compute_terms_by_framing_detailed(comp_one_b, fram_order_b)
+        terms_by_framing_detailed_b = _compute_terms_by_framing_detailed(comp_one_b, fram_order_b, language="both")
+        terms_by_framing_detailed_en_b = _compute_terms_by_framing_detailed(comp_one_b, fram_order_b, language="en")
+        terms_by_framing_detailed_ru_b = _compute_terms_by_framing_detailed(comp_one_b, fram_order_b, language="ru")
         term_framing_heatmap_b = _compute_term_framing_heatmap(comp_one_b, fram_order_b)
+        term_framing_heatmap_en_b = _compute_term_framing_heatmap(comp_one_b, fram_order_b, language="en")
+        term_framing_heatmap_ru_b = _compute_term_framing_heatmap(comp_one_b, fram_order_b, language="ru")
         fram_colours_for_viz_b = _fram_colours_for_viz_order(fram_order_b, fram_colours)
         word_cloud_presets_b = _word_cloud_presets_from_comparison(
             comp_one_b,
@@ -2304,7 +2963,11 @@ def _build_per_document_viz_section(
             "catOrder": cat_order_b,
             "framOrder": fram_order_b,
             "termsByCat": terms_by_cat_b,
+            "termsByCatEng": tc_eng_cat_b,
+            "termsByCatRus": tc_rus_cat_b,
             "termsByFram": _filter_framing_counts_dict_for_report_ui(dict(terms_by_fram_b), cat_ids_b, config),
+            "termsByFramEng": _filter_framing_counts_dict_for_report_ui(dict(tc_eng_fram_b), cat_ids_b, config),
+            "termsByFramRus": _filter_framing_counts_dict_for_report_ui(dict(tc_rus_fram_b), cat_ids_b, config),
             "vocabDiversity": vocab_diversity_b,
             "segmentLengthVsAccuracy": segment_length_vs_accuracy_b,
             "agreementStats": agreement_stats_b,
@@ -2312,9 +2975,14 @@ def _build_per_document_viz_section(
             "mismatchFlow": mismatch_flow_b,
             "docFingerprint": doc_fingerprint_b,
             "termsByFramingDetailed": terms_by_framing_detailed_b,
+            "termsByFramingDetailedEn": terms_by_framing_detailed_en_b,
+            "termsByFramingDetailedRu": terms_by_framing_detailed_ru_b,
             "termFramingHeatmap": term_framing_heatmap_b,
+            "termFramingHeatmapEn": term_framing_heatmap_en_b,
+            "termFramingHeatmapRu": term_framing_heatmap_ru_b,
             "configDefaults": {
                 "word_cloud": _word_cloud_config_defaults(wc_cfg),
+                "chart_text": {"language": "both"},
                 "segment_length": {"scale": 100, "x_tick_step": 0},
             },
         }
@@ -2383,42 +3051,12 @@ def _build_places_map_html(config: Dict[str, Any], embedded: bool = False, doc_i
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Places Map — Vozmezdie</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     * {{ box-sizing: border-box; }}
     body {{ margin: 0; font-family: 'Crimson Text', Georgia, serif; background: #f5f0e6; color: #4a5568; }}
     .demo-header {{ padding: 1rem 1.5rem; background: #2d3748; color: #e8e4dc; border-bottom: 1px solid rgba(139,0,0,0.3); }}
     .demo-header h1 {{ margin: 0; font-size: 1.5rem; font-weight: 600; }}
-    .demo-header .badge {{
-      display: inline-block;
-      margin-left: 0.55rem;
-      vertical-align: middle;
-      font-family: 'Stardos Stencil', 'Impact', sans-serif;
-      font-size: 0.96rem;
-      font-weight: 700;
-      letter-spacing: 0.26em;
-      text-transform: uppercase;
-      white-space: nowrap;
-      padding: 0.42rem 1.08rem 0.38rem;
-      border-radius: 3px 2px 4px 3px;
-      color: #520f14;
-      background:
-        radial-gradient(ellipse 130% 100% at 28% 0%, rgba(255,252,248,0.96), transparent 54%),
-        linear-gradient(170deg, #fffefb 0%, #f4e6d8 38%, #e2cbb8 100%);
-      border: 2px solid #3f0b12;
-      box-shadow:
-        0 0 0 1px #b42323,
-        0 0 0 5px rgba(254, 226, 226, 0.32),
-        inset 0 1px 1px rgba(255,255,255,0.88),
-        inset 0 -8px 22px rgba(127, 29, 29, 0.11),
-        0 4px 18px rgba(0, 0, 0, 0.38);
-      text-shadow:
-        0 1px 0 rgba(255,255,255,0.52),
-        0 0 3px rgba(82, 15, 20, 0.32),
-        0 2px 8px rgba(0, 0, 0, 0.12);
-      transform: rotate(-4.75deg);
-      transform-origin: 50% 50%;
-    }}
     .demo-header p {{ margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.9; }}
     .demo-header .demo-header-tagline {{ margin: 0.35rem 0 0; font-size: 0.82rem; opacity: 0.85; font-style: italic; }}
     #map {{ height: calc(100vh - 100px); min-height: 400px; }}
@@ -2440,7 +3078,7 @@ def _build_places_map_html(config: Dict[str, Any], embedded: bool = False, doc_i
 </head>
 <body>
   <div class="demo-header">
-    <h1>Places Map <span class="badge">Declassified</span></h1>
+    <h1>Places Map</h1>
     <p class="demo-header-tagline">The eyes of the KGB are upon you.</p>
   </div>
   <div id="map"></div>
@@ -2636,9 +3274,45 @@ def _compute_agreement_stats(
 def _compute_terms_counts_for_viz(
     comparison_by_doc: Dict[str, Dict[str, Any]],
 ) -> Tuple[Dict[str, int], Dict[str, int]]:
-    """Returns (terms_by_cat, terms_by_fram): unique term count per category/framing for bar charts."""
+    """Returns (terms_by_cat, terms_by_fram): unique bilingual pair count per category/framing."""
     terms_by_cat, terms_by_fram, _, _, _ = _collect_terms_from_comparison(comparison_by_doc)
     return {c: len(s) for c, s in terms_by_cat.items()}, {f: len(s) for f, s in terms_by_fram.items()}
+
+
+def _terms_counts_for_viz_by_language(
+    comparison_by_doc: Dict[str, Dict[str, Any]],
+) -> Tuple[Dict[str, int], Dict[str, int], Dict[str, int], Dict[str, int]]:
+    """Unique segment strings per EN-only / RU-only slices (same llm_category / llm_framing grouping as pair charts)."""
+    from collections import defaultdict
+
+    en_cat: Dict[str, Set[str]] = defaultdict(set)
+    ru_cat: Dict[str, Set[str]] = defaultdict(set)
+    en_fram: Dict[str, Set[str]] = defaultdict(set)
+    ru_fram: Dict[str, Set[str]] = defaultdict(set)
+    for comp in (comparison_by_doc or {}).values():
+        for r in comp.get("aligned_rows", []):
+            eng = (r.get("entry_eng") or "").strip()
+            rus = (r.get("entry_rus") or "").strip()
+            cat_raw = (r.get("llm_category") or "").strip()
+            cat_fold = display_content_category_for_ui(cat_raw) if cat_raw else ""
+            cat = canonical_content_category_id(cat_fold) if cat_fold else ""
+            fram = _normalize_for_group(r.get("llm_framing") or "")
+            if eng:
+                if cat:
+                    en_cat[cat].add(eng)
+                if fram:
+                    en_fram[fram].add(eng)
+            if rus:
+                if cat:
+                    ru_cat[cat].add(rus)
+                if fram:
+                    ru_fram[fram].add(rus)
+    return (
+        {c: len(s) for c, s in en_cat.items()},
+        {c: len(s) for c, s in ru_cat.items()},
+        {f: len(s) for f, s in en_fram.items()},
+        {f: len(s) for f, s in ru_fram.items()},
+    )
 
 
 def _compute_mismatch_flow(
@@ -2710,17 +3384,27 @@ def _compute_document_similarity(
 def _compute_terms_by_framing_detailed(
     comparison_by_doc: Dict[str, Dict[str, Any]],
     fram_order: List[str],
+    *,
+    language: str = "both",
 ) -> Dict[str, List[Tuple[str, int]]]:
-    """Framing -> [(term, count), ...] for top terms per framing. Term = entry_eng or entry_rus."""
+    """Framing -> [(term, count), ...]. ``language``: en | ru | both (preferred phrase for both)."""
     from collections import Counter
     fram_set = set(fram_order)
     fram_terms: Dict[str, Counter] = {}
+    lang = (language or "both").strip().lower()
     for comp in (comparison_by_doc or {}).values():
         for r in comp.get("aligned_rows", []):
             fram = _normalize_for_group(r.get("llm_framing") or "")
             if not fram or fram not in fram_set:
                 continue
-            term = (r.get("entry_eng") or r.get("entry_rus") or "").strip() or (r.get("entry_rus") or "").strip()
+            eng = (r.get("entry_eng") or "").strip()
+            rus = (r.get("entry_rus") or "").strip()
+            if lang == "en":
+                term = eng
+            elif lang == "ru":
+                term = rus
+            else:
+                term = eng or rus
             if term:
                 fram_terms.setdefault(fram, Counter())[term] += 1
     result: Dict[str, List[Tuple[str, int]]] = {}
@@ -2735,22 +3419,42 @@ def _compute_term_framing_heatmap(
     fram_order: List[str],
     top_n_terms: int = 15,
     min_word_len: int = 3,
+    *,
+    language: str = "both",
 ) -> Dict[str, Dict[str, int]]:
-    """Term -> framing -> count for heatmap. Uses tokenized words from segments.
-    Returns {term: {fram: count}}."""
+    """Term -> framing -> count. Token source depends on ``language`` (en | ru | both)."""
     from collections import Counter
     fram_set = set(fram_order)
     term_fram: Counter = Counter()
     sw = _DEFAULT_STOPWORDS_EN | _DEFAULT_STOPWORDS_RU
+    lang = (language or "both").strip().lower()
+
+    def tokens_from_row(r: Dict[str, Any]) -> List[str]:
+        eng = (r.get("entry_eng") or "").strip()
+        rus = (r.get("entry_rus") or "").strip()
+        if lang == "en":
+            blob = _wordcloud_english_source_text(eng.lower())
+        elif lang == "ru":
+            blob = rus.lower()
+        else:
+            blob = ((eng + " " + rus) if (eng and rus) else (eng or rus)).lower()
+        out: List[str] = []
+        for word in re.findall(r"\b[\w\u0400-\u04ff]+\b", blob):
+            wl = word.lower()
+            if len(wl) < min_word_len or wl in sw:
+                continue
+            if lang == "en" and not _wordcloud_token_ok_english(wl):
+                continue
+            out.append(wl)
+        return out
+
     for comp in (comparison_by_doc or {}).values():
         for r in comp.get("aligned_rows", []):
             fram = _normalize_for_group(r.get("llm_framing") or "")
             if fram not in fram_set:
                 continue
-            text = (r.get("entry_eng") or r.get("entry_rus") or "").lower()
-            for word in re.findall(r"\b[\w\u0400-\u04ff]+\b", text):
-                if len(word) >= min_word_len and word not in sw:
-                    term_fram[(word, fram)] += 1
+            for word in tokens_from_row(r):
+                term_fram[(word, fram)] += 1
     all_terms = sorted(
         set(t for t, _ in term_fram.keys()),
         key=lambda t: -sum(term_fram.get((t, f), 0) for f in fram_order),
@@ -2765,21 +3469,42 @@ def _compute_vocab_diversity(
     documents: List[Dict[str, Any]],
     min_len: int = 3,
 ) -> List[Dict[str, Any]]:
-    """Type-token ratio per document. Returns list of {display_name, doc_id, types, tokens, ratio}."""
+    """Type-token ratio per document (combined + English-only + Russian-only full-document text)."""
+    sw_eng = _DEFAULT_STOPWORDS_EN
+    sw_rus = _DEFAULT_STOPWORDS_RU
     result: List[Dict[str, Any]] = []
     for doc in documents:
-        text = (doc.get("raw_text_en") or doc.get("raw_text") or "").lower()
-        tokens = re.findall(r"\b[\w\u0400-\u04ff]+\b", text)
-        tokens = [t for t in tokens if len(t) >= min_len]
-        types = len(set(tokens))
-        n_tokens = len(tokens)
-        ratio = types / n_tokens if n_tokens else 0
+        eng_blob = _wordcloud_english_source_text((doc.get("raw_text_en") or "").lower())
+        rus_blob = (doc.get("raw_text") or "").lower()
+        tokens_eng = [
+            t.lower()
+            for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", eng_blob)
+            if len(t) >= min_len and t.lower() not in sw_eng and _wordcloud_token_ok_english(t.lower())
+        ]
+        tokens_rus = [
+            t.lower()
+            for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", rus_blob)
+            if len(t) >= min_len and t.lower() not in sw_rus
+        ]
+        tokens_combined = tokens_eng + tokens_rus
+        types_c = len(set(tokens_combined))
+        n_c = len(tokens_combined)
+        types_e = len(set(tokens_eng))
+        n_e = len(tokens_eng)
+        types_r = len(set(tokens_rus))
+        n_r = len(tokens_rus)
         result.append({
             "display_name": _nav_label(doc),
             "doc_id": doc.get("document_id", ""),
-            "types": types,
-            "tokens": n_tokens,
-            "ratio": round(ratio, 4),
+            "types": types_c,
+            "tokens": n_c,
+            "ratio": round(types_c / n_c, 4) if n_c else 0,
+            "types_eng": types_e,
+            "tokens_eng": n_e,
+            "ratio_eng": round(types_e / n_e, 4) if n_e else 0,
+            "types_rus": types_r,
+            "tokens_rus": n_r,
+            "ratio_rus": round(types_r / n_r, 4) if n_r else 0,
         })
     return result
 
@@ -2796,12 +3521,16 @@ def _compute_segment_length_vs_accuracy(
         for r in comp.get("aligned_rows", []):
             eng = (r.get("entry_eng") or "").strip()
             rus = (r.get("entry_rus") or "").strip()
-            length = max(len(eng), len(rus)) if (eng or rus) else 0
+            len_eng = len(eng)
+            len_rus = len(rus)
+            length = max(len_eng, len_rus) if (eng or rus) else 0
             both_match = r.get("both_match", False)
             category_match = r.get("category_match", False)
             framing_match = r.get("framing_match", False)
             points.append({
                 "length": length,
+                "length_eng": len_eng,
+                "length_rus": len_rus,
                 "doc_id": doc_id,
                 "display_name": display_name,
                 "both_match": both_match,
@@ -2853,6 +3582,49 @@ _DEFAULT_STOPWORDS_RU = frozenset([
     "и", "в", "во", "не", "что", "он", "на", "я", "с", "со", "как", "а", "то", "все", "она", "так", "его", "но", "да", "ты", "к", "у", "же", "вы", "за", "бы", "по", "только", "ее", "мне", "было", "вот", "от", "меня", "еще", "нет", "о", "из", "ему", "теперь", "когда", "уже", "вам", "ни", "быть", "был", "него", "до", "вас", "нибудь", "опять", "уж", "вам", "ведь", "там", "потом", "себя", "ничего", "ей", "им", "была", "нас", "над", "вами", "ними", "это", "этого", "этому", "этой", "этом", "этот", "эту", "эти", "этих", "этим", "этими", "какой", "какая", "какое", "какие", "который", "которая", "которое", "которые", "свой", "своя", "свое", "свои", "наш", "наша", "наше", "наши", "ваш", "ваша", "ваше", "ваши", "или", "если", "при", "под", "через", "после", "перед", "между", "без", "для", "до", "из-за", "кроме",
 ])
 
+# Non-Latin script letter runs stripped from EN cloud sources so Cyrillic (e.g. ценностный) never tokenizes as EN.
+_RE_WORDCLOUD_STRIP_NON_LATIN_FOR_EN = re.compile(
+    "["
+    "\u0400-\u04FF\u0500-\u052F"
+    "\u2DE0-\u2DFF\uFE20-\uFE2F"
+    "\uA640-\uA69F\u1C80-\u1C88"
+    "\u0370-\u03FF\u1F00-\u1FFF"
+    "\u0590-\u05FF"
+    "\u0600-\u06FF\u0750-\u077F"
+    "\u3040-\u30FF\u4E00-\u9FFF"
+    "]+"
+)
+
+
+def _wordcloud_english_source_text(raw: str) -> str:
+    """Lowercase text with Cyrillic/Greek/Arabic/… runs replaced by spaces before EN tokenization."""
+    return _RE_WORDCLOUD_STRIP_NON_LATIN_FOR_EN.sub(" ", (raw or "").lower())
+
+
+def _wordcloud_token_ok_english(t: str) -> bool:
+    """English clouds: Latin-script letters only (excludes Cyrillic homoglyphs, Greek, etc.)."""
+    if not t:
+        return False
+    saw_latin = False
+    for ch in t:
+        cat = unicodedata.category(ch)
+        if cat in ("Nd", "Nl", "No"):
+            continue
+        if cat.startswith("M"):
+            continue
+        if ch in "_'-·":
+            continue
+        if cat == "Pc" and ch == "_":
+            continue
+        if not cat.startswith("L"):
+            return False
+        name = unicodedata.name(ch, "")
+        if name.startswith("LATIN "):
+            saw_latin = True
+        else:
+            return False
+    return saw_latin
+
 
 def _word_frequencies_from_documents(
     documents: List[Dict[str, Any]],
@@ -2867,11 +3639,12 @@ def _word_frequencies_from_documents(
     words_eng: Counter = Counter()
     words_rus: Counter = Counter()
     for doc in documents:
-        text_eng = (doc.get("raw_text_en") or "").lower()
+        text_eng = _wordcloud_english_source_text(doc.get("raw_text_en") or "")
         text_rus = (doc.get("raw_text") or "").lower()
         for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", text_eng):
-            if len(t) >= min_len and t not in sw_eng:
-                words_eng[t] += 1
+            tl = t.lower()
+            if len(tl) >= min_len and tl not in sw_eng and _wordcloud_token_ok_english(tl):
+                words_eng[tl] += 1
         for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", text_rus):
             if len(t) >= min_len and t not in sw_rus:
                 words_rus[t] += 1
@@ -2893,11 +3666,12 @@ def _word_cloud_presets_from_comparison(
     sw_rus = (stopwords_rus or set()) | _DEFAULT_STOPWORDS_RU
 
     def feed_text(counter_eng: Counter, counter_rus: Counter, eng_blob: str, rus_blob: str) -> None:
-        eb = (eng_blob or "").lower()
+        eb = _wordcloud_english_source_text(eng_blob or "")
         rb = (rus_blob or "").lower()
         for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", eb):
-            if len(t) >= min_len and t not in sw_eng:
-                counter_eng[t] += 1
+            tl = t.lower()
+            if len(tl) >= min_len and tl not in sw_eng and _wordcloud_token_ok_english(tl):
+                counter_eng[tl] += 1
         for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", rb):
             if len(t) >= min_len and t not in sw_rus:
                 counter_rus[t] += 1
@@ -3105,7 +3879,7 @@ def _intro_tab() -> str:
   <section class="homepage-section">
     <h3 data-i18n="project_overview">Project Overview</h3>
     <p class="intro-lead" data-i18n="intro_lead_para">This page orients you to the project. Use the shortcuts below to open corpus tools in this same page, or watch the walkthrough at the end.</p>
-    <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified documents. Text is ingested, processed by a model for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: document text view with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.</p>
+    <p data-i18n="project_description">Vozmezdie is a modular pipeline for expert-grounded LLM evaluation of declassified documents. Text is ingested, processed by a model for extraction (specific details and ideological layers), and compared to human-coded ground truth. This Research Lab provides interactive analysis: the Document Text Illuminator with bilingual highlighting, comparison tables, visualizations, and a glossary at the bottom of the Lab page.</p>
   </section>
   <section class="homepage-section">
     <div class="intro-dual-cta">
@@ -3119,13 +3893,13 @@ def _intro_tab() -> str:
     <div class="intro-tools-grid">
       <article class="intro-tool-card">
         <span class="intro-tool-tag" data-i18n="intro_tool_doc_tag">Document tabs</span>
-        <h4 data-i18n="intro_tool_doc_h">Bilingual text view</h4>
-        <p data-i18n="intro_tool_doc_p">Aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.</p>
+        <h4 data-i18n="intro_tool_doc_h">Document Text Illuminator</h4>
+        <p data-i18n="intro_tool_doc_p">The Document Text Illuminator shows aligned English and Russian segments with scroll sync, search, and filters by category and framing. Toggle stacked or side-by-side layout.</p>
       </article>
       <article class="intro-tool-card">
         <span class="intro-tool-tag" data-i18n="intro_tool_compare_tag">Same tab</span>
-        <h4 data-i18n="intro_tool_compare_h">Comparison table</h4>
-        <p data-i18n="intro_tool_compare_p">Human vs model labels row by row; jump from a row into the text view. Export aligned comparison as JSON where enabled.</p>
+        <h4 data-i18n="intro_tool_compare_h">Expert reference vs AI labels</h4>
+        <p data-i18n="intro_tool_compare_p">Each row pairs expert reference labels with AI labels on the same expert-drawn passage; click a section number to open the Document Text Illuminator there. Export aligned comparison as JSON where enabled.</p>
       </article>
       <article class="intro-tool-card">
         <span class="intro-tool-tag" data-i18n="intro_tool_viz_tag">Research Lab</span>
@@ -3164,7 +3938,7 @@ def _intro_tab() -> str:
     <ul class="doc-controls-capabilities">
       <li data-i18n="intro_cap_a">Read aligned English and Russian segments side by side with search and filters.</li>
       <li data-i18n="intro_cap_b">Inspect specific details (what the segment is about) and ideological layers (how it is phrased).</li>
-      <li data-i18n="intro_cap_c">Open human vs AI comparison tables and optional scans (PDF) when configured.</li>
+      <li data-i18n="intro_cap_c">Open expert-reference versus AI comparison tables and optional scans (PDF) when configured.</li>
       <li data-i18n="intro_cap_d">Use the Research Lab for corpus-level charts, maps, and the glossary (at the bottom of the Lab page) for taxonomy-backed definitions.</li>
       <li data-i18n="intro_cap_e">Use the on-screen Cyrillic keyboard: open any document tab or the glossary search on the Research Lab page, click in an English or Russian search field — the keyboard pops up so you can type without switching system layouts.</li>
       <li data-i18n="intro_cap_f">Suggest alternative labels from comparison rows via the “+” button (in-page modal); suggestions are saved in the browser and can be exported as JSON.</li>
@@ -3276,14 +4050,19 @@ def _build_viz_payload_and_heatmap(
     )
     agreement_stats = _compute_agreement_stats(comparison_by_doc, documents, config)
     terms_by_cat, terms_by_fram = _compute_terms_counts_for_viz(comparison_by_doc)
+    tc_eng_cat, tc_rus_cat, tc_eng_fram, tc_rus_fram = _terms_counts_for_viz_by_language(comparison_by_doc)
     vocab_diversity = _compute_vocab_diversity(documents)
     segment_length_vs_accuracy = _compute_segment_length_vs_accuracy(comparison_by_doc, documents)
     trends = _compute_trends(comparison_by_doc, documents, cat_order, fram_order)
     mismatch_flow = _compute_mismatch_flow(comparison_by_doc, fram_order)
     doc_fingerprint = _compute_document_fingerprint(stats, fram_order)
     doc_similarity = _compute_document_similarity(stats, fram_order)
-    terms_by_framing_detailed = _compute_terms_by_framing_detailed(comparison_by_doc, fram_order)
+    terms_by_framing_detailed = _compute_terms_by_framing_detailed(comparison_by_doc, fram_order, language="both")
+    terms_by_framing_detailed_en = _compute_terms_by_framing_detailed(comparison_by_doc, fram_order, language="en")
+    terms_by_framing_detailed_ru = _compute_terms_by_framing_detailed(comparison_by_doc, fram_order, language="ru")
     term_framing_heatmap = _compute_term_framing_heatmap(comparison_by_doc, fram_order)
+    term_framing_heatmap_en = _compute_term_framing_heatmap(comparison_by_doc, fram_order, language="en")
+    term_framing_heatmap_ru = _compute_term_framing_heatmap(comparison_by_doc, fram_order, language="ru")
 
     fram_colours_for_viz = _fram_colours_for_viz_order(fram_order, fram_colours)
 
@@ -3307,7 +4086,11 @@ def _build_viz_payload_and_heatmap(
         "catOrder": cat_order,
         "framOrder": fram_order,
         "termsByCat": terms_by_cat,
+        "termsByCatEng": tc_eng_cat,
+        "termsByCatRus": tc_rus_cat,
         "termsByFram": _filter_framing_counts_dict_for_report_ui(dict(terms_by_fram), cat_ids, config),
+        "termsByFramEng": _filter_framing_counts_dict_for_report_ui(dict(tc_eng_fram), cat_ids, config),
+        "termsByFramRus": _filter_framing_counts_dict_for_report_ui(dict(tc_rus_fram), cat_ids, config),
         "vocabDiversity": vocab_diversity,
         "segmentLengthVsAccuracy": segment_length_vs_accuracy,
         "trends": trends,
@@ -3319,9 +4102,14 @@ def _build_viz_payload_and_heatmap(
         "docSimilarityIds": [pd["doc_id"] for pd in stats["per_doc"]],
         "docSimilarityDisplayNames": [pd.get("display_name", pd["doc_id"]) for pd in stats["per_doc"]],
         "termsByFramingDetailed": terms_by_framing_detailed,
+        "termsByFramingDetailedEn": terms_by_framing_detailed_en,
+        "termsByFramingDetailedRu": terms_by_framing_detailed_ru,
         "termFramingHeatmap": term_framing_heatmap,
+        "termFramingHeatmapEn": term_framing_heatmap_en,
+        "termFramingHeatmapRu": term_framing_heatmap_ru,
         "configDefaults": {
             "word_cloud": _word_cloud_config_defaults(wc_cfg),
+            "chart_text": {"language": "both"},
             "radar": {
                 "mode": "single",
                 "compare_count": 3,
@@ -3525,19 +4313,25 @@ def _comparison_table_rows_html(
         llm_fram_hex = _report_framing_colour(llm_fram_raw, fram_colours)
         human_fram_hex = _report_framing_colour(human_fram_raw, fram_colours)
         section = html_module.escape(str(r.get("section", "")))
-        entry_eng = html_module.escape(str(r.get("entry_eng", "")))
-        entry_rus = html_module.escape(str(r.get("entry_rus", "")))
+        entry_eng_plain = str(r.get("entry_eng", ""))
+        entry_rus_plain = str(r.get("entry_rus", ""))
+        entry_eng = html_module.escape(entry_eng_plain)
+        entry_rus = html_module.escape(entry_rus_plain)
+        entry_eng_cell = html_module.escape(entry_eng_plain).replace("\n", "<br />\n")
+        entry_rus_cell = html_module.escape(entry_rus_plain).replace("\n", "<br />\n")
         llm_cat = html_module.escape(llm_cat_disp)
         human_cat = html_module.escape(human_cat_disp)
         llm_fram = html_module.escape(llm_fram_disp)
         human_fram = html_module.escape(human_fram_disp)
-        context = html_module.escape(str(r.get("context", "")))
+        ctx_plain = str(r.get("context") or "")
+        context_attr = html_module.escape(ctx_plain, quote=True)
+        context_cell_inner = html_module.escape(ctx_plain).replace("\n", "<br />\n")
         table_layout_attr = "preliminary-b" if segment_column_layout == "preliminary_b" else "standard"
         data_attrs = (
             f' data-table-layout="{table_layout_attr}"'
             f' data-section="{section}" data-entry-eng="{entry_eng}" data-entry-rus="{entry_rus}"'
             f' data-llm-category="{llm_cat}" data-human-category="{human_cat}"'
-            f' data-llm-framing="{llm_fram}" data-human-framing="{human_fram}" data-context="{context}"'
+            f' data-llm-framing="{llm_fram}" data-human-framing="{human_fram}" data-context="{context_attr}"'
             f' data-row-index="{row_idx}"'
             f' data-llm-category-colour="{html_module.escape(llm_cat_hex, quote=True)}"'
             f' data-human-category-colour="{html_module.escape(human_cat_hex, quote=True)}"'
@@ -3566,7 +4360,8 @@ def _comparison_table_rows_html(
         )
         section_btn = (
             f'<button type="button" class="section-click-to-view" data-tab="{doc_id}" data-row-index="{row_idx}" '
-            f'title="Open document text view and highlight this entry">{r.get("section", "")}</button>'
+            f'data-i18n-title="comparison_open_illuminator_tooltip" '
+            f'title="Open the Document Text Illuminator and highlight this passage">{r.get("section", "")}</button>'
         )
         doc_id_esc = html_module.escape(doc_id)
         suggest_btn = (
@@ -3588,18 +4383,18 @@ def _comparison_table_rows_html(
                 f'<td class="{fram_cls}">{fram_cell_inner}</td>'
                 f"<td class=\"comparison-cell-segment-rus\">{rus_cell_inner}</td>"
                 f"<td class=\"comparison-cell-segment-eng\">{eng_cell_inner}</td>"
-                f"<td class=\"context-cell\">{r.get('context', '')}</td>"
+                f"<td class=\"context-cell\">{context_cell_inner}</td>"
                 f"</tr>"
             )
         else:
             rows_html.append(
                 f"<tr{data_attrs}>"
                 f"<td class=\"section-cell\">{section_btn} {suggest_btn}</td>"
-                f"<td>{r.get('entry_eng', '')}</td>"
-                f"<td>{r.get('entry_rus', '')}</td>"
+                f"<td>{entry_eng_cell}</td>"
+                f"<td>{entry_rus_cell}</td>"
                 f'<td class="{cat_cls}">{cat_cell_inner}</td>'
                 f'<td class="{fram_cls}">{fram_cell_inner}</td>'
-                f"<td class=\"context-cell\">{r.get('context', '')}</td>"
+                f"<td class=\"context-cell\">{context_cell_inner}</td>"
                 f"</tr>"
             )
     return "\n".join(rows_html)
@@ -3679,6 +4474,7 @@ def _doc_tab(
     secondary_n_matched: Optional[int] = None,
     viz_experiment_labels: Optional[Tuple[str, str]] = None,
     experiment_b_agent_rows: Optional[List[Dict[str, Any]]] = None,
+    keyboard_logo_href: Optional[str] = None,
 ) -> str:
     """One document tab: ``page_heading`` is the blue-gradient banner title (bibliographic citation when configured)."""
     active_class = " active" if active else ""
@@ -3703,8 +4499,7 @@ def _doc_tab(
         f'<div class="doc-tab-cyrillic-keyboard">'
         f'<div class="cyrillic-keyboard-popup-wrap doc-cyrillic-popup-floating" id="cyrillic-popup-{doc_id}" '
         f'role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="cyrillic-popup-label-{doc_id}">'
-        f'<p class="cyrillic-keyboard-label" id="cyrillic-popup-label-{doc_id}" data-i18n="cyrillic_keyboard_label">Cyrillic keyboard</p>'
-        f"{_cyrillic_keyboard_html(doc_id)}"
+        f'{_cyrillic_keyboard_html(doc_id, logo_href=keyboard_logo_href)}'
         f"</div></div>"
     )
     cat_opts = "".join(
@@ -3827,8 +4622,11 @@ def _doc_tab(
             f'    <div id="comparison-table-panel-{doc_id}-1" class="comparison-run-table-panel comparison-run-table-panel-b" data-run-panel="1" style="display:none;">\n'
             f'      <div class="comparison-run-table-banner comparison-run-table-banner-b">{esc_banner_b}</div>\n'
             f'      <p class="comparison-run-table-blurb" data-i18n="comparison_table_run_b_blurb">'
-            f"This table uses the AI Segmented run: different segment boundaries and alignment than Human Segmented. "
-            f"Cells emphasize the model; expert labels appear when they disagree.</p>\n"
+            f"The upper table lists expert-drawn passages: human coders chose each slice’s boundaries, so every row pairs "
+            f"expert reference labels with AI labels on that same passage. This lower table lists AI-drawn passages: the "
+            f"model split the text differently, so rows may be shorter, longer, or shifted—you are not looking at the "
+            f"same slices as above. The category and framing columns foreground the model’s choices; expert wording "
+            f"appears beside them only when we could align an expert label to that model-sized passage.</p>\n"
             f'      <table class="comparison-table comparison-table-experiment-b">\n'
             f"    {thead_experiment_b}\n"
             f'    <tbody id="table-{doc_id}-run-1">{table_body_b}</tbody>\n'
@@ -3865,14 +4663,14 @@ def _doc_tab(
         else:
             inner_tbl = (
                 '<p class="exp-b-prelim-empty" data-i18n="exp_b_prelim_empty_doc">'
-                "No assessor segments are recorded for this document in the configured AI Segmented agent assessments file."
+                "No AI Segmented labelled passages are loaded for this document."
                 "</p>"
             )
         experiment_b_prelim_section = (
             f'<details class="collapsible-section exp-b-prelim-details" id="doc-section-exp-b-prelim-{esc_cmp}">\n'
-            '  <summary data-i18n="exp_b_prelim_summary">AI Segmented — assessor segments (not compared)</summary>\n'
+            '  <summary data-i18n="exp_b_prelim_summary">AI Segmented: labelled passages only (no expert-vs-AI comparison columns)</summary>\n'
             '  <div class="collapsible-body">\n'
-            '    <p class="exp-b-prelim-intro" data-i18n="exp_b_prelim_intro">Rows come from the AI Segmented agent assessments file (same source as preliminary_results.html): assessor-defined segments with category, framing, Russian and English text, and context. There are no expert or model comparison columns.</p>\n'
+            '    <p class="exp-b-prelim-intro" data-i18n="exp_b_prelim_intro">This optional block lists passages that were coded directly in the AI Segmented workflow. Each row shows the Russian and English text, the chosen specific detail and ideological layer, and any surrounding context we saved with it. You will not see side-by-side expert-versus-model comparison columns here. That pairing lives in the main comparison table for expert-drawn passages.</p>\n'
             f"    {inner_tbl}\n"
             "  </div>\n"
             "</details>\n"
@@ -3883,7 +4681,7 @@ def _doc_tab(
         esc_trb = html_module.escape(viz_experiment_labels[1])
         dual_run_ctl = (
             f'<div class="ctl-group comparison-run-toolbar-group">'
-            f'<span class="document-text-filter-head">Comparison run</span>'
+            f'<span class="document-text-filter-head" data-i18n="comparison_run_head">Comparison run</span>'
             f'<select id="table-comparison-run-{doc_id}" class="table-comparison-run-select" '
             f'data-tab="{html_module.escape(doc_id)}"><option value="0">{esc_tra}</option>'
             f'<option value="1">{esc_trb}</option></select></div>'
@@ -3895,14 +4693,14 @@ def _doc_tab(
 {doc_text_runs_embed}
 {pdf_section}
 <details class="collapsible-section" id="doc-section-text-{doc_id}">
-  <summary data-i18n="document_text_view">Document text view</summary>
+  <summary data-i18n="document_text_view">Document Text Illuminator</summary>
   <div class="collapsible-body">
     {text_view}
   </div>
 </details>
 {doc_viz_section_html}
 <details class="collapsible-section" id="doc-section-compare-{doc_id}">
-  <summary data-i18n="comparison_table">Comparison table</summary>
+  <summary data-i18n="comparison_table">Comparison table: expert reference labels vs AI (expert-drawn passages)</summary>
   <div class="collapsible-body">
     <div class="comparison-table-controls" data-tab="{doc_id}">
       <input type="text" id="table-search-{doc_id}" class="comparison-table-search" placeholder="Search in table..." data-tab="{doc_id}" data-i18n="table_search_placeholder"/>
@@ -3949,12 +4747,12 @@ def _colour_legend(categories: List[Dict], framings: List[Dict]) -> str:
     fram_html = items_html(framings) if framings else ""
     caps_intro = """
     <div class="colour-legend-section document-text-intro-block">
-      <p data-i18n="doc_text_capabilities_intro">Use the mirrored text panels to:</p>
+      <p data-i18n="doc_text_capabilities_intro">In the Document Text Illuminator you can:</p>
       <ul class="doc-controls-capabilities">
         <li data-i18n="doc_text_cap_search">Search in text for specific information (such as date/time, place, people, etc.), in English and Russian.</li>
         <li data-i18n="doc_text_cap_highlight">Find and highlight different ideological layers in the text.</li>
         <li data-i18n="doc_text_cap_compare">Compare how specific details and ideological layers intersect within segments.</li>
-        <li data-i18n="doc_text_cap_lab">Pair this view with Research Lab charts to compare Human Segmented and AI Segmented outputs.</li>
+        <li data-i18n="doc_text_cap_lab">Pair this illuminator with Research Lab charts—those charts reflect whichever segmentation pass is loaded (expert-drawn vs AI-drawn).</li>
       </ul>
     </div>"""
     inner = (
@@ -3970,7 +4768,7 @@ def _colour_legend(categories: List[Dict], framings: List[Dict]) -> str:
       <div class="colour-legend-items">{fram_html}</div>
     </div>
     <div class="colour-legend-section">
-      <div class="colour-legend-orphan-note colour-legend-narrative" data-i18n-html="document_text_legend_note">Legend narrative placeholder.</div>
+      <div class="colour-legend-narrative-block colour-legend-narrative" data-i18n-html="document_text_legend_note">Legend narrative placeholder.</div>
     </div>
   </div>"""
     )
@@ -3978,6 +4776,35 @@ def _colour_legend(categories: List[Dict], framings: List[Dict]) -> str:
         '<details class="colour-legend-details"><summary data-i18n="legend_toggle_summary">Colour legend & notes</summary>'
         + inner
         + "</details>"
+    )
+
+
+def _document_text_colour_by_select_html(doc_id_esc: str) -> str:
+    """Analysis by: label source for tinting. ``ai_segmented`` applies when Comparison run is AI Segmented (dual-run)."""
+    return (
+        f'        <select id="doc-colour-by-{doc_id_esc}" class="document-colour-by" '
+        f'data-tab="{doc_id_esc}" data-i18n-title="colour_by_select_title" '
+        f'title="Whose labels tint each segment">\n'
+        '          <option value="llm" data-i18n="colour_by_llm">Colour by: AI</option>\n'
+        '          <option value="human" data-i18n="colour_by_human">Colour by: expert coder labels</option>\n'
+        '          <option value="both" data-i18n="colour_by_both">Colour by: Both (only where AI & expert labels match)</option>\n'
+        '          <option value="ai_segmented" data-i18n="colour_by_ai_segmented">Labels: AI Segmented</option>\n'
+        "        </select>"
+    )
+
+
+def _document_text_comparison_run_select_html(
+    doc_id_esc: str, *, label_a: str, label_b: str
+) -> str:
+    esc_la = html_module.escape(label_a)
+    esc_lb = html_module.escape(label_b)
+    return (
+        f'      <div class="ctl-group comparison-run-toolbar-group">\n'
+        f'        <span class="document-text-filter-head" data-i18n="comparison_run_head">Comparison run</span>\n'
+        f'        <select id="doc-comparison-run-{doc_id_esc}" class="doc-comparison-run-select" '
+        f'data-tab="{doc_id_esc}"><option value="0">{esc_la}</option>'
+        f'<option value="1">{esc_lb}</option></select>\n'
+        f"      </div>\n"
     )
 
 
@@ -3995,25 +4822,13 @@ def _document_text_view(
     """Block: search, category/framing filters; two panels show full document text (with aligned segments as spans when provided)."""
     legend = _colour_legend(categories, framings)
     esc_id = html_module.escape(doc_id)
-    esc_la = html_module.escape(experiment_label_a)
-    esc_lb = html_module.escape(experiment_label_b)
-    if comparison_run_labels:
-        experiment_ctl = f"""      <div class="ctl-group">
-        <span class="document-text-filter-head">Comparison run</span>
-        <select id="doc-comparison-run-{esc_id}" class="doc-comparison-run-select" data-tab="{esc_id}" title="Alignment run for highlighted text, table, and export (same as comparison table)">
-          <option value="0">{esc_la}</option>
-          <option value="1">{esc_lb}</option>
-        </select>
-      </div>
-"""
-    else:
-        experiment_ctl = f"""      <div class="ctl-group">
-        <span class="document-text-filter-head">Comparison run</span>
-        <select id="doc-comparison-run-{esc_id}" class="document-comparison-run-locked" data-tab="{esc_id}" disabled title="Only one alignment is bundled. Add report.secondary_comparison_json when building the report for the AI Segmented run.">
-          <option value="0">{esc_la}</option>
-        </select>
-      </div>
-"""
+    dual = comparison_run_labels is not None
+    colour_by_sel = _document_text_colour_by_select_html(esc_id)
+    doc_comparison_run_sel = ""
+    if dual:
+        doc_comparison_run_sel = _document_text_comparison_run_select_html(
+            esc_id, label_a=experiment_label_a, label_b=experiment_label_b
+        )
     return f"""
 <div class="document-text-view layout-split" data-tab-id="{esc_id}">
   <div class="document-text-controls-sticky">
@@ -4033,13 +4848,9 @@ def _document_text_view(
       </div>
       <div class="ctl-group">
         <span class="document-text-filter-head" data-i18n="analysis_by_head">Analysis by</span>
-        <select id="doc-colour-by-{esc_id}" class="document-colour-by" data-tab="{esc_id}" title="Whose labels to use for colours">
-          <option value="llm" data-i18n="colour_by_llm">Colour by: LLM</option>
-          <option value="human" data-i18n="colour_by_human">Colour by: Human</option>
-          <option value="both" data-i18n="colour_by_both">Colour by: Both (agree only)</option>
-        </select>
+{colour_by_sel}
       </div>
-{experiment_ctl}
+{doc_comparison_run_sel}
     </div>
     <div class="document-text-controls-actions">
       <div class="reader-layout-toggle" data-tab="{esc_id}">
@@ -4047,6 +4858,10 @@ def _document_text_view(
         <button type="button" class="reader-layout-btn" data-layout="stacked" data-tab="{esc_id}" data-i18n="reader_layout_stacked">Stacked</button>
       </div>
       <button type="button" class="document-clear-filters" data-tab="{esc_id}" data-i18n="clear_filters">Clear filters</button>
+      <label class="illuminator-vignette-opt" data-i18n-title="illuminator_vignette_hint" title="Briefly dims panel edges when you open a passage from the comparison table (preference saved in this browser).">
+        <input type="checkbox" class="illuminator-vignette-toggle" data-tab="{esc_id}" id="illuminator-vignette-{esc_id}" />
+        <span data-i18n="illuminator_vignette_label">Warm edge vignette when jumping from the table</span>
+      </label>
     </div>
   </div>
 {legend}
@@ -4213,6 +5028,7 @@ def _glossary_tab(
     config: Optional[Dict[str, Any]] = None,
     comparison_secondary_by_doc: Optional[Dict[str, Dict[str, Any]]] = None,
     viz_experiment_labels: Optional[Tuple[str, str]] = None,
+    keyboard_logo_href: Optional[str] = None,
 ) -> str:
     """Build glossary HTML embedded at the bottom of the Research Lab tab."""
     dual_exp = bool(comparison_secondary_by_doc)
@@ -4361,9 +5177,9 @@ def _glossary_tab(
     opt_b_dis = "" if dual_exp else " disabled"
     glossary_src_opts = (
         f'<div class="glossary-filter-wrap glossary-label-source-wrap">'
-        f'<label for="glossary-label-source">Group terms by</label>'
+        f'<label for="glossary-label-source" data-i18n="glossary_group_terms_by">Group terms by</label>'
         f'<select id="glossary-label-source" class="glossary-label-source">'
-        f'<option value="human">Human labelled</option>'
+        f'<option value="human" data-i18n="glossary_group_expert_coder">Expert coder labels</option>'
         f'<option value="exp_a">{esc_lab_a}</option>'
         f'<option value="exp_b"{opt_b_dis}>{esc_lab_b}</option>'
         f"</select></div>"
@@ -4378,8 +5194,8 @@ def _glossary_tab(
 <hr style="margin: 3rem 0; border: none; border-top: 2px solid #dee2e6;"/>
 <h3 style="color: #4a5568; margin-bottom: 1.5rem; font-size: 1.5rem; margin-top: 3rem;" data-i18n="terms_found_summary">Terms Found in Documents - Summary</h3>
 <div style="background: #e8e4dc; padding: 1.5rem; border-radius: 4px; margin-bottom: 2rem; border: 1px solid rgba(139,115,85,0.3);">
-<p style="margin-bottom: 0.65rem;"><strong data-i18n="total_unique_terms">Total unique terms extracted:</strong> {total_unique} <span style="color:#5a5348;">(Human Segmented run, model slice)</span></p>
-<p style="margin-bottom: 0.45rem;"><strong>Human-labelled segments (unique terms):</strong> {nh_all}</p>
+<p style="margin-bottom: 0.65rem;"><strong data-i18n="total_unique_terms">Total unique terms extracted:</strong> {total_unique} <span style="color:#5a5348;" data-i18n="terms_vocab_alignment_note">(Expert-drawn alignment · model-assigned labels)</span></p>
+<p style="margin-bottom: 0.45rem;"><strong data-i18n="glossary_expert_segments_terms">Expert coder segments (unique terms):</strong> {nh_all}</p>
 <p style="margin-bottom: 0.45rem;"><strong>{esc_lab_a} (LLM on primary alignment, unique terms):</strong> {na_all}</p>
 <p style="margin-bottom: 1rem;"><strong>{esc_lab_b} (LLM on secondary comparison, unique terms):</strong> {nb_line}</p>
 <p style="margin-bottom: 1rem;"><strong data-i18n="content_categories_stats">Content Categories:</strong> <span data-i18n="glossary_stats_cat_detail" data-i18n-params='{params_cat}'>{n_cat_with_terms} types · {unique_by_cat} term instances</span></p>
@@ -4391,26 +5207,27 @@ def _glossary_tab(
         for doc in (documents or [])
         if doc.get("document_id")
     )
-    glossary_cyr = _cyrillic_keyboard_html("glossary")
+    glossary_cyr = _cyrillic_keyboard_html("glossary", logo_href=keyboard_logo_href)
     return (
         """<details class="collapsible-section lab-glossary-root" id="lab-glossary" aria-labelledby="lab-glossary-heading">
 <summary><span id="lab-glossary-heading" data-i18n="glossary_of_terms">Glossary of Terms</span></summary>
 <div class="collapsible-body lab-glossary-collapsible-body">
 <p data-i18n="glossary_intro" style="margin: 0 0 1rem; color: #4a5568; line-height: 1.55;">Definitions and examples for content categories and framing strategies used in document analysis.</p>
-<div class="glossary-controls">
+<div class="glossary-controls glossary-controls-search">
 <div class="glossary-search-cyrillic-anchor">
 <input type="search" id="glossary-search" class="glossary-search" placeholder="Search glossary by name or definition..." data-i18n="glossary_search_placeholder" autocomplete="off"/>
 <div class="cyrillic-keyboard-popup-wrap" id="cyrillic-popup-glossary" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="cyrillic-popup-label-glossary">
-<p class="cyrillic-keyboard-label" id="cyrillic-popup-label-glossary" data-i18n="cyrillic_keyboard_label">Cyrillic keyboard</p>
 """
         + glossary_cyr
         + """
+</div>
 </div>
 </div>
 <details class="glossary-how-search-details">
 <summary data-i18n="glossary_how_search_summary">How do I search?</summary>
 <div class="glossary-how-search-body" data-i18n-html="glossary_how_search_html"></div>
 </details>
+<div class="glossary-controls glossary-controls-filters">
 <div class="glossary-filter-wrap">
 <label for="glossary-doc-filter" data-i18n="filter_by_document">Filter by document:</label>
 <select id="glossary-doc-filter" class="glossary-doc-filter">
@@ -4817,24 +5634,71 @@ function setDocExperimentIndex(docId, idx) {
   if (idx !== 1) idx = 0;
   try { sessionStorage.setItem(docExperimentStorageKey(docId), String(idx)); } catch (e) {}
 }
-function getActiveComparisonTbody(tid) {
+function docTextExperimentStorageKey(docId) {
+  return 'vozmezdie_doc_text_exp_' + docId;
+}
+function getDocTextExperimentIndex(docId) {
+  var raw = null;
+  try { raw = sessionStorage.getItem(docTextExperimentStorageKey(docId)); } catch (e) {}
+  /* Until doc-text storage exists (upgrade path), match table preference */
+  if (raw === null || raw === '') return getDocExperimentIndex(docId);
+  var idx = parseInt(raw, 10) || 0;
+  if (idx !== 1) idx = 0;
+  return idx;
+}
+function setDocTextExperimentIndex(docId, idx) {
+  if (idx !== 1) idx = 0;
+  try { sessionStorage.setItem(docTextExperimentStorageKey(docId), String(idx)); } catch (e) {}
+}
+function getComparisonTbodyForRun(tid, idx) {
   var tab = document.getElementById('tab-' + tid);
   if (tab && tab.getAttribute('data-comparison-dual') === '1') {
-    var idx = getDocExperimentIndex(tid);
+    if (idx !== 1) idx = 0;
     return document.getElementById('table-' + tid + '-run-' + idx);
   }
   return document.getElementById('table-' + tid);
 }
-function updateDocumentTextRunHint(docId, idx) {
-  if (idx !== 1) idx = 0;
+function getActiveComparisonTbody(tid) {
+  return getComparisonTbodyForRun(tid, getDocExperimentIndex(tid));
+}
+/** Enable/disable Analysis by options: on AI Segmented run only ``ai_segmented`` is valid; on Human run that option is disabled. */
+function updateDocumentColourByOptionsForRun(docId, runIdx) {
+  if (runIdx !== 1) runIdx = 0;
   var tab = document.getElementById('tab-' + docId);
-  if (!tab || tab.getAttribute('data-comparison-dual') !== '1') return;
-  var l0 = tab.getAttribute('data-viz-exp-label-0') || 'Human Segmented';
-  var l1 = tab.getAttribute('data-viz-exp-label-1') || 'AI Segmented';
-  var active = idx === 1 ? l1 : l0;
-  var cb = document.getElementById('doc-colour-by-' + docId);
-  if (cb) {
-    cb.setAttribute('title', 'LLM / Human / Both use labels from the comparison run now selected (' + active + ').');
+  if (!tab) return;
+  var sel = document.getElementById('doc-colour-by-' + docId);
+  if (!sel) return;
+  var optLlm = sel.querySelector('option[value="llm"]');
+  var optHum = sel.querySelector('option[value="human"]');
+  var optBoth = sel.querySelector('option[value="both"]');
+  var optAi = sel.querySelector('option[value="ai_segmented"]');
+  var dual = tab.getAttribute('data-comparison-dual') === '1';
+  var titleKey = sel.getAttribute('data-i18n-title');
+  var baseTitle = '';
+  if (titleKey && typeof t === 'function') baseTitle = t(titleKey);
+  if (!baseTitle) baseTitle = sel.getAttribute('title') || '';
+  var extra = (typeof t === 'function') ? t('analysis_by_ai_run_hint') : '';
+  if (!dual) {
+    if (optLlm) optLlm.disabled = false;
+    if (optHum) optHum.disabled = false;
+    if (optBoth) optBoth.disabled = false;
+    if (optAi) optAi.disabled = true;
+    sel.setAttribute('data-ai-run-active', '0');
+    sel.title = baseTitle;
+    if (sel.value === 'ai_segmented') sel.value = 'llm';
+    return;
+  }
+  var aiMode = runIdx === 1;
+  if (optLlm) optLlm.disabled = aiMode;
+  if (optHum) optHum.disabled = aiMode;
+  if (optBoth) optBoth.disabled = aiMode;
+  if (optAi) optAi.disabled = !aiMode;
+  sel.setAttribute('data-ai-run-active', aiMode ? '1' : '0');
+  sel.title = (aiMode && extra) ? (baseTitle + ' — ' + extra) : baseTitle;
+  if (aiMode) {
+    sel.value = 'ai_segmented';
+  } else {
+    if (sel.value === 'ai_segmented') sel.value = 'llm';
   }
 }
 function syncDocumentComparisonRun(docId, idx) {
@@ -4859,9 +5723,6 @@ function syncDocumentComparisonRun(docId, idx) {
   var hs1 = document.getElementById('hidden-stats-' + docId + '-run-1');
   if (hs0) hs0.style.display = idx === 0 ? '' : 'none';
   if (hs1) hs1.style.display = idx === 1 ? '' : 'none';
-  /* Dual-run document text must mirror the active comparison tbody so filters /
-     Analysis by use the same labels as the table (SSR / JSON snapshot can drift). */
-  if (typeof buildDocumentTextView === 'function') buildDocumentTextView(docId);
   var bundle = document.getElementById('comparison-runs-' + docId);
   var main = document.getElementById('comparison-export-' + docId);
   if (bundle && main) {
@@ -4870,19 +5731,29 @@ function syncDocumentComparisonRun(docId, idx) {
       main.textContent = JSON.stringify(cp.runs[idx]);
     } catch(e3) {}
   }
-  tab.querySelectorAll('.doc-comparison-run-select, .table-comparison-run-select, .doc-viz-experiment-select').forEach(function(sel) {
+  tab.querySelectorAll('.table-comparison-run-select, .doc-viz-experiment-select').forEach(function(sel) {
     sel.value = String(idx);
   });
-  updateDocumentTextRunHint(docId, idx);
   if (typeof applyComparisonTableFilters === 'function') applyComparisonTableFilters(docId);
-  if (typeof applyDocumentSearchAndFilter === 'function') applyDocumentSearchAndFilter(docId);
   syncDocVizForDocument(docId, idx);
+}
+function syncDocumentTextComparisonRun(docId, idx) {
+  if (idx !== 1) idx = 0;
+  var tab = document.getElementById('tab-' + docId);
+  if (!tab || tab.getAttribute('data-comparison-dual') !== '1') return;
+  setDocTextExperimentIndex(docId, idx);
+  var docSel = document.getElementById('doc-comparison-run-' + docId);
+  if (docSel) docSel.value = String(idx);
+  if (typeof updateDocumentColourByOptionsForRun === 'function') updateDocumentColourByOptionsForRun(docId, idx);
+  if (typeof buildDocumentTextView === 'function') buildDocumentTextView(docId);
+  if (typeof applyDocumentSearchAndFilter === 'function') applyDocumentSearchAndFilter(docId);
 }
 function initPerDocumentExperimentUIs() {
   document.querySelectorAll('.tab-content[data-comparison-dual="1"]').forEach(function(tab) {
     var tid = tab.id.replace(/^tab-/, '');
     if (!tid || tid === 'home' || tid === 'intro') return;
     syncDocumentComparisonRun(tid, getDocExperimentIndex(tid));
+    syncDocumentTextComparisonRun(tid, getDocTextExperimentIndex(tid));
   });
 }
 function syncDocVizForDocument(docId, idx) {
@@ -4914,10 +5785,11 @@ function buildDocumentTextView(tid) {
   var containerEng = document.getElementById('doc-text-eng-' + tid);
   var containerRus = document.getElementById('doc-text-rus-' + tid);
   if (!containerEng || !containerRus) return;
-  var tbody = getActiveComparisonTbody(tid);
+  var dualDoc = tabEl.getAttribute('data-comparison-dual') === '1';
+  var textIdx = dualDoc && typeof getDocTextExperimentIndex === 'function' ? getDocTextExperimentIndex(tid) : 0;
+  var tbody = typeof getComparisonTbodyForRun === 'function' ? getComparisonTbodyForRun(tid, dualDoc ? textIdx : 0) : getActiveComparisonTbody(tid);
   var catSelect = tabEl.querySelector('select.document-category-filter');
   var framSelect = tabEl.querySelector('select.document-framing-filter');
-  var dualDoc = tabEl.getAttribute('data-comparison-dual') === '1';
   var rows = tbody ? tbody.querySelectorAll('tr') : [];
   /* Dual-run: prefer embedded SSR panels per experiment so full originals stay intact with gaps (avoid rebuilding from table rows only). */
   var appliedFromRunsBundle = false;
@@ -4926,7 +5798,7 @@ function buildDocumentTextView(tid) {
     try {
       var trPayload = JSON.parse(textRunsEl.textContent);
       var runsArr = trPayload.runs;
-      var ri = typeof getDocExperimentIndex === 'function' ? getDocExperimentIndex(tid) : 0;
+      var ri = textIdx;
       var rr = runsArr && runsArr[ri];
       if (!rr && runsArr && runsArr.length) rr = runsArr[0];
       if (rr && typeof rr.eng === 'string' && typeof rr.rus === 'string') {
@@ -5089,9 +5961,11 @@ function buildDocumentTextView(tid) {
   var filterHandler = function() { applyDocumentSearchAndFilter(tid); };
   var searchInput = document.getElementById('doc-search-' + tid);
   var colourByEl = document.getElementById('doc-colour-by-' + tid);
+  if (colourByEl) {
+    colourByEl.onchange = function() { applyDocumentSearchAndFilter(tid); };
+  }
   if (catSelect) { catSelect.removeEventListener('change', filterHandler); catSelect.addEventListener('change', filterHandler); }
   if (framSelect) { framSelect.removeEventListener('change', filterHandler); framSelect.addEventListener('change', filterHandler); }
-  if (colourByEl) { colourByEl.removeEventListener('change', filterHandler); colourByEl.addEventListener('change', filterHandler); }
   if (searchInput) { searchInput.removeEventListener('input', filterHandler); searchInput.addEventListener('input', filterHandler); }
   var docTextView = tabEl.querySelector('.document-text-view');
   if (docTextView) {
@@ -5228,6 +6102,7 @@ function applyDocumentSearchAndFilter(tid) {
   var framEl = document.getElementById('doc-fram-' + tid);
   var colourByEl = document.getElementById('doc-colour-by-' + tid);
   var colourBy = (colourByEl && colourByEl.value) ? colourByEl.value : 'llm';
+  if (colourBy !== 'llm' && colourBy !== 'human' && colourBy !== 'both' && colourBy !== 'ai_segmented') colourBy = 'llm';
   var search = (searchEl && searchEl.value) ? searchEl.value.trim().toLowerCase() : '';
   var catFilter = catEl ? catEl.value : '';
   var framFilter = framEl ? framEl.value : '';
@@ -5301,6 +6176,44 @@ function applyComparisonTableFilters(tid) {
     row.classList.toggle('table-row-hidden', !visible);
   }
 }
+var ILLUMINATOR_VIGNETTE_LS = 'vozmezdie_illuminator_vignette';
+function illuminatorVignettePreference() {
+  try {
+    var v = localStorage.getItem(ILLUMINATOR_VIGNETTE_LS);
+    if (v === '0') return false;
+    return true;
+  } catch (e) {
+    return true;
+  }
+}
+function setIlluminatorVignettePreference(on) {
+  try {
+    localStorage.setItem(ILLUMINATOR_VIGNETTE_LS, on ? '1' : '0');
+  } catch (e) {}
+}
+function bindIlluminatorVignetteToggles() {
+  document.querySelectorAll('.illuminator-vignette-toggle').forEach(function(cb) {
+    cb.checked = illuminatorVignettePreference();
+    cb.addEventListener('change', function() {
+      setIlluminatorVignettePreference(!!cb.checked);
+    });
+  });
+}
+function pulseIlluminatorVignette(tid) {
+  if (!illuminatorVignettePreference()) return;
+  var panels = document.querySelector('#tab-' + tid + ' .document-text-panels');
+  if (!panels) {
+    var vw = document.querySelector('.document-text-view[data-tab-id="' + tid + '"]');
+    if (vw) panels = vw.querySelector('.document-text-panels');
+  }
+  if (!panels) return;
+  panels.classList.remove('illuminator-vignette-pulse');
+  void panels.offsetWidth;
+  panels.classList.add('illuminator-vignette-pulse');
+  window.setTimeout(function() {
+    panels.classList.remove('illuminator-vignette-pulse');
+  }, 1400);
+}
 function onSectionClickToView(tid, rowIndex) {
   var detailsEl = document.getElementById('doc-section-text-' + tid) || document.getElementById('doc-text-view-details-' + tid);
   if (!detailsEl) return;
@@ -5345,13 +6258,21 @@ function onSectionClickToView(tid, rowIndex) {
   allSpans.forEach(function(s) { s.classList.add('doc-entry-highlight-brief'); });
   if (allSpans.length > 0) allSpans[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
   setTimeout(function() { allSpans.forEach(function(s) { s.classList.remove('doc-entry-highlight-brief'); }); }, 2100);
+  pulseIlluminatorVignette(tid);
 }
 function onDocumentTabShown(tid) {
   buildDocumentTextView(tid);
+  var tabEl = document.getElementById('tab-' + tid);
+  if (tabEl && typeof updateDocumentColourByOptionsForRun === 'function') {
+    var ri = 0;
+    if (tabEl.getAttribute('data-comparison-dual') === '1' && typeof getDocTextExperimentIndex === 'function') {
+      ri = getDocTextExperimentIndex(tid);
+    }
+    updateDocumentColourByOptionsForRun(tid, ri);
+  }
   applyDocumentSearchAndFilter(tid);
   applyComparisonTableFilters(tid);
   if (typeof initScrollSyncForDoc === 'function') initScrollSyncForDoc(tid);
-  var tabEl = document.getElementById('tab-' + tid);
   if (tabEl) {
     var detOpen = tabEl.querySelector('details.doc-viz-details[open]');
     if (detOpen) {
@@ -5486,27 +6407,19 @@ function getVizConfig() {
   try { stored = JSON.parse(localStorage.getItem('vozmezdie_viz') || '{}'); } catch(e) { stored = {}; }
   var radarDefaults = (defaults && defaults.radar) ? defaults.radar : { mode: 'single', compare_count: 3, selected_indices: [] };
   var segLenDefaults = (defaults && defaults.segment_length) ? defaults.segment_length : { scale: 100, x_tick_step: 0 };
+  var chartTextDefaults = (defaults && defaults.chart_text) ? defaults.chart_text : { language: 'both' };
   return {
     selection: stored.selection || 'wordcloud',
     config: {
       word_cloud: Object.assign({}, defaults.word_cloud, stored.config && stored.config.word_cloud),
       radar: Object.assign({}, radarDefaults, stored.config && stored.config.radar),
-      segment_length: Object.assign({}, segLenDefaults, stored.config && stored.config.segment_length)
+      segment_length: Object.assign({}, segLenDefaults, stored.config && stored.config.segment_length),
+      chart_text: Object.assign({}, chartTextDefaults, stored.config && stored.config.chart_text)
     }
   };
 }
 function saveVizConfig(selection, config) {
   try { localStorage.setItem('vozmezdie_viz', JSON.stringify({ selection: selection, config: config || {} })); } catch(e) {} 
-}
-function _wcFmt(str, reps) {
-  if (!str) return '';
-  var out = String(str);
-  if (reps) {
-    Object.keys(reps).forEach(function(k) {
-      out = out.split('{' + k + '}').join(reps[k] != null ? String(reps[k]) : '');
-    });
-  }
-  return out;
 }
 function resolveWordCloudLists(data, wcCfg) {
   wcCfg = wcCfg || {};
@@ -5536,28 +6449,77 @@ function resolveWordCloudLists(data, wcCfg) {
   var rus = (bucket && bucket.rus) ? bucket.rus : [];
   return { eng: eng, rus: rus, mode: 'segments' };
 }
-function wordCloudCaptionText(data, wcCfg) {
-  wcCfg = wcCfg || {};
-  var src = wcCfg.text_source || 'full_documents';
-  var cat = String(wcCfg.filter_category || '').trim();
-  var fram = String(wcCfg.filter_framing || '').trim();
-  var usePresets = src === 'aligned_segments' || !!cat || !!fram;
-  var Tf = function(key, reps) { return _wcFmt(typeof t === 'function' ? t(key) : key, reps); };
-  var parts = [];
-  if (!usePresets) {
-    parts.push(Tf('wordcloud_caption_full'));
-    return parts.join(' ');
-  }
-  parts.push(Tf('wordcloud_caption_segments'));
-  if (cat && fram) parts.push(Tf('wordcloud_caption_seg_filter_both', { cat: cat, fram: fram }));
-  else if (cat) parts.push(Tf('wordcloud_caption_seg_filter_cat', { cat: cat }));
-  else if (fram) parts.push(Tf('wordcloud_caption_seg_filter_fram', { fram: fram }));
-  if (src === 'full_documents' && (cat || fram)) parts.push(Tf('wordcloud_caption_auto_segments'));
-  return parts.filter(Boolean).join(' ');
+function wcNormalizeWordCloudPair(entry) {
+  if (!entry || entry.length < 2) return null;
+  var a = entry[0], b = entry[1];
+  if (typeof a === 'string' && typeof b === 'number') return [a, b];
+  if (typeof b === 'string' && typeof a === 'number') return [b, a];
+  return null;
 }
-function updateWordCloudCaption(el, data, wcCfg) {
-  if (!el) return;
-  el.textContent = wordCloudCaptionText(data, wcCfg);
+function wcEnglishCloudCodepointReject(cp) {
+  if (cp >= 0x0400 && cp <= 0x04FF) return true;
+  if (cp >= 0x0500 && cp <= 0x052F) return true;
+  if (cp >= 0x0370 && cp <= 0x03FF) return true;
+  if (cp >= 0x1F00 && cp <= 0x1FFF) return true;
+  if (cp >= 0x0590 && cp <= 0x05FF) return true;
+  if (cp >= 0x0600 && cp <= 0x06FF) return true;
+  if (cp >= 0x0750 && cp <= 0x077F) return true;
+  if (cp >= 0x3040 && cp <= 0x309F) return true;
+  if (cp >= 0x30A0 && cp <= 0x30FF) return true;
+  if (cp >= 0x4E00 && cp <= 0x9FFF) return true;
+  if (cp >= 0x2DE0 && cp <= 0x2DFF) return true;
+  if (cp >= 0xFE20 && cp <= 0xFE2F) return true;
+  if (cp >= 0xA640 && cp <= 0xA69F) return true;
+  if (cp >= 0x1C80 && cp <= 0x1C88) return true;
+  return false;
+}
+function wcEnglishCloudTokenOk(w) {
+  if (w == null || typeof w !== 'string') return false;
+  var i = 0, cp, sawAsciiLatin = false;
+  try {
+    if (/\p{Script=Cyrillic}/u.test(w)) return false;
+    if (/\p{Script=Greek}/u.test(w)) return false;
+    if (/\p{Script=Arabic}/u.test(w)) return false;
+    if (/\p{Script=Hebrew}/u.test(w)) return false;
+    if (/\p{Script=Han}/u.test(w)) return false;
+    if (/\p{Script=Hiragana}/u.test(w)) return false;
+    if (/\p{Script=Katakana}/u.test(w)) return false;
+    if (!/\p{Script=Latin}/u.test(w)) return false;
+    return /^[\p{Script=Latin}\p{Nd}\p{Nl}\p{No}\p{M}_'\-\u00B7]+$/u.test(w);
+  } catch (e) {
+    for (i = 0; i < w.length; ) {
+      cp = w.codePointAt(i);
+      i += cp >= 0x10000 ? 2 : 1;
+      if (wcEnglishCloudCodepointReject(cp)) return false;
+      if ((cp >= 65 && cp <= 90) || (cp >= 97 && cp <= 122)) sawAsciiLatin = true;
+    }
+    return sawAsciiLatin;
+  }
+}
+function vizPickTermsByCat(data, tvLang) {
+  if (tvLang === 'en') return data.termsByCatEng || data.termsByCat || {};
+  if (tvLang === 'ru') return data.termsByCatRus || data.termsByCat || {};
+  return data.termsByCat || {};
+}
+function vizPickTermsByFram(data, tvLang) {
+  if (tvLang === 'en') return data.termsByFramEng || data.termsByFram || {};
+  if (tvLang === 'ru') return data.termsByFramRus || data.termsByFram || {};
+  return data.termsByFram || {};
+}
+function vizPickTermsByFramingDetailed(data, tvLang) {
+  if (tvLang === 'en') return data.termsByFramingDetailedEn || data.termsByFramingDetailed || {};
+  if (tvLang === 'ru') return data.termsByFramingDetailedRu || data.termsByFramingDetailed || {};
+  return data.termsByFramingDetailed || {};
+}
+function vizPickTermFramingHeatmap(data, tvLang) {
+  if (tvLang === 'en') return data.termFramingHeatmapEn || data.termFramingHeatmap || {};
+  if (tvLang === 'ru') return data.termFramingHeatmapRu || data.termFramingHeatmap || {};
+  return data.termFramingHeatmap || {};
+}
+function vizSegmentLenAxis(p, tvLang) {
+  if (tvLang === 'en') return (p.length_eng != null) ? p.length_eng : 0;
+  if (tvLang === 'ru') return (p.length_rus != null) ? p.length_rus : 0;
+  return p.length || 0;
 }
 function renderVizPanel(panelId, data) {
   var cfg = getVizConfig();
@@ -5566,6 +6528,7 @@ function renderVizPanel(panelId, data) {
   var catCols = data.catColours || {};
   var framCols = data.framColours || {};
   var wcCfg = cfg.config.word_cloud || {};
+  var tvLang = (cfg.config.chart_text && cfg.config.chart_text.language) ? cfg.config.chart_text.language : 'both';
   var maxWords = Math.min(parseInt(wcCfg.max_words, 10) || 80, 150);
   var weightFactor = parseFloat(wcCfg.weight_factor) || 15;
   var lang = wcCfg.language || 'both';
@@ -5573,18 +6536,20 @@ function renderVizPanel(panelId, data) {
   var wcPalette = ['#8b0000', '#2d5a27', '#4a5568', '#8b7355', '#2563eb', '#ca8a04', '#0d9488', '#7c3aed', '#dc2626', '#15803d'];
   function hashStr(s) { var h = 0; for (var i = 0; i < (s||'').length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0; return Math.abs(h); }
   var wcColorFn = function(word) { return wcPalette[hashStr(word) % wcPalette.length]; };
-  function filterStop(list) { return list.filter(function(x) { return extraStop.indexOf(x[0].toLowerCase()) === -1; }); }
+  function wcFilteredPairs(list) {
+    return (list || []).map(wcNormalizeWordCloudPair).filter(Boolean).filter(function(x) {
+      return extraStop.indexOf(x[0].toLowerCase()) === -1;
+    });
+  }
   if (vizChartInstances[panelId]) { vizChartInstances[panelId].destroy(); vizChartInstances[panelId] = null; }
   if (panelId === 'viz-wordcloud' && typeof WordCloud !== 'undefined') {
-    var capLab = document.getElementById('viz-wordcloud-caption');
-    updateWordCloudCaption(capLab, data, wcCfg);
     var engWrap = document.getElementById('wc-eng-wrap');
     var rusWrap = document.getElementById('wc-rus-wrap');
     if (engWrap) engWrap.classList.toggle('hidden', lang === 'ru');
     if (rusWrap) rusWrap.classList.toggle('hidden', lang === 'en');
     var resolvedWC = resolveWordCloudLists(data, wcCfg);
-    var engList = filterStop(resolvedWC.eng || []).slice(0, maxWords);
-    var rusList = filterStop(resolvedWC.rus || []).slice(0, maxWords);
+    var engList = wcFilteredPairs(resolvedWC.eng).filter(function(e) { return wcEnglishCloudTokenOk(e[0]); }).slice(0, maxWords);
+    var rusList = wcFilteredPairs(resolvedWC.rus).slice(0, maxWords);
     var wcEng = document.getElementById('wordcloud-canvas-eng');
     if (wcEng && (lang === 'en' || lang === 'both') && engList.length > 0) {
       WordCloud(wcEng, { list: engList, gridSize: 8, weightFactor: weightFactor, fontFamily: 'Crimson Text, Georgia, serif', color: wcColorFn, rotateRatio: 0.25, backgroundColor: '#fff', shuffle: false });
@@ -5625,7 +6590,7 @@ function renderVizPanel(panelId, data) {
     }
   } else if (panelId === 'viz-terms-cat' && typeof Chart !== 'undefined') {
     var el5 = document.getElementById('chart-terms-cat');
-    var tb = data.termsByCat || {};
+    var tb = vizPickTermsByCat(data, tvLang);
     if (el5 && Object.keys(tb).length > 0) {
       var tcLabels = Object.keys(tb).sort(function(a,b){ return tb[b]-tb[a]; });
       var tcData = tcLabels.map(function(k){ return tb[k]; });
@@ -5634,7 +6599,7 @@ function renderVizPanel(panelId, data) {
     }
   } else if (panelId === 'viz-terms-fram' && typeof Chart !== 'undefined') {
     var el6 = document.getElementById('chart-terms-fram');
-    var tbf = data.termsByFram || {};
+    var tbf = vizPickTermsByFram(data, tvLang);
     if (el6 && Object.keys(tbf).length > 0) {
       var tfLabels = Object.keys(tbf).sort(function(a,b){ return tbf[b]-tbf[a]; });
       var tfData = tfLabels.map(function(k){ return tbf[k]; });
@@ -5646,9 +6611,13 @@ function renderVizPanel(panelId, data) {
     var vd = data.vocabDiversity || [];
     if (el7 && vd.length > 0) {
       var vdLabels = vd.map(function(d){ return d.display_name; });
-      var vdTypes = vd.map(function(d){ return d.types; });
-      var vdRatio = vd.map(function(d){ return d.ratio * 100; });
-      vizChartInstances[panelId] = new Chart(el7, { type: 'bar', data: { labels: vdLabels, datasets: [{ label: 'Type-token ratio (%)', data: vdRatio, backgroundColor: '#0d9488', borderColor: '#0d9488', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+      var vdRatio = vd.map(function(d){
+        if (tvLang === 'en') return ((d.ratio_eng != null ? d.ratio_eng : d.ratio) * 100);
+        if (tvLang === 'ru') return ((d.ratio_rus != null ? d.ratio_rus : d.ratio) * 100);
+        return d.ratio * 100;
+      });
+      var vdBarLabel = tvLang === 'en' ? 'TTR English (%)' : (tvLang === 'ru' ? 'TTR Russian (%)' : 'Type-token ratio (%)');
+      vizChartInstances[panelId] = new Chart(el7, { type: 'bar', data: { labels: vdLabels, datasets: [{ label: vdBarLabel, data: vdRatio, backgroundColor: '#0d9488', borderColor: '#0d9488', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
     }
   } else if (panelId === 'viz-trends' && typeof Chart !== 'undefined') {
     var el8 = document.getElementById('chart-trends');
@@ -5670,14 +6639,15 @@ function renderVizPanel(panelId, data) {
       function compute(matchFn) {
         var bins = {}, exact = {};
         sla.forEach(function(p){
-          if (p.length < MIN_LENGTH) return;
-          var bin = Math.floor(p.length / BIN_SIZE) * BIN_SIZE;
+          var segL = vizSegmentLenAxis(p, tvLang);
+          if (segL < MIN_LENGTH) return;
+          var bin = Math.floor(segL / BIN_SIZE) * BIN_SIZE;
           bins[bin] = bins[bin] || { match: 0, total: 0 };
           bins[bin].total++;
           if (matchFn(p)) bins[bin].match++;
-          exact[p.length] = exact[p.length] || { match: 0, total: 0 };
-          exact[p.length].total++;
-          if (matchFn(p)) exact[p.length].match++;
+          exact[segL] = exact[segL] || { match: 0, total: 0 };
+          exact[segL].total++;
+          if (matchFn(p)) exact[segL].match++;
         });
         var binsList = Object.keys(bins).map(Number).filter(function(b){ return bins[b].total >= MIN_RANGE_SEGMENTS; }).map(function(b){ return { lo: b, hi: b + BIN_SIZE - 1, acc: bins[b].match / bins[b].total, n: bins[b].total }; });
         binsList.sort(function(a,b){ return b.acc - a.acc; });
@@ -5701,15 +6671,16 @@ function renderVizPanel(panelId, data) {
     }
     if (el9 && sla.length > 0) {
       function jitter(base, r) { return base + (Math.random() - 0.5) * r; }
-      var matchPts = sla.filter(function(p){ return p.both_match; }).map(function(p){ return { x: p.length, y: jitter(1, 0.15) }; });
-      var noMatchPts = sla.filter(function(p){ return !p.both_match; }).map(function(p){ return { x: p.length, y: jitter(0, 0.15) }; });
+      var matchPts = sla.filter(function(p){ return p.both_match; }).map(function(p){ return { x: vizSegmentLenAxis(p, tvLang), y: jitter(1, 0.15) }; });
+      var noMatchPts = sla.filter(function(p){ return !p.both_match; }).map(function(p){ return { x: vizSegmentLenAxis(p, tvLang), y: jitter(0, 0.15) }; });
       var slCfg = (cfg.config && cfg.config.segment_length) ? cfg.config.segment_length : { scale: 100, x_tick_step: 0 };
       var scale = Math.max(25, Math.min(500, parseInt(slCfg.scale, 10) || 100));
       var xTickStep = parseInt(slCfg.x_tick_step, 10) || 0;
-      var dataMax = Math.max.apply(null, sla.map(function(p){ return p.length; })) || 500;
+      var dataMax = Math.max.apply(null, sla.map(function(p){ return vizSegmentLenAxis(p, tvLang); })) || 500;
       var xMax = dataMax * (100 / scale);
       var xTicks = xTickStep > 0 ? { stepSize: xTickStep } : { maxTicksLimit: 80 };
-      var xScale = { title: { display: true, text: 'Segment length (chars)' }, min: 0, max: Math.max(xMax, 50), ticks: xTicks };
+      var xAxisTitle = tvLang === 'en' ? 'Segment length — English (chars)' : (tvLang === 'ru' ? 'Segment length — Russian (chars)' : 'Segment length (max EN/RU chars)');
+      var xScale = { title: { display: true, text: xAxisTitle }, min: 0, max: Math.max(xMax, 50), ticks: xTicks };
       vizChartInstances[panelId] = new Chart(el9, { type: 'scatter', data: { datasets: [{ label: 'Match', data: matchPts, backgroundColor: 'rgba(21,128,61,0.5)', pointRadius: 3 }, { label: 'Mismatch', data: noMatchPts, backgroundColor: 'rgba(220,38,38,0.5)', pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: xScale, y: { min: -0.2, max: 1.2, ticks: { callback: function(v){ return v>=0.9?'Match':v<=0.1?'Mismatch':''; } } } } } });
     }
   } else if (panelId === 'viz-places-map') {
@@ -5743,15 +6714,15 @@ function renderVizPanel(panelId, data) {
       });
       mismatches.sort(function(a,b){ return b.v - a.v; });
       var interp = function(llm, human) {
-        if ((llm.indexOf('Generic') >= 0 || llm === 'Generic / Neutral Language') && (human.indexOf('Ideological') >= 0 || human.indexOf('Discrediting') >= 0)) return 'LLM overgeneralizes';
-        if ((llm.indexOf('Ideological') >= 0) && (human.indexOf('Generic') >= 0 || human === 'Generic / Neutral Language')) return 'LLM over-specifies';
-        if (llm.indexOf('Discrediting') >= 0 && human.indexOf('Normalizing') >= 0) return 'LLM confuses discrediting vs normalizing';
-        if (llm.indexOf('Normalizing') >= 0 && human.indexOf('Discrediting') >= 0) return 'LLM confuses normalizing vs discrediting';
+        if ((llm.indexOf('Generic') >= 0 || llm === 'Generic / Neutral Language') && (human.indexOf('Ideological') >= 0 || human.indexOf('Discrediting') >= 0)) return 'AI overgeneralizes';
+        if ((llm.indexOf('Ideological') >= 0) && (human.indexOf('Generic') >= 0 || human === 'Generic / Neutral Language')) return 'AI over-specifies';
+        if (llm.indexOf('Discrediting') >= 0 && human.indexOf('Normalizing') >= 0) return 'AI confuses discrediting vs normalizing';
+        if (llm.indexOf('Normalizing') >= 0 && human.indexOf('Discrediting') >= 0) return 'AI confuses normalizing vs discrediting';
         return 'Mismatch';
       };
-      var callout = mismatches.length > 0 ? '<div class="confusions-callout"><h4>Top confusions (LLM said → Human said)</h4><ul>' + mismatches.slice(0,5).map(function(m){ return '<li><strong>' + (shortNames[m.llm]||m.llm) + ' → ' + (shortNames[m.human]||m.human) + ':</strong> ' + m.v + ' <span class="interpret">(' + interp(m.llm,m.human) + ')</span></li>'; }).join('') + '</ul></div>' : '';
+      var callout = mismatches.length > 0 ? '<div class="confusions-callout"><h4>Top confusions (AI said → Human said)</h4><ul>' + mismatches.slice(0,5).map(function(m){ return '<li><strong>' + (shortNames[m.llm]||m.llm) + ' → ' + (shortNames[m.human]||m.human) + ':</strong> ' + m.v + ' <span class="interpret">(' + interp(m.llm,m.human) + ')</span></li>'; }).join('') + '</ul></div>' : '';
       var header1 = '<tr><th class="axis-corner"></th><th colspan="' + fo.length + '" class="axis-human">Human said</th></tr>';
-      var header2 = '<tr><th class="axis-llm">LLM said</th>' + fo.map(function(f){ return '<th>' + (shortNames[f]||f) + '</th>'; }).join('') + '</tr>';
+      var header2 = '<tr><th class="axis-llm">AI said</th>' + fo.map(function(f){ return '<th>' + (shortNames[f]||f) + '</th>'; }).join('') + '</tr>';
       var body = fo.map(function(llm, ri){
         var cells = fo.map(function(human, ci){
           var v = matrix[llm + '|' + human] || 0;
@@ -5802,7 +6773,7 @@ function renderVizPanel(panelId, data) {
     }
   } else if (panelId === 'viz-terms-by-framing') {
     var tbf = document.getElementById('terms-by-framing-container');
-    var tbfData = data.termsByFramingDetailed || {};
+    var tbfData = vizPickTermsByFramingDetailed(data, tvLang);
     var fo = data.framOrder || [];
     var framCols = data.framColours || {};
     if (tbf && fo.length > 0) {
@@ -5816,7 +6787,7 @@ function renderVizPanel(panelId, data) {
     }
   } else if (panelId === 'viz-term-framing-heatmap') {
     var thEl = document.getElementById('term-framing-heatmap-table');
-    var thData = data.termFramingHeatmap || {};
+    var thData = vizPickTermFramingHeatmap(data, tvLang);
     var fo = data.framOrder || [];
     var terms = Object.keys(thData);
     if (thEl) {
@@ -5974,6 +6945,7 @@ function renderDocVizPanel(root, vizKind, data) {
   var catCols = data.catColours || {};
   var framCols = data.framColours || {};
   var wcCfg = cfg.config.word_cloud || {};
+  var tvLang = (cfg.config.chart_text && cfg.config.chart_text.language) ? cfg.config.chart_text.language : 'both';
   var maxWords = Math.min(parseInt(wcCfg.max_words, 10) || 80, 150);
   var weightFactor = parseFloat(wcCfg.weight_factor) || 15;
   var lang = wcCfg.language || 'both';
@@ -5981,17 +6953,19 @@ function renderDocVizPanel(root, vizKind, data) {
   var wcPalette = ['#8b0000', '#2d5a27', '#4a5568', '#8b7355', '#2563eb', '#ca8a04', '#0d9488', '#7c3aed', '#dc2626', '#15803d'];
   function hashStr(s) { var h = 0; for (var i = 0; i < (s||'').length; i++) h = ((h << 5) - h) + s.charCodeAt(i) | 0; return Math.abs(h); }
   var wcColorFn = function(word) { return wcPalette[hashStr(word) % wcPalette.length]; };
-  function filterStop(list) { return list.filter(function(x) { return extraStop.indexOf(x[0].toLowerCase()) === -1; }); }
+  function wcFilteredPairs(list) {
+    return (list || []).map(wcNormalizeWordCloudPair).filter(Boolean).filter(function(x) {
+      return extraStop.indexOf(x[0].toLowerCase()) === -1;
+    });
+  }
   if (vizKind === 'wordcloud' && typeof WordCloud !== 'undefined') {
-    var capDoc = root.querySelector('.viz-wordcloud-caption');
-    updateWordCloudCaption(capDoc, data, wcCfg);
     var engWrap = root.querySelector('.doc-viz-wc-eng-wrap');
     var rusWrap = root.querySelector('.doc-viz-wc-rus-wrap');
     if (engWrap) engWrap.classList.toggle('hidden', lang === 'ru');
     if (rusWrap) rusWrap.classList.toggle('hidden', lang === 'en');
     var resolvedDocWC = resolveWordCloudLists(data, wcCfg);
-    var engList = filterStop(resolvedDocWC.eng || []).slice(0, maxWords);
-    var rusList = filterStop(resolvedDocWC.rus || []).slice(0, maxWords);
+    var engList = wcFilteredPairs(resolvedDocWC.eng).filter(function(e) { return wcEnglishCloudTokenOk(e[0]); }).slice(0, maxWords);
+    var rusList = wcFilteredPairs(resolvedDocWC.rus).slice(0, maxWords);
     var wcEng = docVizChart(root, 'wordcloud-eng');
     if (wcEng && (lang === 'en' || lang === 'both') && engList.length > 0) {
       WordCloud(wcEng, { list: engList, gridSize: 8, weightFactor: weightFactor, fontFamily: 'Crimson Text, Georgia, serif', color: wcColorFn, rotateRatio: 0.25, backgroundColor: '#fff', shuffle: false });
@@ -6042,7 +7016,7 @@ function renderDocVizPanel(root, vizKind, data) {
     }
   } else if (vizKind === 'terms-cat') {
     var el5 = docVizChart(root, 'terms-cat');
-    var tb = data.termsByCat || {};
+    var tb = vizPickTermsByCat(data, tvLang);
     if (el5 && Object.keys(tb).length > 0) {
       var tcLabels = Object.keys(tb).sort(function(a,b){ return tb[b]-tb[a]; });
       var tcData = tcLabels.map(function(k){ return tb[k]; });
@@ -6051,7 +7025,7 @@ function renderDocVizPanel(root, vizKind, data) {
     }
   } else if (vizKind === 'terms-fram') {
     var el6 = docVizChart(root, 'terms-fram');
-    var tbf = data.termsByFram || {};
+    var tbf = vizPickTermsByFram(data, tvLang);
     if (el6 && Object.keys(tbf).length > 0) {
       var tfLabels = Object.keys(tbf).sort(function(a,b){ return tbf[b]-tbf[a]; });
       var tfData = tfLabels.map(function(k){ return tbf[k]; });
@@ -6063,8 +7037,13 @@ function renderDocVizPanel(root, vizKind, data) {
     var vd = data.vocabDiversity || [];
     if (el7 && vd.length > 0) {
       var vdLabels = vd.map(function(d){ return d.display_name; });
-      var vdRatio = vd.map(function(d){ return d.ratio * 100; });
-      vizChartInstances[ck] = new Chart(el7, { type: 'bar', data: { labels: vdLabels, datasets: [{ label: 'Type-token ratio (%)', data: vdRatio, backgroundColor: '#0d9488', borderColor: '#0d9488', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+      var vdRatio = vd.map(function(d){
+        if (tvLang === 'en') return ((d.ratio_eng != null ? d.ratio_eng : d.ratio) * 100);
+        if (tvLang === 'ru') return ((d.ratio_rus != null ? d.ratio_rus : d.ratio) * 100);
+        return d.ratio * 100;
+      });
+      var vdBarLabel = tvLang === 'en' ? 'TTR English (%)' : (tvLang === 'ru' ? 'TTR Russian (%)' : 'Type-token ratio (%)');
+      vizChartInstances[ck] = new Chart(el7, { type: 'bar', data: { labels: vdLabels, datasets: [{ label: vdBarLabel, data: vdRatio, backgroundColor: '#0d9488', borderColor: '#0d9488', borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
     }
   } else if (vizKind === 'segment-length') {
     var el9 = docVizChart(root, 'segment-length');
@@ -6079,14 +7058,15 @@ function renderDocVizPanel(root, vizKind, data) {
       function compute(matchFn) {
         var bins = {}, exact = {};
         sla.forEach(function(p){
-          if (p.length < MIN_LENGTH) return;
-          var bin = Math.floor(p.length / BIN_SIZE) * BIN_SIZE;
+          var segL = vizSegmentLenAxis(p, tvLang);
+          if (segL < MIN_LENGTH) return;
+          var bin = Math.floor(segL / BIN_SIZE) * BIN_SIZE;
           bins[bin] = bins[bin] || { match: 0, total: 0 };
           bins[bin].total++;
           if (matchFn(p)) bins[bin].match++;
-          exact[p.length] = exact[p.length] || { match: 0, total: 0 };
-          exact[p.length].total++;
-          if (matchFn(p)) exact[p.length].match++;
+          exact[segL] = exact[segL] || { match: 0, total: 0 };
+          exact[segL].total++;
+          if (matchFn(p)) exact[segL].match++;
         });
         var binsList = Object.keys(bins).map(Number).filter(function(b){ return bins[b].total >= MIN_RANGE_SEGMENTS; }).map(function(b){ return { lo: b, hi: b + BIN_SIZE - 1, acc: bins[b].match / bins[b].total, n: bins[b].total }; });
         binsList.sort(function(a,b){ return b.acc - a.acc; });
@@ -6110,15 +7090,16 @@ function renderDocVizPanel(root, vizKind, data) {
     }
     if (el9 && sla.length > 0) {
       function jitter(base, r) { return base + (Math.random() - 0.5) * r; }
-      var matchPts = sla.filter(function(p){ return p.both_match; }).map(function(p){ return { x: p.length, y: jitter(1, 0.15) }; });
-      var noMatchPts = sla.filter(function(p){ return !p.both_match; }).map(function(p){ return { x: p.length, y: jitter(0, 0.15) }; });
+      var matchPts = sla.filter(function(p){ return p.both_match; }).map(function(p){ return { x: vizSegmentLenAxis(p, tvLang), y: jitter(1, 0.15) }; });
+      var noMatchPts = sla.filter(function(p){ return !p.both_match; }).map(function(p){ return { x: vizSegmentLenAxis(p, tvLang), y: jitter(0, 0.15) }; });
       var slCfg = (cfg.config && cfg.config.segment_length) ? cfg.config.segment_length : { scale: 100, x_tick_step: 0 };
       var scale = Math.max(25, Math.min(500, parseInt(slCfg.scale, 10) || 100));
       var xTickStep = parseInt(slCfg.x_tick_step, 10) || 0;
-      var dataMax = Math.max.apply(null, sla.map(function(p){ return p.length; })) || 500;
+      var dataMax = Math.max.apply(null, sla.map(function(p){ return vizSegmentLenAxis(p, tvLang); })) || 500;
       var xMax = dataMax * (100 / scale);
       var xTicks = xTickStep > 0 ? { stepSize: xTickStep } : { maxTicksLimit: 80 };
-      var xScale = { title: { display: true, text: 'Segment length (chars)' }, min: 0, max: Math.max(xMax, 50), ticks: xTicks };
+      var xAxisTitle = tvLang === 'en' ? 'Segment length — English (chars)' : (tvLang === 'ru' ? 'Segment length — Russian (chars)' : 'Segment length (max EN/RU chars)');
+      var xScale = { title: { display: true, text: xAxisTitle }, min: 0, max: Math.max(xMax, 50), ticks: xTicks };
       vizChartInstances[ck] = new Chart(el9, { type: 'scatter', data: { datasets: [{ label: 'Match', data: matchPts, backgroundColor: 'rgba(21,128,61,0.5)', pointRadius: 3 }, { label: 'Mismatch', data: noMatchPts, backgroundColor: 'rgba(220,38,38,0.5)', pointRadius: 3 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: true } }, scales: { x: xScale, y: { min: -0.2, max: 1.2, ticks: { callback: function(v){ return v>=0.9?'Match':v<=0.1?'Mismatch':''; } } } } } });
     }
   } else if (vizKind === 'radar') {
@@ -6147,15 +7128,15 @@ function renderDocVizPanel(root, vizKind, data) {
       });
       mismatches.sort(function(a,b){ return b.v - a.v; });
       var interp = function(llm, human) {
-        if ((llm.indexOf('Generic') >= 0 || llm === 'Generic / Neutral Language') && (human.indexOf('Ideological') >= 0 || human.indexOf('Discrediting') >= 0)) return 'LLM overgeneralizes';
-        if ((llm.indexOf('Ideological') >= 0) && (human.indexOf('Generic') >= 0 || human === 'Generic / Neutral Language')) return 'LLM over-specifies';
-        if (llm.indexOf('Discrediting') >= 0 && human.indexOf('Normalizing') >= 0) return 'LLM confuses discrediting vs normalizing';
-        if (llm.indexOf('Normalizing') >= 0 && human.indexOf('Discrediting') >= 0) return 'LLM confuses normalizing vs discrediting';
+        if ((llm.indexOf('Generic') >= 0 || llm === 'Generic / Neutral Language') && (human.indexOf('Ideological') >= 0 || human.indexOf('Discrediting') >= 0)) return 'AI overgeneralizes';
+        if ((llm.indexOf('Ideological') >= 0) && (human.indexOf('Generic') >= 0 || human === 'Generic / Neutral Language')) return 'AI over-specifies';
+        if (llm.indexOf('Discrediting') >= 0 && human.indexOf('Normalizing') >= 0) return 'AI confuses discrediting vs normalizing';
+        if (llm.indexOf('Normalizing') >= 0 && human.indexOf('Discrediting') >= 0) return 'AI confuses normalizing vs discrediting';
         return 'Mismatch';
       };
-      var callout = mismatches.length > 0 ? '<div class="confusions-callout"><h4>Top confusions (LLM said → Human said)</h4><ul>' + mismatches.slice(0,5).map(function(m){ return '<li><strong>' + (shortNames[m.llm]||m.llm) + ' → ' + (shortNames[m.human]||m.human) + ':</strong> ' + m.v + ' <span class="interpret">(' + interp(m.llm,m.human) + ')</span></li>'; }).join('') + '</ul></div>' : '';
+      var callout = mismatches.length > 0 ? '<div class="confusions-callout"><h4>Top confusions (AI said → Human said)</h4><ul>' + mismatches.slice(0,5).map(function(m){ return '<li><strong>' + (shortNames[m.llm]||m.llm) + ' → ' + (shortNames[m.human]||m.human) + ':</strong> ' + m.v + ' <span class="interpret">(' + interp(m.llm,m.human) + ')</span></li>'; }).join('') + '</ul></div>' : '';
       var header1 = '<tr><th class="axis-corner"></th><th colspan="' + fo.length + '" class="axis-human">Human said</th></tr>';
-      var header2 = '<tr><th class="axis-llm">LLM said</th>' + fo.map(function(f){ return '<th>' + (shortNames[f]||f) + '</th>'; }).join('') + '</tr>';
+      var header2 = '<tr><th class="axis-llm">AI said</th>' + fo.map(function(f){ return '<th>' + (shortNames[f]||f) + '</th>'; }).join('') + '</tr>';
       var body = fo.map(function(llm, ri){
         var cells = fo.map(function(human, ci){
           var v = matrix[llm + '|' + human] || 0;
@@ -6186,7 +7167,7 @@ function renderDocVizPanel(root, vizKind, data) {
     }
   } else if (vizKind === 'terms-by-framing') {
     var tbf = docVizHost(root, 'terms-by-framing');
-    var tbfData = data.termsByFramingDetailed || {};
+    var tbfData = vizPickTermsByFramingDetailed(data, tvLang);
     var fo = data.framOrder || [];
     var framCols3 = data.framColours || {};
     if (tbf && fo.length > 0) {
@@ -6200,7 +7181,7 @@ function renderDocVizPanel(root, vizKind, data) {
     }
   } else if (vizKind === 'term-framing-heatmap') {
     var thEl = docVizHost(root, 'term-framing-heatmap');
-    var thData = data.termFramingHeatmap || {};
+    var thData = vizPickTermFramingHeatmap(data, tvLang);
     var fo = data.framOrder || [];
     var terms = Object.keys(thData);
     if (thEl) {
@@ -6269,6 +7250,7 @@ function initDocViz(root) {
       c.config.word_cloud = c.config.word_cloud || {};
       c.config.radar = c.config.radar || {};
       c.config.segment_length = c.config.segment_length || {};
+      c.config.chart_text = c.config.chart_text || {};
       if (baseId === 'viz-max-words') c.config.word_cloud.max_words = parseInt(tgt.value, 10) || 80;
       if (baseId === 'viz-weight-factor') c.config.word_cloud.weight_factor = parseFloat(tgt.value) || 15;
       if (baseId === 'viz-language') c.config.word_cloud.language = tgt.value || 'both';
@@ -6280,7 +7262,8 @@ function initDocViz(root) {
       if (baseId === 'viz-radar-compare-count') c.config.radar.compare_count = parseInt(tgt.value, 10) || 3;
       if (baseId === 'viz-segment-scale') c.config.segment_length.scale = parseInt(tgt.value, 10) || 100;
       if (baseId === 'viz-segment-x-step') c.config.segment_length.x_tick_step = parseInt(tgt.value, 10);
-      if (baseId && (/^viz-(max-words|weight-factor|language|stopwords-extra|text-source|wc-category|wc-framing)$/.test(baseId) || /^viz-radar-(mode|compare-count)$/.test(baseId) || /^viz-segment-(scale|x-step)$/.test(baseId))) {
+      if (baseId === 'viz-chart-text-lang') c.config.chart_text.language = tgt.value || 'both';
+      if (baseId && (/^viz-(max-words|weight-factor|language|stopwords-extra|text-source|wc-category|wc-framing|chart-text-lang)$/.test(baseId) || /^viz-radar-(mode|compare-count)$/.test(baseId) || /^viz-segment-(scale|x-step)$/.test(baseId))) {
         saveVizConfig(c.selection, c.config);
         var vk = sel ? sel.value : 'wordcloud';
         renderDocVizPanel(root, vk, data);
@@ -6516,6 +7499,35 @@ function buildConfigPanel(panelId, data, docCtx) {
     stepRow.appendChild(stepSel);
     body.appendChild(stepRow);
   }
+  var chartTextPanels = { 'viz-terms-cat': 1, 'viz-terms-fram': 1, 'viz-vocab-diversity': 1, 'viz-segment-length': 1, 'viz-terms-by-framing': 1, 'viz-term-framing-heatmap': 1 };
+  if (chartTextPanels[panelId]) {
+    var cfgCT = getVizConfig();
+    var ctLang = (cfgCT.config.chart_text && cfgCT.config.chart_text.language) ? cfgCT.config.chart_text.language : 'both';
+    var rowCT = document.createElement('div');
+    rowCT.className = 'viz-config-row viz-config-full';
+    var lblCT = document.createElement('label');
+    lblCT.setAttribute('data-i18n', 'viz_config_chart_text_lang');
+    lblCT.textContent = (typeof t === 'function' ? t('viz_config_chart_text_lang') : 'Segment text language:');
+    lblCT.htmlFor = fid('viz-chart-text-lang');
+    var selCT = document.createElement('select');
+    selCT.id = fid('viz-chart-text-lang');
+    ['en', 'ru', 'both'].forEach(function(v) {
+      var opt = document.createElement('option');
+      opt.value = v;
+      opt.textContent = v === 'en' ? (typeof t === 'function' ? t('english') : 'English') : (v === 'ru' ? (typeof t === 'function' ? t('russian_original') : 'Russian') : (typeof t === 'function' ? t('viz_both') : 'Both'));
+      selCT.appendChild(opt);
+    });
+    selCT.value = ctLang;
+    rowCT.appendChild(lblCT);
+    rowCT.appendChild(selCT);
+    body.appendChild(rowCT);
+    var hintCT = document.createElement('p');
+    hintCT.className = 'viz-config-chart-text-hint';
+    hintCT.setAttribute('data-i18n', 'viz_config_chart_text_lang_hint');
+    hintCT.style.cssText = 'margin:0 0 0.35rem 0;font-size:0.82rem;color:#6b7280;line-height:1.45;width:100%;';
+    hintCT.textContent = (typeof t === 'function' ? t('viz_config_chart_text_lang_hint') : '');
+    body.appendChild(hintCT);
+  }
   if (isDoc && docCtx && docCtx.suffix) {
     var detP = document.getElementById('viz-config-panel-' + docCtx.suffix);
     if (detP) detP.style.display = body.childNodes.length ? '' : 'none';
@@ -6634,6 +7646,7 @@ function initViz() {
       c.config.word_cloud = c.config.word_cloud || {};
       c.config.radar = c.config.radar || {};
       c.config.segment_length = c.config.segment_length || {};
+      c.config.chart_text = c.config.chart_text || {};
       if (e.target.id === 'viz-max-words') c.config.word_cloud.max_words = parseInt(e.target.value, 10) || 80;
       if (e.target.id === 'viz-weight-factor') c.config.word_cloud.weight_factor = parseFloat(e.target.value) || 15;
       if (e.target.id === 'viz-language') c.config.word_cloud.language = e.target.value || 'both';
@@ -6645,7 +7658,8 @@ function initViz() {
       if (e.target.id === 'viz-radar-compare-count') c.config.radar.compare_count = parseInt(e.target.value, 10) || 3;
       if (e.target.id === 'viz-segment-scale') c.config.segment_length.scale = parseInt(e.target.value, 10) || 100;
       if (e.target.id === 'viz-segment-x-step') c.config.segment_length.x_tick_step = parseInt(e.target.value, 10);
-      if (e.target.id && (/^viz-(max-words|weight-factor|language|stopwords-extra|text-source|wc-category|wc-framing)$/.test(e.target.id) || /^viz-radar-(mode|compare-count)$/.test(e.target.id) || /^viz-segment-(scale|x-step)$/.test(e.target.id))) {
+      if (e.target.id === 'viz-chart-text-lang') c.config.chart_text.language = e.target.value || 'both';
+      if (e.target.id && (/^viz-(max-words|weight-factor|language|stopwords-extra|text-source|wc-category|wc-framing|chart-text-lang)$/.test(e.target.id) || /^viz-radar-(mode|compare-count)$/.test(e.target.id) || /^viz-segment-(scale|x-step)$/.test(e.target.id))) {
         saveVizConfig(c.selection, c.config);
         renderVizPanel('viz-' + c.selection, payload());
       }
@@ -6695,6 +7709,7 @@ function applySavedReaderLayout() {
 }
 document.addEventListener('DOMContentLoaded', function() {
   setLanguage(UI_LANG);
+  bindIlluminatorVignetteToggles();
   syncLabelSuggestionsHiddenJson();
   (function initLabelSuggestionModal() {
     var modal = document.getElementById('label-suggestion-modal');
@@ -6738,8 +7753,8 @@ document.addEventListener('DOMContentLoaded', function() {
     if (el.id === 'glossary-search') return;
     if (el.closest && el.closest('.document-search')) return;
     if (el.closest && el.closest('.comparison-table-search')) return;
-    if (el.closest && el.closest('.doc-comparison-run-select')) return;
     if (el.closest && el.closest('.table-comparison-run-select')) return;
+    if (el.closest && el.closest('.doc-comparison-run-select')) return;
     if (typeof closeAllCyrillicKeyboardPopups === 'function') closeAllCyrillicKeyboardPopups();
   }, true);
   document.addEventListener('keydown', function(e) {
@@ -6920,8 +7935,8 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     if (e.target.classList && e.target.classList.contains('doc-comparison-run-select')) {
-      var tdx = e.target.getAttribute('data-tab');
-      if (tdx && typeof syncDocumentComparisonRun === 'function') syncDocumentComparisonRun(tdx, parseInt(e.target.value, 10) || 0);
+      var tdxDocRun = e.target.getAttribute('data-tab');
+      if (tdxDocRun && typeof syncDocumentTextComparisonRun === 'function') syncDocumentTextComparisonRun(tdxDocRun, parseInt(e.target.value, 10) || 0);
       return;
     }
     if (e.target.classList && e.target.classList.contains('table-comparison-run-select')) {

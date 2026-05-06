@@ -72,13 +72,9 @@
         "en": "Human Seg.",
         "uk": "Люд. сегм."
       },
-      "colour_by_llm": {
-        "en": "Colour by: Human Segmented run",
+      "colour_by_human": {
+        "en": "Colour by: Human Segmented Run",
         "uk": "Колір за: прогін «Людина-сегментація»"
-      },
-      "document_text_legend_note": {
-        "en": "Dashed underlines mark segments with no aligned partner in the other column. Colour by (LLM / Human / Both) uses labels from the Human Segmented run unless you switch Comparison run to AI Segmented. Specific-detail and ideological-layer colours apply only when those filters are not None.",
-        "uk": "Пунктир позначає сегменти без вирівняного партнера. «Колір за» типово бере мітки з прогону «Людина-сегментація», доки не перемкнете Comparison run на «ШІ-сегментація». Кольори деталей і шарів — лише коли фільтри не «Немає»."
       },
       "comparison_table": {
         "en": "Expert ground truth vs Human Segmented — Comparison Table",

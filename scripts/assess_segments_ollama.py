@@ -79,7 +79,7 @@ def _classify_segment(
     entry_rus = segment.get("entry_rus", "")[:300]
     context = (segment.get("context") or "")[:200]
 
-    prompt = f"""You are classifying a segment from a Cold War KGB archival document.
+    prompt = f"""You are classifying a segment from a Cold War archival document.
 Assign exactly one content_category and one framing from the lists below.
 
 Content categories (pick one): {cat_list}

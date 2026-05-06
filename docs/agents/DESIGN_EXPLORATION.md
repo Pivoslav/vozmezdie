@@ -17,7 +17,7 @@ This document captures design ideas, known issues, and architectural decisions f
 - Comparison table: Section, Entry ENG, Entry RUS, Content Category (LLM vs Human), Framing (LLM vs Human), Context
 - Document text view: two panels (English, Russian), search, category/framing filters, colour by LLM or Human
 - Glossary: definitions from `Categories Explained.html`, terms from documents by category/framing
-- Colour legend, orphan markers (dashed underline for segments without partner)
+- Colour legend; narrative note under legend (alignment modes and colours — no public “orphan” affordance)
 
 ### Assessment workflow
 - 17 documents assessed; 3 fresh blind (1249-0046-0047, 1262_28-32, 1249-80-83)
