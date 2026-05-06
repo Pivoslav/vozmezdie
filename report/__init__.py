@@ -336,6 +336,9 @@ _UI_TRANSLATIONS = {
     "label_suggestion_cancel": {"en": "Cancel", "uk": "Скасувати"},
     "label_suggestion_download": {"en": "Download all suggestions (JSON)", "uk": "Завантажити всі пропозиції (JSON)"},
     "label_suggestion_saved_ok": {"en": "Suggestion saved locally.", "uk": "Пропозицію збережено локально."},
+    "dev_label_export_title": {"en": "Label suggestions export (developer)", "uk": "Експорт пропозицій міток (для розробника)"},
+    "dev_label_export_intro": {"en": "Saved suggestions live in your browser (localStorage) and are mirrored in a hidden JSON script tag at the end of this page (`label-suggestions-export-json`). That duplicate lets you copy or scrape exports without opening devtools.", "uk": "Збережені пропозиції зберігаються в браузері (localStorage) і дублюються в прихованому елементі JSON (`label-suggestions-export-json`) в кінці сторінки — щоб можна було скопіювати дані без інструментів розробника."},
+    "dev_label_export_link_hint": {"en": "Bookmark this view by adding `#tab-dev-label-export` to the report URL.", "uk": "Додайте `#tab-dev-label-export` до URL звіту, щоб відкривати цей екран напряму."},
     "label_suggestion_document_id": {"en": "Document ID", "uk": "ID документа"},
     "label_suggestion_row_index": {"en": "Row index", "uk": "Індекс рядка"},
     "english": {"en": "English", "uk": "Англійська"},
@@ -1135,6 +1138,7 @@ def run(
             )
         )
 
+    parts.append(_dev_label_export_tab())
     parts.append("</div></div>")
     parts.append(_label_suggestion_modal_html())
     term_synonyms = _load_term_synonyms()
@@ -1231,7 +1235,7 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .tab-content.active { display: block; }
 @media (max-width: 768px) { .sidebar { width: 100%; min-width: auto; } .app-container { flex-direction: column; } }
 .header { background: linear-gradient(180deg, #4a5568 0%, #2d3748 100%); color: #f5f0e6; padding: 1.25rem 1.5rem; border-radius: 4px; margin-bottom: 2rem; border: 1px solid #8b7355; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
-.header h2 { font-family: 'Crimson Text', Georgia, serif; font-size: 1.05rem; line-height: 1.55; font-weight: 600; margin: 0; max-width: 100%; }
+.header h2 { font-family: 'Crimson Text', Georgia, serif; font-size: 1.05rem; line-height: 1.55; font-weight: 600; margin: 0; max-width: 100%; overflow-wrap: anywhere; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0; }
 .stat-card { background: #e8e4dc; padding: 1.5rem; border-radius: 4px; text-align: center; border: 1px solid #8b7355; }
 .stat-number { font-size: 2rem; font-weight: bold; color: #2d3748; font-family: 'JetBrains Mono', monospace; }
@@ -2927,6 +2931,21 @@ def _taxonomy_reference_section(
     return "\n".join(parts)
 
 
+def _dev_label_export_tab() -> str:
+    """Hidden-by-navigation tab: export notes + JSON download (open via URL `#tab-dev-label-export`)."""
+    return """
+<div class="tab-content" id="tab-dev-label-export">
+<div class="header"><h2 data-i18n="dev_label_export_title">Label suggestions export (developer)</h2></div>
+<div class="homepage-content">
+  <section class="homepage-section">
+    <p style="color:#5a5348;line-height:1.55;margin-bottom:0.75rem;" data-i18n="dev_label_export_intro">Saved suggestions live in your browser (localStorage) and are mirrored in a hidden JSON script tag at the end of this page (`label-suggestions-export-json`). That duplicate lets you copy or scrape exports without opening devtools.</p>
+    <p style="color:#5a5348;line-height:1.55;margin-bottom:1rem;" data-i18n="dev_label_export_link_hint">Bookmark this view by adding `#tab-dev-label-export` to the report URL.</p>
+    <button type="button" class="comparison-export-json" id="dev-label-suggestion-download-btn" data-i18n="label_suggestion_download">Download all suggestions (JSON)</button>
+  </section>
+</div>
+</div>"""
+
+
 def _intro_tab() -> str:
     """Sidebar tab: introduction and project context (above Research Lab)."""
     return """
@@ -3065,7 +3084,6 @@ def _label_suggestion_modal_html() -> str:
     <div class="label-suggestion-actions">
       <button type="button" class="label-suggestion-save-btn" id="label-suggestion-save-btn" data-i18n="label_suggestion_save">Save suggestion</button>
       <button type="button" class="label-suggestion-cancel-btn" id="label-suggestion-cancel-btn" data-i18n="label_suggestion_cancel">Cancel</button>
-      <button type="button" class="label-suggestion-download-btn" id="label-suggestion-download-btn" data-i18n="label_suggestion_download">Download all suggestions (JSON)</button>
     </div>
   </div>
 </div>
@@ -3719,7 +3737,7 @@ def _doc_tab(
         )
     return f"""
 {tab_attrs}
-<div class="header"><h2>{page_heading}</h2></div>
+<div class="header"><h2>{html_module.escape(page_heading)}</h2></div>
 {hidden_stats}
 {doc_text_runs_embed}
 {pdf_section}
@@ -4554,14 +4572,14 @@ function hexToRgba(hex, a) {
   var r = parseInt(hex.substr(0,2), 16), g = parseInt(hex.substr(2,2), 16), b = parseInt(hex.substr(4,2), 16);
   return 'rgba(' + r + ',' + g + ',' + b + ',' + (a !== undefined ? a : 1) + ')';
 }
-var framingColourFallback = { 'Action-Focused Language': '#dc2626', 'Ideological Phrasing (Normalizing)': '#ca8a04', 'Generic / Neutral Language': '#15803d', 'Generic / Neutral': '#15803d', 'Institutional / Bureaucratic Lingo': '#2563eb', 'Ideological Framing (Discrediting)': '#ea580c' };
+var framingColourFallback = { 'Action-Focused Language': '#9333ea', 'Ideological Phrasing (Normalizing)': '#ca8a04', 'Generic / Neutral Language': '#15803d', 'Generic / Neutral': '#15803d', 'Institutional / Bureaucratic Lingo': '#2563eb', 'Ideological Framing (Discrediting)': '#dc2626' };
 function resolveFramingColour(fram, attrColour) {
   fram = (fram || '').trim();
   if (!fram) return (attrColour && attrColour !== '#333' && attrColour !== '#333333') ? attrColour : '#333';
   if (framingColourFallback[fram]) return framingColourFallback[fram];
   var lower = fram.toLowerCase();
   for (var k in framingColourFallback) { if (k.toLowerCase() === lower) return framingColourFallback[k]; }
-  if (fram.indexOf('Action-Focused') !== -1) return '#dc2626';
+  if (fram.indexOf('Action-Focused') !== -1) return '#9333ea';
   if (lower.indexOf('generic') !== -1 && lower.indexOf('neutral') !== -1) return '#15803d';
   return (attrColour && attrColour !== '#333' && attrColour !== '#333333') ? attrColour : '#333';
 }
@@ -6397,12 +6415,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var bd = modal.querySelector('.label-suggestion-modal-backdrop');
     var btnCancel = document.getElementById('label-suggestion-cancel-btn');
     var btnSave = document.getElementById('label-suggestion-save-btn');
-    var btnDl = document.getElementById('label-suggestion-download-btn');
     if (bd) bd.addEventListener('click', function() { closeLabelSuggestionModal(); });
     if (btnCancel) btnCancel.addEventListener('click', function() { closeLabelSuggestionModal(); });
     if (btnSave) btnSave.addEventListener('click', function() { saveLabelSuggestionFromModal(); });
-    if (btnDl) btnDl.addEventListener('click', function() { downloadLabelSuggestionsJson(); });
   })();
+  var btnDlDev = document.getElementById('dev-label-suggestion-download-btn');
+  if (btnDlDev) btnDlDev.addEventListener('click', function() { downloadLabelSuggestionsJson(); });
   refreshAllCyrillicKeyboards();
   document.addEventListener('focusin', function(e) {
     var t = e.target;
