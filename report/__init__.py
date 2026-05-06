@@ -283,8 +283,8 @@ _UI_TRANSLATIONS = {
     "orphan_note": {"en": "Segments with a dashed underline have no corresponding segment in the other panel; hover for tooltip.", "uk": "Сегменти з пунктирною лінією не мають відповідного сегмента в іншій панелі; наведіть для підказки."},
     "colour_by_note": {"en": "Colour by: LLM / Human / Both (agree). Specific-detail and ideological-layer colours apply only when that filter is not None.", "uk": "Колір за: LLM / Людина / Обидва (згода). Кольори конкретних деталей і ідеологічних шарів застосовуються лише коли відповідний фільтр не Немає."},
     "document_text_legend_note": {
-        "en": "Dashed underlines mark segments with no aligned partner in the other column. Colour by (LLM / Human / Both) chooses whose labels tint the text; specific-detail and ideological-layer colours apply only when those filters are not None. When both Human Segmented and AI Segmented runs are bundled, pick the alignment from Comparison run.",
-        "uk": "Пунктир підкреслення позначає сегменти без вирівняного партнера в іншій колонці. «Колір за» (LLM / Людина / Обидва) визначає, чиї мітки фарбують текст; кольори конкретних деталей і ідеологічних шарів діють лише коли відповідні фільтри не «Немає». Якщо завантажено обидва прогони — «Людина-сегментація» та «ШІ-сегментація» — оберіть вирівнювання у полі «Comparison run».",
+        "en": "<strong>Two alignment modes.</strong> <em>Human Segmented</em> follows expert paragraph boundaries; <em>AI Segmented</em> uses model-drawn spans before labelling, so counts can differ. When both runs are loaded, pick which alignment drives highlighting with <strong>Comparison run</strong>; colours come from that run’s pairing.<br/><br/><strong>Dashed underline</strong> means no matching slice exists in the other language column (hover for a short explanation).<br/><br/><strong>Colours.</strong> <em>Analysis by</em> chooses whose labels tint segments (model, human, or both only where they agree). Category and framing rainbow colours appear after you pick a specific detail or ideological layer from the dropdowns (not when those filters stay on None).",
+        "uk": "<strong>Два режими вирівнювання.</strong> <em>Людина-сегментація</em> зберігає межі абзаців експерта; <em>ШІ-сегментація</em> будує власні сегменти перед розміткою, тож кількість рядків може відрізнятися. Якщо завантажено обидва прогони, оберіть джерело підсвітки у полі <strong>Comparison run</strong>; кольори беруться з того вирівнювання.<br/><br/><strong>Пунктирне підкреслення</strong> означає, що у парній колонці немає відповідного фрагмента (наведіть для підказки).<br/><br/><strong>Кольори.</strong> Поле <em>Аналіз за</em> визначає, чиї мітки фарбують текст (модель, людина або лише збіги). Веселка категорій і фреймінгу з’являється лише після вибору конкретної деталі чи шару у списках (не коли лишається «Немає»).",
     },
     "search_placeholder": {"en": "Search in text (English or Russian)...", "uk": "Пошук у тексті (англійською або російською)..."},
     "table_search_placeholder": {"en": "Search in table...", "uk": "Пошук у таблиці..."},
@@ -336,6 +336,9 @@ _UI_TRANSLATIONS = {
     "label_suggestion_cancel": {"en": "Cancel", "uk": "Скасувати"},
     "label_suggestion_download": {"en": "Download all suggestions (JSON)", "uk": "Завантажити всі пропозиції (JSON)"},
     "label_suggestion_saved_ok": {"en": "Suggestion saved locally.", "uk": "Пропозицію збережено локально."},
+    "dev_label_export_title": {"en": "Label suggestions export (developer)", "uk": "Експорт пропозицій міток (для розробника)"},
+    "dev_label_export_intro": {"en": "Saved suggestions live in your browser (localStorage) and are mirrored in a hidden JSON script tag at the end of this page (`label-suggestions-export-json`). That duplicate lets you copy or scrape exports without opening devtools.", "uk": "Збережені пропозиції зберігаються в браузері (localStorage) і дублюються в прихованому елементі JSON (`label-suggestions-export-json`) в кінці сторінки — щоб можна було скопіювати дані без інструментів розробника."},
+    "dev_label_export_link_hint": {"en": "Bookmark this view by adding `#tab-dev-label-export` to the report URL.", "uk": "Додайте `#tab-dev-label-export` до URL звіту, щоб відкривати цей екран напряму."},
     "label_suggestion_document_id": {"en": "Document ID", "uk": "ID документа"},
     "label_suggestion_row_index": {"en": "Row index", "uk": "Індекс рядка"},
     "english": {"en": "English", "uk": "Англійська"},
@@ -343,12 +346,13 @@ _UI_TRANSLATIONS = {
     "glossary_of_terms": {"en": "Glossary of Terms", "uk": "Глосарій термінів"},
     "glossary_intro": {"en": "Definitions and examples for specific details (content categories) and ideological layers (framing strategies) used in document analysis.", "uk": "Визначення та приклади конкретних деталей (категорії контенту) та ідеологічних шарів (стратегії фреймінгу), що використовуються в аналізі документів."},
     "glossary_search_placeholder": {"en": "Search glossary by name or definition...", "uk": "Пошук у глосарії за назвою або визначенням..."},
+    "glossary_how_search_summary": {"en": "How do I search?", "uk": "Як шукати?"},
+    "glossary_how_search_html": {
+        "en": "<p><strong>Plain text</strong> matches titles and definitions anywhere (case-insensitive).</p><p><strong>Regex:</strong> wrap a pattern in slashes, e.g. <code>/Kyiv/</code> or <code>/вітаю|привіт/i</code>. You must include a <strong>closing slash</strong>. For a literal slash inside the pattern, use a backslash before the slash.</p><p><strong>Examples (English):</strong> <code>/\\bOUN\\b/</code> (word boundary); <code>/Kyiv|Kiev/</code>.</p><p><strong>Russian:</strong> <code>/ОУН/</code>; <code>/операци[ия]/</code>.</p><p><strong>Ukrainian:</strong> <code>/Радянськ/</code>; <code>/вітаю|привіт/</code>.</p>",
+        "uk": "<p><strong>Звичайний текст</strong> шукає у заголовках і визначеннях будь-де (без урахування регістру).</p><p><strong>Regex:</strong> шаблон у слешах, напр. <code>/Київ/</code> або <code>/вітаю|привіт/i</code>. Потрібен <strong>закривний слеш</strong>. Літеральний слеш у шаблоні: зворотна коса риска перед слешем.</p><p><strong>English:</strong> <code>/\\bOUN\\b/</code>; <code>/Kyiv|Kiev/</code>.</p><p><strong>Російська:</strong> <code>/ОУН/</code>; <code>/операци[ия]/</code>.</p><p><strong>Українська:</strong> <code>/Радянськ/</code>; <code>/вітаю|привіт/</code>.</p>",
+    },
     "filter_by_document": {"en": "Filter by document:", "uk": "Фільтр за документом:"},
     "all_documents": {"en": "All documents", "uk": "Усі документи"},
-    "glossary_search_hint": {
-        "en": "Plain text matches anywhere (case-insensitive). Regex: /pattern/ or /pattern/flags. <strong>CLOSING SLASH REQUIRED</strong> after the pattern. For a literal slash inside the pattern, type backslash then slash. Optional flags g m s y merge with defaults i and u (Unicode + case-insensitive). Example: /вітаю|привіт/.",
-        "uk": "Звичайний текст збігається будь-де (без урахування регістру). Regex: /шаблон/ або /шаблон/прапорці. <strong>ОБОВ'ЯЗКОВИЙ ЗАКРИВНИЙ СЛЕШ</strong> після шаблону. Літеральний слеш: зворотна коса риска, потім слеш. Прапорці g m s y додаються до базових i та u. Приклад: /вітаю|привіт/.",
-    },
     "view_in_document": {"en": "View in document", "uk": "Переглянути в документі"},
     "content_categories": {"en": "Specific Details", "uk": "Конкретні деталі"},
     "content_categories_desc": {"en": "Specific details describe WHAT the text refers to at surface level (aligned with content-category labels in the data model). In technical materials these correspond to content categories.", "uk": "Конкретні деталі описують ДО ЧОГО стосується текст на поверхневому рівні (відповідають міткам категорій контенту в моделі даних). У технічних матеріалах це відповідає категоріям контенту."},
@@ -468,7 +472,7 @@ _UI_TRANSLATIONS = {
     "viz_calc_segment_length_equations": {"en": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>length</mi><mo>=</mo><mo>max</mo><mo>(</mo><mi>len</mi><mo>(</mo><mi>entry_eng</mi><mo>)</mo><mo>,</mo><mi>len</mi><mo>(</mo><mi>entry_rus</mi><mo>)</mo><mo>)</mo></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>y</mi><mo>=</mo><msub><mn>1</mn><mrow><mo>[</mo><mtext>both_match</mtext><mo>]</mo></mrow></msub></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mtext>Range:</mtext><mspace width=\"0.5em\"/><mi>bin</mi><mo>=</mo><mo>&#x230A;</mo><mi>length</mi><mo>/</mo><mn>25</mn><mo>&#x230B;</mo><mo>&#xD7;</mo><mn>25</mn></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>accuracy</mi><mo>(</mo><mi>bin</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>matched_in_bin</mi></mrow><mrow><mi>total_in_bin</mi></mrow></mfrac></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mtext>Qualified:</mtext><mspace width=\"0.5em\"/><mi>bin</mi><mo>&#x2265;</mo><mn>50</mn><mo>,</mo><mi>n</mi><mo>&#x2265;</mo><mn>15</mn></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mtext>Single:</mtext><mspace width=\"0.5em\"/><mi>accuracy</mi><mo>(</mo><mi>len</mi><mo>)</mo><mo>=</mo><mfrac><mrow><mi>matched_at_len</mi></mrow><mrow><mi>total_at_len</mi></mrow></mfrac></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mtext>Qualified:</mtext><mspace width=\"0.5em\"/><mi>n</mi><mo>&#x2265;</mo><mn>5</mn></mrow></math>", "uk": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>length</mi><mo>=</mo><mo>max</mo><mo>(</mo><mtext>довжин</mtext><mo>)</mo><mo>;</mo><mi>y</mi><mo>=</mo><mn>1</mn><mtext> якщо збіг</mtext></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>bin</mi><mo>=</mo><mo>&#x230A;</mo><mi>length</mi><mo>/</mo><mn>25</mn><mo>&#x230B;</mo><mo>&#xD7;</mo><mn>25</mn><mo>;</mo><mi>accuracy</mi><mo>=</mo><mi>matched</mi><mo>/</mo><mi>total</mi></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mtext>Діапазон:</mtext><mspace width=\"0.5em\"/><mi>n</mi><mo>&#x2265;</mo><mn>15</mn><mo>,</mo><mi>len</mi><mo>&#x2265;</mo><mn>50</mn><mo>;</mo><mtext>одна довжина:</mtext><mspace width=\"0.5em\"/><mi>n</mi><mo>&#x2265;</mo><mn>5</mn></mrow></math>"},
     "viz_calc_segment_length_technical": {"en": "length = max(len(entry_eng), len(entry_rus)): we take the longer of the two because both texts contribute to the classification. y = 1[both_match]: we count a segment as correct only when both category and framing agree. Bins of 25 chars avoid sparse data; excluding len < 50 removes noisy very-short segments. n ≥ 15 per bin (range) and n ≥ 5 (single length) ensure the \"most accurate\" stat is not driven by tiny samples.", "uk": "length = max(довжин): беремо довшу, бо обидва тексти впливають на класифікацію. y = 1[збіг]: правильний лише коли збігаються категорія й фреймінг. Біни 25 символів уникaють розріджених даних; len<50 виключаємо. n≥15 (діапазон) і n≥5 (одна довжина): щоб «найточніше» не базувалося на малих вибірках."},
     "viz_calc_radar_simple": {"en": "axis_value(cat) is the number of segments in the selected documents with category cat. In all mode, selected_docs = all documents.", "uk": "axis_value(cat): кількість сегментів з cat у вибраних doc. У режимі all: усі документи."},
-    "viz_calc_places_map_simple": {"en": "Location names come from segments in your texts tagged as Places. We normalize them and plot coordinates when geocoding succeeds. Larger markers mean the place appears in more segments (each Russian / English slice counts once when present). Run scripts/extract_places.py and scripts/geocode_places.py to refresh data.", "uk": "Назви місць беруться з сегментів категорії Places у документах; нормалізуємо й ставимо на карту після геокодування. Більший маркер означає більше сегментів із згадкою місця (рахуємо кожний шматок тексту окремо, коли він є)."},
+    "viz_calc_places_map_simple": {"en": "Place names are taken from text passages labelled Places in the documents. We tidy spelling variants, look up coordinates when geocoding works, and plot each spot on the map. Bigger circles mean that location shows up in more passages—each Russian or English slice counts separately when both appear. Run scripts/extract_places.py and scripts/geocode_places.py to refresh data.", "uk": "Назви місць беруть із текстових уривків, позначених як Places у документах; вирівнюємо варіанти написання, шукаємо координати після успішного геокодування й ставимо точку на карті. Більше коло означає, що місце згадано в більшій кількості уривків (рус / англ шматки рахуємо окремо, коли обидва є). Запустіть scripts/extract_places.py та scripts/geocode_places.py, щоб оновити дані."},
     "viz_calc_radar_equations": {"en": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>axis_value</mi><mo>(</mo><mi>cat</mi><mo>)</mo><mo>=</mo><mo>|</mo><mo>{</mo><mi>s</mi><mo>&#x2208;</mo><mtext>selected_docs</mtext><mo>:</mo><mi>s</mi><mo>.</mo><mi>category</mi><mo>=</mo><mi>cat</mi><mo>}</mo><mo>|</mo></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mtext>all mode:</mtext><mspace width=\"0.5em\"/><mtext>selected_docs = all documents</mtext></mrow></math>", "uk": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>axis_value</mi><mo>(</mo><mi>cat</mi><mo>)</mo><mo>=</mo><mtext>кількість сегментів з cat у вибраних doc</mtext></mrow></math>"},
     "viz_calc_radar_technical": {"en": "axis_value(cat) = |{s ∈ selected_docs : s.category = cat}|. Each axis shows one category's count so we can compare the shape of documents. In single mode, selected_docs = one document. In compare mode, multiple documents overlaid. In all mode, selected_docs = all documents so we see the aggregate profile.", "uk": "axis_value(cat) = |{s ∈ selected_docs : s.category = cat}|. Кожна вісь = одна категорія. All mode: selected_docs = усі документи."},
     "viz_calc_agreement_cat_simple": {"en": "We measure how often the LLM agrees with the human expert on each category. matched(cat) = segments where both chose cat. total(cat) = segments where the human chose cat (we use human as the denominator because we are measuring LLM accuracy against ground truth). agreement = 100 × matched / total. Why per category? Some categories may be easier or harder for the LLM.", "uk": "Вимірюємо згоду LLM з експертом по категоріях. matched = де обидва обрали cat; total = де human обрала cat. agreement = 100 × matched / total. total базується на human як еталоні."},
@@ -576,20 +580,19 @@ def _filter_framing_counts_dict_for_report_ui(
 
 # Canonical framing colours so server and JS text view always use them
 _FRAMING_COLOUR_FALLBACK = {
-    "Action-Focused Language": "#dc2626",
+    "Action-Focused Language": "#9333ea",
     "Ideological Phrasing (Normalizing)": "#ca8a04",
     "Generic / Neutral Language": "#15803d",
     "Generic / Neutral": "#15803d",
     "Institutional / Bureaucratic Lingo": "#2563eb",
-    "Ideological Framing (Discrediting)": "#ea580c",
+    "Ideological Framing (Discrediting)": "#dc2626",
 }
 
-# ЙЦУКЕН-style rows + Ukrainian letters on bottom row (Russian + Ukrainian coverage)
+# Shared Cyrillic letters (Russian-typewriter layout) + Ukrainian letters і ї є ґ emphasized on the bottom row.
 _CYRILLIC_KEYBOARD_ROWS: Tuple[Tuple[str, ...], ...] = (
-    ("ё",),
-    ("й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х", "ъ"),
+    ("й", "ц", "у", "к", "е", "н", "г", "ш", "щ", "з", "х"),
     ("ф", "ы", "в", "а", "п", "р", "о", "л", "д", "ж", "э"),
-    ("я", "ч", "с", "м", "и", "т", "ь", "б", "ю"),
+    ("я", "ч", "с", "м", "и", "т", "ь", "б", "ю", "ъ"),
 )
 
 
@@ -605,20 +608,18 @@ def _cyrillic_keyboard_html(doc_id: str) -> str:
         )
 
     rows_out: List[str] = []
-    r0 = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[0])
-    rows_out.append(f'<div class="cyrillic-keyboard-row kb-row-top">{r0}</div>')
-    for ri in range(1, 3):
-        stagger = f" kb-stagger-{min(ri, 3)}"
-        rk = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[ri])
-        rows_out.append(f'<div class="cyrillic-keyboard-row{stagger}">{rk}</div>')
-    letters_r3 = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[3])
+    r0 = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[0]) + letter_key("ё", "cyr-key-minor")
+    rows_out.append(f'<div class="cyrillic-keyboard-row kb-row-top kb-stagger-1">{r0}</div>')
+    rk_mid = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[1])
+    rows_out.append(f'<div class="cyrillic-keyboard-row kb-stagger-2">{rk_mid}</div>')
+    letters_bottom = "".join(letter_key(c) for c in _CYRILLIC_KEYBOARD_ROWS[2])
     caps_btn = (
         f'<button type="button" class="cyr-key-mod cyr-key-caps" data-tab="{esc_id}" '
         f'data-i18n="cyrillic_key_caps" data-i18n-title="cyrillic_key_caps_title">Caps Lock</button>'
     )
-    rows_out.append(f'<div class="cyrillic-keyboard-row kb-stagger-2">{caps_btn}{letters_r3}</div>')
+    rows_out.append(f'<div class="cyrillic-keyboard-row kb-stagger-2">{caps_btn}{letters_bottom}</div>')
     ua = ("і", "ї", "є", "ґ")
-    ua_keys = "".join(letter_key(c) for c in ua)
+    ua_keys = "".join(letter_key(c, "cyr-key-ua-emphasis") for c in ua)
     shift_btn = (
         f'<button type="button" class="cyr-key-mod cyr-key-shift" data-tab="{esc_id}" '
         f'data-i18n="cyrillic_key_shift" data-i18n-title="cyrillic_key_shift_title">⇧ Shift</button>'
@@ -1137,6 +1138,7 @@ def run(
             )
         )
 
+    parts.append(_dev_label_export_tab())
     parts.append("</div></div>")
     parts.append(_label_suggestion_modal_html())
     term_synonyms = _load_term_synonyms()
@@ -1192,7 +1194,20 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .master-header-links { display: flex; flex-wrap: wrap; gap: 0.75rem 1.25rem; align-items: center; margin-left: 1rem; }
 .master-header-links .master-header-link { margin-left: 0; }
 .master-header h1 { font-family: 'Crimson Text', Georgia, serif; font-weight: 700; letter-spacing: 0.02em; }
-.master-header-badge { font-family: 'Stardos Stencil', 'Impact', sans-serif; font-size: 1.1rem; font-weight: 700; letter-spacing: 0.12em; padding: 0.4rem 0.75rem; border: 2px solid #8b0000; border-radius: 2px; color: #8b0000; background: rgba(245,240,230,0.15); }
+.master-header-badge {
+  font-family: 'Stardos Stencil', 'Impact', sans-serif;
+  font-size: 0.98rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 0.38rem 0.9rem;
+  border: 3px double #6b0000;
+  border-radius: 3px;
+  color: #450a0a;
+  background: linear-gradient(165deg, #fffef7 0%, #ebe4d4 45%, #dcd3c4 100%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.18);
+  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+}
 .master-header .lang-toggle { margin-left: auto; }
 .lang-btn { font-size: 1.25rem; padding: 0.25rem 0.5rem; border: 1px solid rgba(245,240,230,0.4); border-radius: 4px; background: rgba(0,0,0,0.2); color: inherit; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
 .lang-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(245,240,230,0.6); }
@@ -1205,11 +1220,12 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .sidebar-section-title { padding: 0.75rem 1.25rem 0.35rem; font-size: 0.7rem; font-weight: 600; color: #8b7355; text-transform: uppercase; letter-spacing: 0.08em; }
 .sidebar-doc-stat { font-size: 0.75rem; color: #8b7355; margin-left: 0.5rem; font-family: 'JetBrains Mono', monospace; }
 .sidebar-divider { border: none; border-top: 1px solid rgba(139,115,85,0.35); margin: 1rem 1rem 0.75rem; padding: 0; height: 0; background: none; }
-.sidebar .sidebar-feedback-section { margin: 0 0.75rem 1rem; border-radius: 4px; overflow: hidden; border: 1px solid rgba(139,115,85,0.35); box-shadow: none; }
-.sidebar .sidebar-feedback-section > summary { padding: 0.55rem 1rem; background: rgba(0,0,0,0.28); color: #e8e4dc; border-bottom: 1px dashed rgba(139,115,85,0.35); font-size: 0.88rem; }
-.sidebar .sidebar-feedback-section .collapsible-body { padding: 0.75rem 1rem 1rem; background: #242424; color: #c4bfb4; font-size: 0.88rem; }
+.sidebar .sidebar-feedback-section { margin: 0 0.75rem 1rem; border-radius: 3px; overflow: hidden; border: 2px solid #9a855c; box-shadow: 3px 4px 0 rgba(45,34,20,0.12); background: #e8dcc8; }
+.sidebar .sidebar-feedback-section > summary { padding: 0.55rem 1rem; background: linear-gradient(180deg, #d8c8a8 0%, #cbb896 100%); color: #2c2419; border-bottom: 1px solid #9a855c; font-size: 0.88rem; font-weight: 600; cursor: pointer; list-style: none; }
+.sidebar .sidebar-feedback-section > summary::-webkit-details-marker { display: none; }
+.sidebar .sidebar-feedback-section .collapsible-body { padding: 0.75rem 1rem 1rem; background: #f4ecd8; color: #2c2419; font-size: 0.88rem; line-height: 1.5; }
 .sidebar .sidebar-feedback-section .feedback-input,
-.sidebar .sidebar-feedback-section .feedback-textarea { background: #1a1a1a; color: #e8e4dc; border-color: #6b5344; }
+.sidebar .sidebar-feedback-section .feedback-textarea { background: #fffdf7; color: #2d3748; border: 1px solid #9a855c; }
 .main-content { flex: 1; padding: 2rem; overflow: auto; background: #f5f0e6; }
 .tabs { display: none; }
 .tab-button { padding: 0.75rem 1.5rem; background: #e8e4dc; border: 1px solid #8b7355; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-family: inherit; }
@@ -1219,7 +1235,7 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .tab-content.active { display: block; }
 @media (max-width: 768px) { .sidebar { width: 100%; min-width: auto; } .app-container { flex-direction: column; } }
 .header { background: linear-gradient(180deg, #4a5568 0%, #2d3748 100%); color: #f5f0e6; padding: 1.25rem 1.5rem; border-radius: 4px; margin-bottom: 2rem; border: 1px solid #8b7355; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
-.header h2 { font-family: 'Crimson Text', Georgia, serif; font-size: 1.05rem; line-height: 1.55; font-weight: 600; margin: 0; max-width: 100%; }
+.header h2 { font-family: 'Crimson Text', Georgia, serif; font-size: 1.05rem; line-height: 1.55; font-weight: 600; margin: 0; max-width: 100%; overflow-wrap: anywhere; }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 2rem 0; }
 .stat-card { background: #e8e4dc; padding: 1.5rem; border-radius: 4px; text-align: center; border: 1px solid #8b7355; }
 .stat-number { font-size: 2rem; font-weight: bold; color: #2d3748; font-family: 'JetBrains Mono', monospace; }
@@ -1298,7 +1314,7 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .document-text-controls-row1 .document-search { width: 100%; max-width: min(100%, 28rem); min-width: min(100%, 240px); }
 .document-search-cyrillic-anchor,
 .glossary-search-cyrillic-anchor { position: relative; z-index: 12; }
-.glossary-search-cyrillic-anchor { flex: 1 1 280px; min-width: min(100%, 280px); }
+.glossary-search-cyrillic-anchor { flex: 1 1 520px; min-width: min(100%, 520px); }
 .cyrillic-keyboard-popup-wrap {
   display: none;
   position: absolute;
@@ -1385,6 +1401,17 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .cyr-key-ins:active {
   transform: translateY(2px);
   box-shadow: 0 0 0 #8a8379, 0 1px 2px rgba(0,0,0,0.08);
+}
+.cyr-key-ins.cyr-key-minor {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  padding: 0.42rem 0.26rem;
+  opacity: 0.92;
+  border-style: dashed;
+}
+.cyr-key-ins.cyr-key-ua-emphasis {
+  border-color: #14532d;
+  box-shadow: 0 2px 0 #6b8f67, 0 3px 6px rgba(45,90,39,0.15);
 }
 .cyr-key-mod {
   flex: 0 0 auto;
@@ -1481,7 +1508,14 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 @media (max-width: 900px) { .document-text-panels { grid-template-columns: 1fr; } }
 /* Glossary search and filter */
 .glossary-controls { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; margin-bottom: 1.5rem; }
-.glossary-controls .glossary-search { min-width: 280px; flex: 1 1 280px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
+.glossary-controls .glossary-search { min-width: min(100%, 520px); flex: 1 1 520px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
+.glossary-how-search-details { margin: 0 0 1rem 0; border: 1px solid rgba(139,115,85,0.45); border-radius: 4px; background: #faf8f4; }
+.glossary-how-search-details > summary { padding: 0.45rem 0.75rem; cursor: pointer; font-weight: 600; color: #4a5568; font-size: 0.92rem; list-style: none; }
+.glossary-how-search-details > summary::-webkit-details-marker { display: none; }
+.glossary-how-search-body { padding: 0.6rem 0.85rem 0.85rem; font-size: 0.88rem; line-height: 1.55; color: #4a5568; border-top: 1px dashed rgba(139,115,85,0.35); }
+.glossary-how-search-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; background: rgba(139,115,85,0.12); padding: 0.08rem 0.28rem; border-radius: 3px; }
+.colour-legend-narrative { font-size: 0.88rem; line-height: 1.55; color: #4a5568; text-align: left; }
+.colour-legend-narrative strong { color: #2d3748; }
 .glossary-controls .glossary-filter-wrap { display: flex; align-items: center; gap: 0.5rem; }
 .glossary-controls .glossary-filter-wrap label { font-size: 0.9rem; color: #4a5568; white-space: nowrap; }
 .glossary-controls .glossary-doc-filter { min-width: 200px; padding: 0.5rem 1rem; border: 1px solid #8b7355; border-radius: 4px; font-size: 1rem; background: #fff; height: 2.5rem; }
@@ -2303,13 +2337,29 @@ def _build_places_map_html(config: Dict[str, Any], embedded: bool = False, doc_i
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Places Map — Vozmezdie</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     * {{ box-sizing: border-box; }}
     body {{ margin: 0; font-family: 'Crimson Text', Georgia, serif; background: #f5f0e6; color: #4a5568; }}
     .demo-header {{ padding: 1rem 1.5rem; background: #2d3748; color: #e8e4dc; border-bottom: 1px solid rgba(139,0,0,0.3); }}
     .demo-header h1 {{ margin: 0; font-size: 1.5rem; font-weight: 600; }}
-    .demo-header .badge {{ display: inline-block; margin-left: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #8b0000; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }}
+    .demo-header .badge {{
+      display: inline-block;
+      margin-left: 0.55rem;
+      vertical-align: middle;
+      font-family: 'Stardos Stencil', 'Impact', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.85rem;
+      border: 3px double #6b0000;
+      border-radius: 3px;
+      color: #450a0a;
+      background: linear-gradient(165deg, #fffef7 0%, #ebe4d4 45%, #dcd3c4 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.18);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    }}
     .demo-header p {{ margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.9; }}
     .demo-header .demo-header-tagline {{ margin: 0.35rem 0 0; font-size: 0.82rem; opacity: 0.85; font-style: italic; }}
     #map {{ height: calc(100vh - 100px); min-height: 400px; }}
@@ -2881,6 +2931,21 @@ def _taxonomy_reference_section(
     return "\n".join(parts)
 
 
+def _dev_label_export_tab() -> str:
+    """Hidden-by-navigation tab: export notes + JSON download (open via URL `#tab-dev-label-export`)."""
+    return """
+<div class="tab-content" id="tab-dev-label-export">
+<div class="header"><h2 data-i18n="dev_label_export_title">Label suggestions export (developer)</h2></div>
+<div class="homepage-content">
+  <section class="homepage-section">
+    <p style="color:#5a5348;line-height:1.55;margin-bottom:0.75rem;" data-i18n="dev_label_export_intro">Saved suggestions live in your browser (localStorage) and are mirrored in a hidden JSON script tag at the end of this page (`label-suggestions-export-json`). That duplicate lets you copy or scrape exports without opening devtools.</p>
+    <p style="color:#5a5348;line-height:1.55;margin-bottom:1rem;" data-i18n="dev_label_export_link_hint">Bookmark this view by adding `#tab-dev-label-export` to the report URL.</p>
+    <button type="button" class="comparison-export-json" id="dev-label-suggestion-download-btn" data-i18n="label_suggestion_download">Download all suggestions (JSON)</button>
+  </section>
+</div>
+</div>"""
+
+
 def _intro_tab() -> str:
     """Sidebar tab: introduction and project context (above Research Lab)."""
     return """
@@ -3019,7 +3084,6 @@ def _label_suggestion_modal_html() -> str:
     <div class="label-suggestion-actions">
       <button type="button" class="label-suggestion-save-btn" id="label-suggestion-save-btn" data-i18n="label_suggestion_save">Save suggestion</button>
       <button type="button" class="label-suggestion-cancel-btn" id="label-suggestion-cancel-btn" data-i18n="label_suggestion_cancel">Cancel</button>
-      <button type="button" class="label-suggestion-download-btn" id="label-suggestion-download-btn" data-i18n="label_suggestion_download">Download all suggestions (JSON)</button>
     </div>
   </div>
 </div>
@@ -3673,7 +3737,7 @@ def _doc_tab(
         )
     return f"""
 {tab_attrs}
-<div class="header"><h2>{page_heading}</h2></div>
+<div class="header"><h2>{html_module.escape(page_heading)}</h2></div>
 {hidden_stats}
 {doc_text_runs_embed}
 {pdf_section}
@@ -3753,7 +3817,7 @@ def _colour_legend(categories: List[Dict], framings: List[Dict]) -> str:
       <div class="colour-legend-items">{fram_html}</div>
     </div>
     <div class="colour-legend-section">
-      <div class="colour-legend-orphan-note" data-i18n="document_text_legend_note">Dashed underlines mark segments with no aligned partner in the other column. Colour by (LLM / Human / Both) chooses whose labels tint the text; specific-detail and ideological-layer colours apply only when those filters are not None. When both Human Segmented and AI Segmented runs are bundled, pick the alignment from Comparison run.</div>
+      <div class="colour-legend-orphan-note colour-legend-narrative" data-i18n-html="document_text_legend_note">Legend narrative placeholder.</div>
     </div>
   </div>"""
     )
@@ -4190,6 +4254,10 @@ def _glossary_tab(
         + """
 </div>
 </div>
+<details class="glossary-how-search-details">
+<summary data-i18n="glossary_how_search_summary">How do I search?</summary>
+<div class="glossary-how-search-body" data-i18n-html="glossary_how_search_html"></div>
+</details>
 <div class="glossary-filter-wrap">
 <label for="glossary-doc-filter" data-i18n="filter_by_document">Filter by document:</label>
 <select id="glossary-doc-filter" class="glossary-doc-filter">
@@ -4202,7 +4270,6 @@ def _glossary_tab(
         + glossary_src_opts
         + """
 </div>
-<p class="glossary-search-hint" style="font-size: 0.85rem; color: #6b7280; margin-top: -0.5rem; margin-bottom: 1.5rem;" data-i18n-html="glossary_search_hint">Plain text matches anywhere (case-insensitive). Regex: /pattern/ or /pattern/flags. <strong>CLOSING SLASH REQUIRED</strong> after the pattern.</p>
 <h3 style="color: #4a5568; margin-bottom: 1.5rem; font-size: 1.5rem;" data-i18n="content_categories">Content Categories</h3>
 <p style="margin-bottom: 2rem; color: #4a5568; font-style: italic;" data-i18n="content_categories_desc">Specific details describe WHAT the text refers to at surface level (aligned with content-category labels in the data model). In technical materials these correspond to content categories.</p>
 """
@@ -4505,14 +4572,14 @@ function hexToRgba(hex, a) {
   var r = parseInt(hex.substr(0,2), 16), g = parseInt(hex.substr(2,2), 16), b = parseInt(hex.substr(4,2), 16);
   return 'rgba(' + r + ',' + g + ',' + b + ',' + (a !== undefined ? a : 1) + ')';
 }
-var framingColourFallback = { 'Action-Focused Language': '#dc2626', 'Ideological Phrasing (Normalizing)': '#ca8a04', 'Generic / Neutral Language': '#15803d', 'Generic / Neutral': '#15803d', 'Institutional / Bureaucratic Lingo': '#2563eb', 'Ideological Framing (Discrediting)': '#ea580c' };
+var framingColourFallback = { 'Action-Focused Language': '#9333ea', 'Ideological Phrasing (Normalizing)': '#ca8a04', 'Generic / Neutral Language': '#15803d', 'Generic / Neutral': '#15803d', 'Institutional / Bureaucratic Lingo': '#2563eb', 'Ideological Framing (Discrediting)': '#dc2626' };
 function resolveFramingColour(fram, attrColour) {
   fram = (fram || '').trim();
   if (!fram) return (attrColour && attrColour !== '#333' && attrColour !== '#333333') ? attrColour : '#333';
   if (framingColourFallback[fram]) return framingColourFallback[fram];
   var lower = fram.toLowerCase();
   for (var k in framingColourFallback) { if (k.toLowerCase() === lower) return framingColourFallback[k]; }
-  if (fram.indexOf('Action-Focused') !== -1) return '#dc2626';
+  if (fram.indexOf('Action-Focused') !== -1) return '#9333ea';
   if (lower.indexOf('generic') !== -1 && lower.indexOf('neutral') !== -1) return '#15803d';
   return (attrColour && attrColour !== '#333' && attrColour !== '#333333') ? attrColour : '#333';
 }
@@ -6348,12 +6415,12 @@ document.addEventListener('DOMContentLoaded', function() {
     var bd = modal.querySelector('.label-suggestion-modal-backdrop');
     var btnCancel = document.getElementById('label-suggestion-cancel-btn');
     var btnSave = document.getElementById('label-suggestion-save-btn');
-    var btnDl = document.getElementById('label-suggestion-download-btn');
     if (bd) bd.addEventListener('click', function() { closeLabelSuggestionModal(); });
     if (btnCancel) btnCancel.addEventListener('click', function() { closeLabelSuggestionModal(); });
     if (btnSave) btnSave.addEventListener('click', function() { saveLabelSuggestionFromModal(); });
-    if (btnDl) btnDl.addEventListener('click', function() { downloadLabelSuggestionsJson(); });
   })();
+  var btnDlDev = document.getElementById('dev-label-suggestion-download-btn');
+  if (btnDlDev) btnDlDev.addEventListener('click', function() { downloadLabelSuggestionsJson(); });
   refreshAllCyrillicKeyboards();
   document.addEventListener('focusin', function(e) {
     var t = e.target;

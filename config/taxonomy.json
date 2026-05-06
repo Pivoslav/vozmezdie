@@ -2,7 +2,7 @@
   "content_categories": [
     { "id": "Actors", "label_en": "Actors", "label_uk": "Актори", "colour": "#3b82f6" },
     { "id": "Places", "label_en": "Places", "label_uk": "Місця", "colour": "#10b981" },
-    { "id": "Actions", "label_en": "Actions", "label_uk": "Дії", "colour": "#ef4444" },
+    { "id": "Actions", "label_en": "Actions", "label_uk": "Дії", "colour": "#0d9488" },
     { "id": "Events", "label_en": "Events", "label_uk": "Події", "colour": "#64748b" },
     { "id": "Date & Time", "label_en": "Date & Time", "label_uk": "Дата й час", "colour": "#8b5cf6" },
     { "id": "Legal Framework", "label_en": "Legal Framework", "label_uk": "Правова база", "colour": "#f43f5e" },
@@ -12,8 +12,8 @@
   "framing_strategies": [
     { "id": "Generic / Neutral Language", "label_en": "Generic / Neutral Language", "label_uk": "Нейтральна мова", "colour": "#15803d" },
     { "id": "Institutional / Bureaucratic Lingo", "label_en": "Institutional / Bureaucratic Lingo", "label_uk": "Інституційна / бюрократична мова", "colour": "#2563eb" },
-    { "id": "Ideological Framing (Discrediting)", "label_en": "Ideological Framing (Discrediting)", "label_uk": "Ідеологічний фреймінг (дискредитація)", "colour": "#ea580c" },
+    { "id": "Ideological Framing (Discrediting)", "label_en": "Ideological Framing (Discrediting)", "label_uk": "Ідеологічний фреймінг (дискредитація)", "colour": "#dc2626" },
     { "id": "Ideological Phrasing (Normalizing)", "label_en": "Ideological Phrasing (Normalizing)", "label_uk": "Ідеологічне формулювання (нормалізація)", "colour": "#ca8a04" },
-    { "id": "Action-Focused Language", "label_en": "Action-Focused Language", "label_uk": "Мова, орієнтована на дію", "colour": "#dc2626" }
+    { "id": "Action-Focused Language", "label_en": "Action-Focused Language", "label_uk": "Мова, орієнтована на дію", "colour": "#9333ea" }
   ]
 }
