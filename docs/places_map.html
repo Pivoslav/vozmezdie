@@ -5,13 +5,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Places Map — Vozmezdie</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=JetBrains+Mono:wght@400;500&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet"/>
   <style>
     * { box-sizing: border-box; }
     body { margin: 0; font-family: 'Crimson Text', Georgia, serif; background: #f5f0e6; color: #4a5568; }
     .demo-header { padding: 1rem 1.5rem; background: #2d3748; color: #e8e4dc; border-bottom: 1px solid rgba(139,0,0,0.3); }
     .demo-header h1 { margin: 0; font-size: 1.5rem; font-weight: 600; }
-    .demo-header .badge { display: inline-block; margin-left: 0.5rem; padding: 0.2rem 0.5rem; font-size: 0.75rem; background: #8b0000; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+    .demo-header .badge {
+      display: inline-block;
+      margin-left: 0.55rem;
+      vertical-align: middle;
+      font-family: 'Stardos Stencil', 'Impact', sans-serif;
+      font-size: 0.92rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      padding: 0.35rem 0.85rem;
+      border: 3px double #6b0000;
+      border-radius: 3px;
+      color: #450a0a;
+      background: linear-gradient(165deg, #fffef7 0%, #ebe4d4 45%, #dcd3c4 100%);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.18);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+    }
     .demo-header p { margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.9; }
     .demo-header .demo-header-tagline { margin: 0.35rem 0 0; font-size: 0.82rem; opacity: 0.85; font-style: italic; }
     #map { height: calc(100vh - 100px); min-height: 400px; }
