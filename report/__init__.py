@@ -380,7 +380,7 @@ _UI_TRANSLATIONS = {
     "feedback": {"en": "Feedback", "uk": "Зворотний зв'язок"},
     "feedback_intro": {"en": "Submit general requests or suggest labels for tagged sections.", "uk": "Надішліть загальні запити або пропозиції щодо міток для розмічених секцій."},
     "submit_feedback": {"en": "Submit", "uk": "Надіслати"},
-    "wordcloud_intro": {"en": "Word cloud from document corpus (top terms by frequency):", "uk": "Хмара слів з корпусу документів (топ термінів за частотою):"},
+    "wordcloud_intro": {"en": "Word cloud (most frequent words; bigger means more often):", "uk": "Хмара слів (найчастіші слова; більший розмір — частіше):"},
     "heatmap_intro": {"en": "Specific detail × ideological layer co-occurrence (segment counts):", "uk": "Співпідношення конкретна деталь × ідеологічний шар (кількість сегментів):"},
     "per_doc_intro": {"en": "Per-document distribution:", "uk": "Розподіл за документами:"},
     "select_visualization": {"en": "Select visualization:", "uk": "Оберіть візуалізацію:"},
@@ -395,6 +395,18 @@ _UI_TRANSLATIONS = {
     "viz_config_weight_factor": {"en": "Size factor:", "uk": "Коеф. розміру:"},
     "viz_config_language": {"en": "Language:", "uk": "Мова:"},
     "viz_config_stopwords": {"en": "Additional stopwords (one per line or comma-separated):", "uk": "Додаткові стоп-слова (по одному на рядок або через кому):"},
+    "viz_config_wc_text_source": {"en": "Text source:", "uk": "Джерело тексту:"},
+    "viz_text_source_full_documents": {"en": "Full document files (all loaded text)", "uk": "Повні файли документів (весь завантажений текст)"},
+    "viz_text_source_aligned_segments": {"en": "Aligned segments only (comparison rows)", "uk": "Лише вирівняні сегменти (рядки порівняння)"},
+    "viz_wc_filter_category": {"en": "Limit to specific detail (human label):", "uk": "Обмежити конкретною деталлю (людська мітка):"},
+    "viz_wc_filter_framing": {"en": "Limit to ideological layer (human label):", "uk": "Обмежити ідеологічним шаром (людська мітка):"},
+    "viz_wc_filter_all_option": {"en": "All (no filter)", "uk": "Усі (без фільтра)"},
+    "wordcloud_caption_full": {"en": "Dataset: words counted from the full English and Russian document text loaded for this view (not split by segment labels).", "uk": "Набір: слова з повного англійського та російського тексту документів для цього перегляду (без поділу за мітками сегментів)."},
+    "wordcloud_caption_segments": {"en": "Dataset: words from aligned segment snippets (English + Russian segment text and short context), using expert human labels for filters.", "uk": "Набір: слова з вирівняних уривків сегментів (англ. + рос. текст і короткий контекст); фільтри за експертними людськими мітками."},
+    "wordcloud_caption_seg_filter_cat": {"en": "Only segments whose human specific-detail label is: {cat}.", "uk": "Лише сегменти з людською міткою конкретної деталі: {cat}."},
+    "wordcloud_caption_seg_filter_fram": {"en": "Only segments whose human ideological-layer label is: {fram}.", "uk": "Лише сегменти з людською міткою ідеологічного шару: {fram}."},
+    "wordcloud_caption_seg_filter_both": {"en": "Only segments with both labels: specific detail \"{cat}\" and ideological layer \"{fram}\".", "uk": "Лише сегменти з обома мітками: деталь «{cat}» і шар «{fram}»."},
+    "wordcloud_caption_auto_segments": {"en": "Category or layer filters always use segment text (not the full files).", "uk": "Фільтри за категорією чи шаром завжди використовують текст сегментів (не повні файли)."},
     "viz_config_apply": {"en": "Apply", "uk": "Застосувати"},
     "viz_config_doc_radar_note": {"en": "This document view shows a single profile. Multi-document radar modes are available in the Research Lab.", "uk": "Тут показано профіль одного документа. Режими радару для кількох документів доступні в Дослідницькій лабораторії."},
     "viz_both": {"en": "Both", "uk": "Обидві"},
@@ -438,7 +450,7 @@ _UI_TRANSLATIONS = {
     "viz_segment_single": {"en": "Single length", "uk": "Одна довжина"},
     "viz_segment_insufficient": {"en": "(insufficient data)", "uk": "(недостатньо даних)"},
     "viz_how_calculated": {"en": "How is this calculated?", "uk": "Як це обчислюється?"},
-    "viz_calc_wordcloud_simple": {"en": "We show which terms dominate the corpus. count(w) is how often word w appears; we use frequency because it reflects importance. size(w) is proportional to count so more frequent words appear larger. The weight_factor lets you scale sizes up or down. Stopwords are excluded because common words like \"the\" would otherwise dominate.", "uk": "Показуємо, які терміни домінують у корпусі. count(w) = частота слова w; частота відображає важливість. size(w) пропорційний count, тому частіші слова більші. weight_factor масштабує розмір. Стоп-слова виключаємо, бо вони забивали б візуалізацію."},
+    "viz_calc_wordcloud_simple": {"en": "We show which terms dominate the chosen text. count(w) is how often word w appears in that text; size(w) is proportional to count so more frequent words appear larger. Choose **full documents** to count over entire loaded English/Russian files, or **aligned segments** to count only segment snippets from the comparison rows (with optional filters on expert human labels). The weight_factor scales sizes; stopwords are excluded so common words like \"the\" do not dominate.", "uk": "Показуємо, які терміни домінують у обраному тексті. count(w) — частота слова w у цьому тексті; size(w) пропорційний count. Оберіть **повні документи** для підрахунку по всьому завантаженому EN/RU тексту або **вирівняні сегменти** лише для уривків з рядків порівняння (із опційними фільтрами за експертними мітками). weight_factor масштабує розмір; стоп-слова виключені, щоб не забивали графік."},
     "viz_calc_wordcloud_equations": {"en": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>count</mi><mo>(</mo><mi>w</mi><mo>)</mo><mo>=</mo><mtext>frequency of word w in corpus</mtext></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>size</mi><mo>(</mo><mi>w</mi><mo>)</mo><mo>&#x221D;</mo><mi>weight_factor</mi><mo>&#xD7;</mo><mi>count</mi><mo>(</mo><mi>w</mi><mo>)</mo></mrow></math>", "uk": "<math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>count</mi><mo>(</mo><mi>w</mi><mo>)</mo><mo>=</mo><mtext>частота слова w</mtext></mrow></math><math xmlns=\"http://www.w3.org/1998/Math/MathML\" display=\"block\"><mrow><mi>size</mi><mo>(</mo><mi>w</mi><mo>)</mo><mo>&#x221D;</mo><mi>weight_factor</mi><mo>&#xD7;</mo><mi>count</mi><mo>(</mo><mi>w</mi><mo>)</mo></mrow></math>"},
     "viz_calc_wordcloud_technical": {"en": "count(w) = frequency of word w in corpus. We use frequency because it reflects how central a term is. size(w) ∝ weight_factor × count(w): larger font for more frequent words so the eye is drawn to dominant terms. The weight_factor lets users adjust the scale when the default is too small or too large.", "uk": "count(w) = частота слова w. size(w) ∝ weight_factor × count(w). Частота показує важливість; weight_factor масштабує розмір."},
     "viz_calc_heatmap_simple": {"en": "We show which category-framing combinations co-occur most. Each cell counts segments with that pair; we use category and framing together because they describe both what is discussed and how it is phrased. intensity is cell_value / max so relative density is visible: darker cells have more segments. Normalizing to [0, 1] makes it easy to compare across the matrix.", "uk": "Показуємо, які пари (категорія, фреймінг) найчастіші. Клітинка = кількість сегментів з парою. intensity = cell_value / max: темніші клітинки = більше сегментів. Нормалізація в [0, 1] дозволяє порівнювати."},
@@ -1195,25 +1207,51 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .master-header-links .master-header-link { margin-left: 0; }
 .master-header h1 { font-family: 'Crimson Text', Georgia, serif; font-weight: 700; letter-spacing: 0.02em; }
 .master-header-badge {
+  display: inline-block;
+  flex-shrink: 0;
+  align-self: center;
+  margin-left: 0.4rem;
   font-family: 'Stardos Stencil', 'Impact', sans-serif;
-  font-size: 0.98rem;
+  font-size: 0.96rem;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.26em;
   text-transform: uppercase;
-  padding: 0.38rem 0.9rem;
-  border: 3px double #6b0000;
-  border-radius: 3px;
-  color: #450a0a;
-  background: linear-gradient(165deg, #fffef7 0%, #ebe4d4 45%, #dcd3c4 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.18);
-  text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+  white-space: nowrap;
+  padding: 0.42rem 1.08rem 0.38rem;
+  border-radius: 3px 2px 4px 3px;
+  color: #520f14;
+  background:
+    radial-gradient(ellipse 130% 100% at 28% 0%, rgba(255,252,248,0.96), transparent 54%),
+    linear-gradient(170deg, #fffefb 0%, #f4e6d8 38%, #e2cbb8 100%);
+  border: 2px solid #3f0b12;
+  box-shadow:
+    0 0 0 1px #b42323,
+    0 0 0 5px rgba(254, 226, 226, 0.32),
+    inset 0 1px 1px rgba(255,255,255,0.88),
+    inset 0 -8px 22px rgba(127, 29, 29, 0.11),
+    0 4px 18px rgba(0, 0, 0, 0.38);
+  text-shadow:
+    0 1px 0 rgba(255,255,255,0.52),
+    0 0 3px rgba(82, 15, 20, 0.32),
+    0 2px 8px rgba(0, 0, 0, 0.12);
+  transform: rotate(-4.75deg);
+  transform-origin: 50% 50%;
+}
+@media (max-width: 560px) {
+  .master-header-badge {
+    letter-spacing: 0.13em;
+    font-size: 0.74rem;
+    padding: 0.34rem 0.62rem 0.3rem;
+    margin-left: 0.22rem;
+    transform: rotate(-3deg);
+  }
 }
 .master-header .lang-toggle { margin-left: auto; }
 .lang-btn { font-size: 1.25rem; padding: 0.25rem 0.5rem; border: 1px solid rgba(245,240,230,0.4); border-radius: 4px; background: rgba(0,0,0,0.2); color: inherit; cursor: pointer; transition: background 0.2s, border-color 0.2s; }
 .lang-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(245,240,230,0.6); }
 .lang-btn.active { background: rgba(139,0,0,0.3); border-color: #8b0000; }
 .app-container { display: flex; min-height: calc(100vh - 70px); }
-.sidebar { width: 240px; min-width: 240px; background: #2a2a2a; color: #e8e4dc; padding: 1rem 0; flex-shrink: 0; border-right: 1px solid #4a5568; overflow-x: hidden; overflow-y: auto; align-self: stretch; max-height: calc(100vh - 70px); }
+.sidebar { width: 240px; min-width: 240px; background: #2a2a2a; color: #e8e4dc; padding: 1rem 0; flex-shrink: 0; border-right: 1px solid #4a5568; overflow: visible; align-self: stretch; }
 .sidebar-nav-item { display: block; width: 100%; padding: 0.6rem 1.25rem; border: none; background: none; color: #c4bfb4; text-align: left; cursor: pointer; font-size: 0.9rem; font-family: inherit; border-left: 3px solid transparent; }
 .sidebar-nav-item:hover { background: rgba(255,255,255,0.06); color: #f5f0e6; }
 .sidebar-nav-item.active { background: rgba(139,0,0,0.2); color: #f5f0e6; border-left-color: #8b0000; }
@@ -1221,12 +1259,12 @@ body { font-family: 'Crimson Text', Georgia, serif; line-height: 1.6; color: #4a
 .sidebar-doc-stat { font-size: 0.75rem; color: #8b7355; margin-left: 0.5rem; font-family: 'JetBrains Mono', monospace; }
 .sidebar-divider { border: none; border-top: 1px solid rgba(139,115,85,0.35); margin: 1rem 1rem 0.75rem; padding: 0; height: 0; background: none; }
 .sidebar .sidebar-feedback-section { margin: 0 0.75rem 1rem; border-radius: 3px; border: 2px solid #9a855c; box-shadow: 3px 4px 0 rgba(45,34,20,0.12); background: #e8dcc8; overflow: hidden; }
-.sidebar .sidebar-feedback-section[open] { overflow: visible; }
-.sidebar .sidebar-feedback-section > summary { padding: 0.55rem 1rem; background: linear-gradient(180deg, #d8c8a8 0%, #cbb896 100%); color: #2c2419; border-bottom: 1px solid #9a855c; font-size: 0.88rem; font-weight: 600; cursor: pointer; list-style: none; overflow-wrap: anywhere; }
+.sidebar .sidebar-feedback-section > summary { display: block; padding: 0.55rem 1rem; background: linear-gradient(180deg, #d8c8a8 0%, #cbb896 100%); color: #2c2419; border-bottom: 1px solid #9a855c; font-size: 0.88rem; font-weight: 600; cursor: pointer; list-style: none; overflow-wrap: break-word; word-wrap: break-word; }
 .sidebar .sidebar-feedback-section > summary::-webkit-details-marker { display: none; }
-.sidebar .sidebar-feedback-section .collapsible-body { padding: 0.75rem 1rem 1rem; background: #f4ecd8; color: #2c2419; font-size: 0.88rem; line-height: 1.5; min-width: 0; overflow-wrap: anywhere; }
+.sidebar .sidebar-feedback-section > summary::marker { content: ""; }
+.sidebar .sidebar-feedback-section .collapsible-body { padding: 0.75rem 1rem 1rem; background: #f4ecd8; color: #2c2419; font-size: 0.88rem; line-height: 1.5; min-width: 0; overflow-wrap: break-word; word-wrap: break-word; }
 .sidebar .sidebar-feedback-section .feedback-input,
-.sidebar .sidebar-feedback-section .feedback-textarea { background: #fffdf7; color: #2d3748; border: 1px solid #9a855c; width: 100%; min-width: 0; box-sizing: border-box; }
+.sidebar .sidebar-feedback-section .feedback-textarea { background: #fffdf7; color: #2d3748; border: 1px solid #9a855c; width: 100%; max-width: 100%; min-width: 0; box-sizing: border-box; }
 .sidebar .feedback-form { max-width: none; width: 100%; min-width: 0; }
 .main-content { flex: 1; padding: 2rem; overflow: auto; background: #f5f0e6; }
 .tabs { display: none; }
@@ -1685,6 +1723,7 @@ body.standalone-viz-page #viz-open-new-tab { display: none !important; }
 .voyant-iframe-wrap { overflow-x: auto; overflow-y: hidden; margin-top: 0.5rem; border-radius: 4px; border: 1px solid #8b7355; -webkit-overflow-scrolling: touch; }
 .voyant-iframe-wrap iframe { display: block; width: 100%; min-width: 1100px; height: 70vh; min-height: 500px; border: none; border-radius: 4px; }
 .wordcloud-dual { display: flex; flex-direction: column; gap: 1.5rem; }
+.viz-wordcloud-caption { font-size: 0.85rem; color: #4b5563; margin: 0 0 0.75rem 0; line-height: 1.45; max-width: 52rem; }
 .wordcloud-single { background: #fff; border: 1px solid #8b7355; border-radius: 4px; padding: 1rem; }
 .wordcloud-single.hidden { display: none; }
 .wordcloud-label { font-weight: 600; color: #4a5568; margin-bottom: 0.5rem; font-size: 0.95rem; }
@@ -2155,11 +2194,19 @@ def _build_per_document_viz_section(
     )
     viz_config = config.get("report", {}).get("visualizations", {})
     wc_cfg = viz_config.get("word_cloud", {})
+    wc_min_len = int(wc_cfg.get("min_word_length", 3) or 3)
     stopwords_eng = set(wc_cfg.get("stopwords_eng", [])) | set(wc_cfg.get("stopwords", []))
     stopwords_rus = set(wc_cfg.get("stopwords_rus", [])) | set(wc_cfg.get("stopwords", []))
     word_data_eng, word_data_rus = _word_frequencies_from_documents(
         docs_one,
-        min_len=wc_cfg.get("min_word_length", 3),
+        min_len=wc_min_len,
+        stopwords_eng=stopwords_eng if stopwords_eng else None,
+        stopwords_rus=stopwords_rus if stopwords_rus else None,
+    )
+    word_cloud_presets = _word_cloud_presets_from_comparison(
+        comp_one,
+        doc_ids={doc_id},
+        min_len=wc_min_len,
         stopwords_eng=stopwords_eng if stopwords_eng else None,
         stopwords_rus=stopwords_rus if stopwords_rus else None,
     )
@@ -2177,6 +2224,7 @@ def _build_per_document_viz_section(
     viz_data: Dict[str, Any] = {
         "wordCloudEng": [[w, c] for w, c in word_data_eng],
         "wordCloudRus": [[w, c] for w, c in word_data_rus],
+        "wordCloudPresets": word_cloud_presets,
         "perDoc": [
             {
                 "doc_id": pd["doc_id"],
@@ -2203,13 +2251,7 @@ def _build_per_document_viz_section(
         "termsByFramingDetailed": terms_by_framing_detailed,
         "termFramingHeatmap": term_framing_heatmap,
         "configDefaults": {
-            "word_cloud": {
-                "max_words": wc_cfg.get("max_words", 80),
-                "weight_factor": wc_cfg.get("weight_factor", 15),
-                "min_word_length": wc_cfg.get("min_word_length", 3),
-                "language": wc_cfg.get("language", "both"),
-                "stopwords_extra": "",
-            },
+            "word_cloud": _word_cloud_config_defaults(wc_cfg),
             "segment_length": {"scale": 100, "x_tick_step": 0},
         },
     }
@@ -2235,9 +2277,17 @@ def _build_per_document_viz_section(
         terms_by_framing_detailed_b = _compute_terms_by_framing_detailed(comp_one_b, fram_order_b)
         term_framing_heatmap_b = _compute_term_framing_heatmap(comp_one_b, fram_order_b)
         fram_colours_for_viz_b = _fram_colours_for_viz_order(fram_order_b, fram_colours)
+        word_cloud_presets_b = _word_cloud_presets_from_comparison(
+            comp_one_b,
+            doc_ids={doc_id},
+            min_len=wc_min_len,
+            stopwords_eng=stopwords_eng if stopwords_eng else None,
+            stopwords_rus=stopwords_rus if stopwords_rus else None,
+        )
         viz_data_b: Dict[str, Any] = {
             "wordCloudEng": [[w, c] for w, c in word_data_eng],
             "wordCloudRus": [[w, c] for w, c in word_data_rus],
+            "wordCloudPresets": word_cloud_presets_b,
             "perDoc": [
                 {
                     "doc_id": pd["doc_id"],
@@ -2264,13 +2314,7 @@ def _build_per_document_viz_section(
             "termsByFramingDetailed": terms_by_framing_detailed_b,
             "termFramingHeatmap": term_framing_heatmap_b,
             "configDefaults": {
-                "word_cloud": {
-                    "max_words": wc_cfg.get("max_words", 80),
-                    "weight_factor": wc_cfg.get("weight_factor", 15),
-                    "min_word_length": wc_cfg.get("min_word_length", 3),
-                    "language": wc_cfg.get("language", "both"),
-                    "stopwords_extra": "",
-                },
+                "word_cloud": _word_cloud_config_defaults(wc_cfg),
                 "segment_length": {"scale": 100, "x_tick_step": 0},
             },
         }
@@ -2350,17 +2394,30 @@ def _build_places_map_html(config: Dict[str, Any], embedded: bool = False, doc_i
       margin-left: 0.55rem;
       vertical-align: middle;
       font-family: 'Stardos Stencil', 'Impact', sans-serif;
-      font-size: 0.92rem;
+      font-size: 0.96rem;
       font-weight: 700;
-      letter-spacing: 0.14em;
+      letter-spacing: 0.26em;
       text-transform: uppercase;
-      padding: 0.35rem 0.85rem;
-      border: 3px double #6b0000;
-      border-radius: 3px;
-      color: #450a0a;
-      background: linear-gradient(165deg, #fffef7 0%, #ebe4d4 45%, #dcd3c4 100%);
-      box-shadow: inset 0 1px 0 rgba(255,255,255,0.65), 0 2px 6px rgba(0,0,0,0.18);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.35);
+      white-space: nowrap;
+      padding: 0.42rem 1.08rem 0.38rem;
+      border-radius: 3px 2px 4px 3px;
+      color: #520f14;
+      background:
+        radial-gradient(ellipse 130% 100% at 28% 0%, rgba(255,252,248,0.96), transparent 54%),
+        linear-gradient(170deg, #fffefb 0%, #f4e6d8 38%, #e2cbb8 100%);
+      border: 2px solid #3f0b12;
+      box-shadow:
+        0 0 0 1px #b42323,
+        0 0 0 5px rgba(254, 226, 226, 0.32),
+        inset 0 1px 1px rgba(255,255,255,0.88),
+        inset 0 -8px 22px rgba(127, 29, 29, 0.11),
+        0 4px 18px rgba(0, 0, 0, 0.38);
+      text-shadow:
+        0 1px 0 rgba(255,255,255,0.52),
+        0 0 3px rgba(82, 15, 20, 0.32),
+        0 2px 8px rgba(0, 0, 0, 0.12);
+      transform: rotate(-4.75deg);
+      transform-origin: 50% 50%;
     }}
     .demo-header p {{ margin: 0.5rem 0 0; font-size: 0.9rem; opacity: 0.9; }}
     .demo-header .demo-header-tagline {{ margin: 0.35rem 0 0; font-size: 0.82rem; opacity: 0.85; font-style: italic; }}
@@ -2821,6 +2878,97 @@ def _word_frequencies_from_documents(
     return words_eng.most_common(150), words_rus.most_common(150)
 
 
+def _word_cloud_presets_from_comparison(
+    comparison_by_doc: Dict[str, Dict[str, Any]],
+    *,
+    doc_ids: Optional[Set[str]] = None,
+    min_len: int = 3,
+    stopwords_eng: Optional[Set[str]] = None,
+    stopwords_rus: Optional[Set[str]] = None,
+) -> Dict[str, Any]:
+    """Word-frequency buckets from aligned comparison rows (human labels for filters)."""
+    from collections import Counter, defaultdict
+
+    sw_eng = (stopwords_eng or set()) | _DEFAULT_STOPWORDS_EN
+    sw_rus = (stopwords_rus or set()) | _DEFAULT_STOPWORDS_RU
+
+    def feed_text(counter_eng: Counter, counter_rus: Counter, eng_blob: str, rus_blob: str) -> None:
+        eb = (eng_blob or "").lower()
+        rb = (rus_blob or "").lower()
+        for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", eb):
+            if len(t) >= min_len and t not in sw_eng:
+                counter_eng[t] += 1
+        for t in re.findall(r"\b[\w\u0400-\u04ff]+\b", rb):
+            if len(t) >= min_len and t not in sw_rus:
+                counter_rus[t] += 1
+
+    aligned_eng: Counter = Counter()
+    aligned_rus: Counter = Counter()
+    by_cat_eng: Dict[str, Counter] = defaultdict(Counter)
+    by_cat_rus: Dict[str, Counter] = defaultdict(Counter)
+    by_fram_eng: Dict[str, Counter] = defaultdict(Counter)
+    by_fram_rus: Dict[str, Counter] = defaultdict(Counter)
+    by_cf_eng: Dict[str, Dict[str, Counter]] = defaultdict(lambda: defaultdict(Counter))
+    by_cf_rus: Dict[str, Dict[str, Counter]] = defaultdict(lambda: defaultdict(Counter))
+
+    for doc_id, comp in comparison_by_doc.items():
+        if doc_ids is not None and doc_id not in doc_ids:
+            continue
+        for row in comp.get("aligned_rows") or []:
+            eng_blob = (row.get("entry_eng") or "") + " " + (row.get("context") or "")
+            rus_blob = row.get("entry_rus") or ""
+            hc = (row.get("human_category") or "").strip()
+            hf = (row.get("human_framing") or "").strip()
+            feed_text(aligned_eng, aligned_rus, eng_blob, rus_blob)
+            if hc:
+                feed_text(by_cat_eng[hc], by_cat_rus[hc], eng_blob, rus_blob)
+            if hf:
+                feed_text(by_fram_eng[hf], by_fram_rus[hf], eng_blob, rus_blob)
+            if hc and hf:
+                feed_text(by_cf_eng[hc][hf], by_cf_rus[hc][hf], eng_blob, rus_blob)
+
+    def pairs(c: Counter) -> List[List[Any]]:
+        return [[w, n] for w, n in c.most_common(150)]
+
+    out_by_cat = {
+        k: {"eng": pairs(by_cat_eng[k]), "rus": pairs(by_cat_rus[k])}
+        for k in set(by_cat_eng.keys()) | set(by_cat_rus.keys())
+    }
+    out_by_fram = {
+        k: {"eng": pairs(by_fram_eng[k]), "rus": pairs(by_fram_rus[k])}
+        for k in set(by_fram_eng.keys()) | set(by_fram_rus.keys())
+    }
+    out_cf: Dict[str, Any] = {}
+    for cat, inner in by_cf_eng.items():
+        out_cf[cat] = {}
+        for fram in inner.keys():
+            out_cf[cat][fram] = {
+                "eng": pairs(by_cf_eng[cat][fram]),
+                "rus": pairs(by_cf_rus[cat][fram]),
+            }
+
+    return {
+        "alignedSegments": {"eng": pairs(aligned_eng), "rus": pairs(aligned_rus)},
+        "byCategory": out_by_cat,
+        "byFraming": out_by_fram,
+        "byCategoryAndFraming": out_cf,
+    }
+
+
+def _word_cloud_config_defaults(wc_cfg: Dict[str, Any]) -> Dict[str, Any]:
+    """Merged defaults for embedded viz JSON (single place for keys)."""
+    return {
+        "max_words": wc_cfg.get("max_words", 80),
+        "weight_factor": wc_cfg.get("weight_factor", 15),
+        "min_word_length": wc_cfg.get("min_word_length", 3),
+        "language": wc_cfg.get("language", "both"),
+        "stopwords_extra": "",
+        "text_source": wc_cfg.get("text_source", "full_documents"),
+        "filter_category": wc_cfg.get("filter_category", "") or "",
+        "filter_framing": wc_cfg.get("filter_framing", "") or "",
+    }
+
+
 # Heatmap colour stops: (threshold, hex) from low to high intensity
 _HEATMAP_COLOUR_STOPS = [
     (0.0, "#f0fdfa"),   # very light teal
@@ -3106,11 +3254,19 @@ def _build_viz_payload_and_heatmap(
     stats = _compute_dataset_stats(comparison_by_doc, documents)
     viz_config = config.get("report", {}).get("visualizations", {})
     wc_cfg = viz_config.get("word_cloud", {})
+    wc_min_len = int(wc_cfg.get("min_word_length", 3) or 3)
     stopwords_eng = set(wc_cfg.get("stopwords_eng", [])) | set(wc_cfg.get("stopwords", []))
     stopwords_rus = set(wc_cfg.get("stopwords_rus", [])) | set(wc_cfg.get("stopwords", []))
     word_data_eng, word_data_rus = _word_frequencies_from_documents(
         documents,
-        min_len=wc_cfg.get("min_word_length", 3),
+        min_len=wc_min_len,
+        stopwords_eng=stopwords_eng if stopwords_eng else None,
+        stopwords_rus=stopwords_rus if stopwords_rus else None,
+    )
+    word_cloud_presets_corpus = _word_cloud_presets_from_comparison(
+        comparison_by_doc,
+        doc_ids=None,
+        min_len=wc_min_len,
         stopwords_eng=stopwords_eng if stopwords_eng else None,
         stopwords_rus=stopwords_rus if stopwords_rus else None,
     )
@@ -3134,6 +3290,7 @@ def _build_viz_payload_and_heatmap(
     viz_data: Dict[str, Any] = {
         "wordCloudEng": [[w, c] for w, c in word_data_eng],
         "wordCloudRus": [[w, c] for w, c in word_data_rus],
+        "wordCloudPresets": word_cloud_presets_corpus,
         "perDoc": [
             {
                 "doc_id": pd["doc_id"],
@@ -3164,13 +3321,7 @@ def _build_viz_payload_and_heatmap(
         "termsByFramingDetailed": terms_by_framing_detailed,
         "termFramingHeatmap": term_framing_heatmap,
         "configDefaults": {
-            "word_cloud": {
-                "max_words": wc_cfg.get("max_words", 80),
-                "weight_factor": wc_cfg.get("weight_factor", 15),
-                "min_word_length": wc_cfg.get("min_word_length", 3),
-                "language": wc_cfg.get("language", "both"),
-                "stopwords_extra": "",
-            },
+            "word_cloud": _word_cloud_config_defaults(wc_cfg),
             "radar": {
                 "mode": "single",
                 "compare_count": 3,
@@ -3203,7 +3354,7 @@ def _feedback_section_html(config: Dict[str, Any]) -> str:
         <input type="hidden" name="source" value="vozmezdie_report"/>
         <button type="submit" class="feedback-submit" data-i18n="submit_feedback">Submit</button>
       </form>"""
-    return f"""  <details class="collapsible-section sidebar-feedback-section" id="sidebar-feedback">
+    return f"""  <details class="sidebar-feedback-section" id="sidebar-feedback">
     <summary><span data-i18n="feedback">Feedback</span></summary>
     <div class="collapsible-body">
     <p data-i18n="feedback_intro">Submit general requests or suggest labels for tagged sections.</p>
@@ -5347,6 +5498,67 @@ function getVizConfig() {
 function saveVizConfig(selection, config) {
   try { localStorage.setItem('vozmezdie_viz', JSON.stringify({ selection: selection, config: config || {} })); } catch(e) {} 
 }
+function _wcFmt(str, reps) {
+  if (!str) return '';
+  var out = String(str);
+  if (reps) {
+    Object.keys(reps).forEach(function(k) {
+      out = out.split('{' + k + '}').join(reps[k] != null ? String(reps[k]) : '');
+    });
+  }
+  return out;
+}
+function resolveWordCloudLists(data, wcCfg) {
+  wcCfg = wcCfg || {};
+  var src = wcCfg.text_source || 'full_documents';
+  var cat = String(wcCfg.filter_category || '').trim();
+  var fram = String(wcCfg.filter_framing || '').trim();
+  var presets = data.wordCloudPresets;
+  var usePresets = src === 'aligned_segments' || !!cat || !!fram;
+  if (!usePresets) {
+    return { eng: data.wordCloudEng || [], rus: data.wordCloudRus || [], mode: 'full' };
+  }
+  if (!presets) {
+    return { eng: [], rus: [], mode: 'segments' };
+  }
+  var bucket = null;
+  if (cat && fram) {
+    var cf = presets.byCategoryAndFraming && presets.byCategoryAndFraming[cat];
+    bucket = cf && cf[fram];
+  } else if (cat) {
+    bucket = presets.byCategory && presets.byCategory[cat];
+  } else if (fram) {
+    bucket = presets.byFraming && presets.byFraming[fram];
+  } else {
+    bucket = presets.alignedSegments;
+  }
+  var eng = (bucket && bucket.eng) ? bucket.eng : [];
+  var rus = (bucket && bucket.rus) ? bucket.rus : [];
+  return { eng: eng, rus: rus, mode: 'segments' };
+}
+function wordCloudCaptionText(data, wcCfg) {
+  wcCfg = wcCfg || {};
+  var src = wcCfg.text_source || 'full_documents';
+  var cat = String(wcCfg.filter_category || '').trim();
+  var fram = String(wcCfg.filter_framing || '').trim();
+  var usePresets = src === 'aligned_segments' || !!cat || !!fram;
+  var Tf = function(key, reps) { return _wcFmt(typeof t === 'function' ? t(key) : key, reps); };
+  var parts = [];
+  if (!usePresets) {
+    parts.push(Tf('wordcloud_caption_full'));
+    return parts.join(' ');
+  }
+  parts.push(Tf('wordcloud_caption_segments'));
+  if (cat && fram) parts.push(Tf('wordcloud_caption_seg_filter_both', { cat: cat, fram: fram }));
+  else if (cat) parts.push(Tf('wordcloud_caption_seg_filter_cat', { cat: cat }));
+  else if (fram) parts.push(Tf('wordcloud_caption_seg_filter_fram', { fram: fram }));
+  if (src === 'full_documents' && (cat || fram)) parts.push(Tf('wordcloud_caption_auto_segments'));
+  return parts.filter(Boolean).join(' ');
+}
+function updateWordCloudCaption(el, data, wcCfg) {
+  if (!el) return;
+  el.textContent = wordCloudCaptionText(data, wcCfg);
+}
 function renderVizPanel(panelId, data) {
   var cfg = getVizConfig();
   var catOrder = data.catOrder || [];
@@ -5364,12 +5576,15 @@ function renderVizPanel(panelId, data) {
   function filterStop(list) { return list.filter(function(x) { return extraStop.indexOf(x[0].toLowerCase()) === -1; }); }
   if (vizChartInstances[panelId]) { vizChartInstances[panelId].destroy(); vizChartInstances[panelId] = null; }
   if (panelId === 'viz-wordcloud' && typeof WordCloud !== 'undefined') {
+    var capLab = document.getElementById('viz-wordcloud-caption');
+    updateWordCloudCaption(capLab, data, wcCfg);
     var engWrap = document.getElementById('wc-eng-wrap');
     var rusWrap = document.getElementById('wc-rus-wrap');
     if (engWrap) engWrap.classList.toggle('hidden', lang === 'ru');
     if (rusWrap) rusWrap.classList.toggle('hidden', lang === 'en');
-    var engList = filterStop(data.wordCloudEng || []).slice(0, maxWords);
-    var rusList = filterStop(data.wordCloudRus || []).slice(0, maxWords);
+    var resolvedWC = resolveWordCloudLists(data, wcCfg);
+    var engList = filterStop(resolvedWC.eng || []).slice(0, maxWords);
+    var rusList = filterStop(resolvedWC.rus || []).slice(0, maxWords);
     var wcEng = document.getElementById('wordcloud-canvas-eng');
     if (wcEng && (lang === 'en' || lang === 'both') && engList.length > 0) {
       WordCloud(wcEng, { list: engList, gridSize: 8, weightFactor: weightFactor, fontFamily: 'Crimson Text, Georgia, serif', color: wcColorFn, rotateRatio: 0.25, backgroundColor: '#fff', shuffle: false });
@@ -5768,12 +5983,15 @@ function renderDocVizPanel(root, vizKind, data) {
   var wcColorFn = function(word) { return wcPalette[hashStr(word) % wcPalette.length]; };
   function filterStop(list) { return list.filter(function(x) { return extraStop.indexOf(x[0].toLowerCase()) === -1; }); }
   if (vizKind === 'wordcloud' && typeof WordCloud !== 'undefined') {
+    var capDoc = root.querySelector('.viz-wordcloud-caption');
+    updateWordCloudCaption(capDoc, data, wcCfg);
     var engWrap = root.querySelector('.doc-viz-wc-eng-wrap');
     var rusWrap = root.querySelector('.doc-viz-wc-rus-wrap');
     if (engWrap) engWrap.classList.toggle('hidden', lang === 'ru');
     if (rusWrap) rusWrap.classList.toggle('hidden', lang === 'en');
-    var engList = filterStop(data.wordCloudEng || []).slice(0, maxWords);
-    var rusList = filterStop(data.wordCloudRus || []).slice(0, maxWords);
+    var resolvedDocWC = resolveWordCloudLists(data, wcCfg);
+    var engList = filterStop(resolvedDocWC.eng || []).slice(0, maxWords);
+    var rusList = filterStop(resolvedDocWC.rus || []).slice(0, maxWords);
     var wcEng = docVizChart(root, 'wordcloud-eng');
     if (wcEng && (lang === 'en' || lang === 'both') && engList.length > 0) {
       WordCloud(wcEng, { list: engList, gridSize: 8, weightFactor: weightFactor, fontFamily: 'Crimson Text, Georgia, serif', color: wcColorFn, rotateRatio: 0.25, backgroundColor: '#fff', shuffle: false });
@@ -6055,11 +6273,14 @@ function initDocViz(root) {
       if (baseId === 'viz-weight-factor') c.config.word_cloud.weight_factor = parseFloat(tgt.value) || 15;
       if (baseId === 'viz-language') c.config.word_cloud.language = tgt.value || 'both';
       if (baseId === 'viz-stopwords-extra') c.config.word_cloud.stopwords_extra = tgt.value || '';
+      if (baseId === 'viz-text-source') c.config.word_cloud.text_source = tgt.value || 'full_documents';
+      if (baseId === 'viz-wc-category') c.config.word_cloud.filter_category = tgt.value || '';
+      if (baseId === 'viz-wc-framing') c.config.word_cloud.filter_framing = tgt.value || '';
       if (baseId === 'viz-radar-mode') c.config.radar.mode = tgt.value || 'single';
       if (baseId === 'viz-radar-compare-count') c.config.radar.compare_count = parseInt(tgt.value, 10) || 3;
       if (baseId === 'viz-segment-scale') c.config.segment_length.scale = parseInt(tgt.value, 10) || 100;
       if (baseId === 'viz-segment-x-step') c.config.segment_length.x_tick_step = parseInt(tgt.value, 10);
-      if (baseId && (/^viz-(max-words|weight-factor|language|stopwords-extra)$/.test(baseId) || /^viz-radar-(mode|compare-count)$/.test(baseId) || /^viz-segment-(scale|x-step)$/.test(baseId))) {
+      if (baseId && (/^viz-(max-words|weight-factor|language|stopwords-extra|text-source|wc-category|wc-framing)$/.test(baseId) || /^viz-radar-(mode|compare-count)$/.test(baseId) || /^viz-segment-(scale|x-step)$/.test(baseId))) {
         saveVizConfig(c.selection, c.config);
         var vk = sel ? sel.value : 'wordcloud';
         renderDocVizPanel(root, vk, data);
@@ -6099,6 +6320,67 @@ function buildConfigPanel(panelId, data, docCtx) {
   if (panelId === 'viz-wordcloud') {
     var cfg = getVizConfig();
     var wc = cfg.config.word_cloud || {};
+    var cats = data.catOrder || [];
+    var frams = data.framOrder || [];
+    var rowSrc = document.createElement('div');
+    rowSrc.className = 'viz-config-row viz-config-full';
+    var srcLbl = document.createElement('label');
+    srcLbl.textContent = (typeof t === 'function' ? t('viz_config_wc_text_source') : 'Text source:');
+    srcLbl.htmlFor = fid('viz-text-source');
+    var srcSel = document.createElement('select');
+    srcSel.id = fid('viz-text-source');
+    [['full_documents', typeof t === 'function' ? t('viz_text_source_full_documents') : 'Full documents'], ['aligned_segments', typeof t === 'function' ? t('viz_text_source_aligned_segments') : 'Aligned segments']].forEach(function(pair) {
+      var o = document.createElement('option');
+      o.value = pair[0];
+      o.textContent = pair[1];
+      srcSel.appendChild(o);
+    });
+    srcSel.value = wc.text_source || 'full_documents';
+    rowSrc.appendChild(srcLbl);
+    rowSrc.appendChild(srcSel);
+    body.appendChild(rowSrc);
+    var rowCat = document.createElement('div');
+    rowCat.className = 'viz-config-row viz-config-full';
+    var catLbl = document.createElement('label');
+    catLbl.textContent = (typeof t === 'function' ? t('viz_wc_filter_category') : 'Category filter:');
+    catLbl.htmlFor = fid('viz-wc-category');
+    var catSel = document.createElement('select');
+    catSel.id = fid('viz-wc-category');
+    var catAll = document.createElement('option');
+    catAll.value = '';
+    catAll.textContent = typeof t === 'function' ? t('viz_wc_filter_all_option') : 'All';
+    catSel.appendChild(catAll);
+    cats.forEach(function(c) {
+      var o = document.createElement('option');
+      o.value = c;
+      o.textContent = c;
+      catSel.appendChild(o);
+    });
+    catSel.value = wc.filter_category || '';
+    rowCat.appendChild(catLbl);
+    rowCat.appendChild(catSel);
+    body.appendChild(rowCat);
+    var rowFram = document.createElement('div');
+    rowFram.className = 'viz-config-row viz-config-full';
+    var framLbl = document.createElement('label');
+    framLbl.textContent = (typeof t === 'function' ? t('viz_wc_filter_framing') : 'Framing filter:');
+    framLbl.htmlFor = fid('viz-wc-framing');
+    var framSel = document.createElement('select');
+    framSel.id = fid('viz-wc-framing');
+    var framAll = document.createElement('option');
+    framAll.value = '';
+    framAll.textContent = typeof t === 'function' ? t('viz_wc_filter_all_option') : 'All';
+    framSel.appendChild(framAll);
+    frams.forEach(function(f) {
+      var o = document.createElement('option');
+      o.value = f;
+      o.textContent = f;
+      framSel.appendChild(o);
+    });
+    framSel.value = wc.filter_framing || '';
+    rowFram.appendChild(framLbl);
+    rowFram.appendChild(framSel);
+    body.appendChild(rowFram);
     var row1 = document.createElement('div');
     row1.className = 'viz-config-row';
     var maxLbl = document.createElement('label');
@@ -6356,11 +6638,14 @@ function initViz() {
       if (e.target.id === 'viz-weight-factor') c.config.word_cloud.weight_factor = parseFloat(e.target.value) || 15;
       if (e.target.id === 'viz-language') c.config.word_cloud.language = e.target.value || 'both';
       if (e.target.id === 'viz-stopwords-extra') c.config.word_cloud.stopwords_extra = e.target.value || '';
+      if (e.target.id === 'viz-text-source') c.config.word_cloud.text_source = e.target.value || 'full_documents';
+      if (e.target.id === 'viz-wc-category') c.config.word_cloud.filter_category = e.target.value || '';
+      if (e.target.id === 'viz-wc-framing') c.config.word_cloud.filter_framing = e.target.value || '';
       if (e.target.id === 'viz-radar-mode') c.config.radar.mode = e.target.value || 'single';
       if (e.target.id === 'viz-radar-compare-count') c.config.radar.compare_count = parseInt(e.target.value, 10) || 3;
       if (e.target.id === 'viz-segment-scale') c.config.segment_length.scale = parseInt(e.target.value, 10) || 100;
       if (e.target.id === 'viz-segment-x-step') c.config.segment_length.x_tick_step = parseInt(e.target.value, 10);
-      if (e.target.id && (/^viz-(max-words|weight-factor|language|stopwords-extra)$/.test(e.target.id) || /^viz-radar-(mode|compare-count)$/.test(e.target.id) || /^viz-segment-(scale|x-step)$/.test(e.target.id))) {
+      if (e.target.id && (/^viz-(max-words|weight-factor|language|stopwords-extra|text-source|wc-category|wc-framing)$/.test(e.target.id) || /^viz-radar-(mode|compare-count)$/.test(e.target.id) || /^viz-segment-(scale|x-step)$/.test(e.target.id))) {
         saveVizConfig(c.selection, c.config);
         renderVizPanel('viz-' + c.selection, payload());
       }

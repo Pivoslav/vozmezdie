@@ -52,6 +52,9 @@
         "weight_factor": 15,
         "min_word_length": 3,
         "language": "both",
+        "text_source": "full_documents",
+        "filter_category": "",
+        "filter_framing": "",
         "stopwords": [],
         "stopwords_eng": [],
         "stopwords_rus": []

@@ -63,6 +63,7 @@ def per_document_viz_section(
     </div>
     <div class="viz-panels doc-viz-panels">
       <div class="viz-panel doc-viz-panel" data-doc-viz="wordcloud">
+        <p class="viz-wordcloud-caption doc-viz-wordcloud-caption" id="viz-wordcloud-caption-{sfx}" aria-live="polite"></p>
         <div class="wordcloud-dual doc-viz-wordcloud-dual">
           <div class="wordcloud-single doc-viz-wc-eng-wrap"><div class="wordcloud-label" data-i18n="english">English</div><div class="wordcloud-canvas-wrap"><canvas class="doc-viz-chart" data-doc-chart="wordcloud-eng" width="800" height="300"></canvas></div></div>
           <div class="wordcloud-single doc-viz-wc-rus-wrap"><div class="wordcloud-label" data-i18n="russian_original">Russian</div><div class="wordcloud-canvas-wrap"><canvas class="doc-viz-chart" data-doc-chart="wordcloud-rus" width="800" height="300"></canvas></div></div>
@@ -152,6 +153,7 @@ def viz_lab_visualizations_section(
     </div>
     <div class="viz-panels">
       <div class="viz-panel" id="viz-wordcloud" data-viz="wordcloud">
+        <p class="viz-wordcloud-caption" id="viz-wordcloud-caption" aria-live="polite"></p>
         <div class="wordcloud-dual" id="wordcloud-container">
           <div class="wordcloud-single" id="wc-eng-wrap"><div class="wordcloud-label" data-i18n="english">English</div><div class="wordcloud-canvas-wrap"><canvas id="wordcloud-canvas-eng" width="800" height="300"></canvas></div></div>
           <div class="wordcloud-single" id="wc-rus-wrap"><div class="wordcloud-label" data-i18n="russian_original">Russian</div><div class="wordcloud-canvas-wrap"><canvas id="wordcloud-canvas-rus" width="800" height="300"></canvas></div></div>
