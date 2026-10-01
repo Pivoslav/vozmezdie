@@ -46,7 +46,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/index.html docs/research_lab.html docs/lab_visualization.html docs/places_map.html docs/introduction.html
+          git add docs/index.html docs/lab_visualization.html docs/places_map.html docs/introduction.html
           if git diff --staged --quiet; then
             echo "No HTML changes."
           else
